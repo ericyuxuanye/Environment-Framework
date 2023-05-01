@@ -9,22 +9,23 @@ Core components:
     - Runtime data 
         - Field location : (X, Y), velocity (V_x, V_y), Angle, etc.
         - Route location : number of rounds (used to track progress), time stamp.
-- [Model](model.md) represents the AI function. Taking in CarState, CarView, it generates an Action to drive the car.  
 - [Track](track.md) define the characteristics of a racing track. It act as the physical engine. Given a car's current state, it will provide:
     - CarView: what a car can see of the track environment.
     - Given Model's output, what is the car's state after delta time. 
+- [Model](model.md) represents the AI function. Taking in CarState, CarView, it generates an Action to drive the car.  
 
-UI, Training and Competition system will build above them.
 
-- [Run](run.md) system drive the interaction between Car, Model and Track, generate a race dataset.
-- [Training](training.md) system will drive model training.
-    - Online: call model to adjust at every interaction between Car, Model and Track.
-    - Offline: call model to adjust with a completed race dataset.
+Other system are built on top of above components.
+
+- [Race](race.md) system drive interaction between Car, Model and Track, generate a race dataset.
 - [UI](ui.md) visualize a race:
     - Offline mode: based on saved race dataset. It can support pause, fast forward, at different speed, frame by frame etc.
     - online mode: interact with car, model and track in realtime, collect data at each interaction, and update UI. Support to save a race dataset, enable to playback later in offline mode.
-- [Competition](competition.md):
-    - A game is defined a run with specific combination of one or multiple car (with its model), and a track. 
+- [Training](training.md) system will drive model training.
+    - Online: call model to adjust at every interaction between Car, Model and Track.
+    - Offline: call model to adjust with a completed race dataset.
+- [Competition](competition.md) system:
+    - A game is defined a race with specific combination of multiple car (with its model), and a track. 
     - A game data contains race data for each car, generate result such as each car's time, position, score, ranking point etc.
     - Select which set of cars will play at each game.
     - decide which car to advance and final standing.
