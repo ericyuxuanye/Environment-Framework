@@ -136,4 +136,14 @@ Including noice into environment will make each race unique. It help to test AI 
 
 A multiple round competition can be more interesting, even using same TrackField, with different NoiseSet. 
 
+### Mutli-car interaction 
+To support multiple car interaction in a race, we need to expand
+
+- CarView
+
+    Add visible cars' CarState
+
+- GetNextState
+
+    Physical engine need to consider collision between cars to determine next state.
 

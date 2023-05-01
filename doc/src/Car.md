@@ -7,6 +7,8 @@ CarConfig class capture car's characteristic properties not change over time. Sa
 
 Car is modeled as unicycle, with mass on a single wheel. Only one point of its wheel touches ground. 
 
+If we want to consider car collision, we can model each car as the cirle with 1 meter radius. It will be easy to detact collision, and calculate after collision CarState based on reservation of moment.
+
 ### Mass
 At beginning we do not specify mass value. We can assume all cars has same mass. Other configuration values are specified as ratio, or provided as acceleration. Therefore we will not need consider mass in calculating car movement. 
 
@@ -47,14 +49,13 @@ CarConfig
 
 ```
 
-## CarIdentity
-CarIdentity class include a specific car's identity info. 
+## CarInfo
+CarInfo class include a specific car's related info. 
 
 ```
-CarIdentity
-    Int16 Number
+CarInfo
+    UInt16 CarId
     String Team
-    String Org
     String City
     String State
     String Region
