@@ -9,8 +9,9 @@ Action is the output of Model.
 ``` 
 Action
     float linearAcceleration ; linear acceleration in wheel direction
-    float angularAcceleration ;  wheel angular velocity acceleration
+    float angularVelocity ; 
 ```
+
 
 
 ## Model
@@ -57,17 +58,25 @@ Model data saving should consider
 
     Write a text file, easy to read in text editor.
 
-- Each to load/save by program
+- Easy to load/save by other tools.
     
     Use standard format like csv, json, xml etc.
 
 - Make it simple
 
-    If model data structure is complex, may save different part into its own file, like:
+    If model data structure is complex, save different part into its own file, like:
     
-    - Save a tensor into csv file, can use Excel to view it.
+    - Save a matrix into csv file, can use Excel to view it.
     - Save complex data using json file.
 
-- Robust and backward compatible
+- Robust and compatible
 
-    Model data structure may change overtime. When design and change model data, should be able to process old data files saved by previous version of software. 
+    Model data structure may change overtime. When design and change model data, shoule make new data not break old code, and new code not break on old data. 
+    
+    For row based data:
+        - Do not delete an old column. Can make the old data column empty, or minimum sized valid value.
+        - Add new column at end. 
+
+    For data with named fields:
+        - Add new field with new name.
+        - Do not delete a field required by old code.
