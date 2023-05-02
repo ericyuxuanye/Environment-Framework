@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from abc import ABC, abstractmethod
 from car import CarState
+from race import RaceDataset
 
 
 @dataclass
@@ -35,12 +36,24 @@ class IModel(ABC):
         """
         raise NotImplementedError
 
-    @abstractmethod
-    def train(self, new_state: CarState) -> None:
+    def update_online(self, new_state: CarState) -> bool:
         """
         Should be called right after the environment
         performed the action. This method should calculate
         the reward and update the model parameters in order
         to maximize the reward.
+
+        This method specifically is for online training
+        """
+        raise NotImplementedError
+
+    def update_offline(self, dataset: RaceDataset) -> bool:
+        """
+        Should be called right after the environment
+        performed the action. This method should calculate
+        the reward and update the model parameters in order
+        to maximize the reward.
+
+        For offline training
         """
         raise NotImplementedError

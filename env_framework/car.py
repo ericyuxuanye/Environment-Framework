@@ -1,9 +1,10 @@
 from dataclasses import dataclass
 
+Point = tuple[int, int]
 
 @dataclass
 class RotationFriction:
-    __slots__ = ["min_accel_start", "friction", "max_velocity"]
+    __slots__ = "min_accel_start", "friction", "max_velocity"
 
     min_accel_start: float
     """The minimum acceleration needed to start the car"""
@@ -17,10 +18,10 @@ class RotationFriction:
 
 @dataclass
 class SlideFriction:
-    __slots__ = ["min_velocity_start", "friction"]
+    __slots__ = "min_velocity_start", "friction"
 
     min_velocity_start: float
-    """The minimum velocity needed to start the car"""
+    """The minimum velocity needed to start the sideways slide"""
 
     friction: float
     """The friction coefficient"""
@@ -28,7 +29,7 @@ class SlideFriction:
 
 @dataclass
 class CarConfig:
-    __slots__ = ["rotation_friction", "slide_friction"]
+    __slots__ = "rotation_friction", "slide_friction"
     rotation_friction: RotationFriction
     """Rotational friction of the car"""
     slide_friction: SlideFriction
@@ -37,7 +38,7 @@ class CarConfig:
 
 @dataclass
 class CarInfo:
-    __slots__ = ["id", "team", "city", "state", "region"]
+    __slots__ = "id", "team", "city", "state", "region"
     id: int
     team: str
     city: str
@@ -47,15 +48,7 @@ class CarInfo:
 
 @dataclass
 class CarState:
-    __slots__ = [
-        "timestamp",
-        "x_velocity",
-        "y_velocity",
-        "angular_velocity",
-        "location",
-        "angle",
-        "distance",
-    ]
+    __slots__ = "timestamp", "x_velocity", "y_velocity", "location", "angle", "distance"
 
     timestamp: int
     """Milliseconds since start of race"""
@@ -64,11 +57,9 @@ class CarState:
     """x velocity (m/s)"""
     y_velocity: float
     """y velocity (m/s)"""
-    angular_velocity: float
-    """Angular velocity radians/sec"""
 
-    location: tuple[int, int]
-    """Point(x, y)"""
+    location: Point
+    """Location of the car (x, y)"""
     angle: float
     """Angle of car in radians"""
     distance: float
