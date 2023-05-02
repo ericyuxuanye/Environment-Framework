@@ -45,7 +45,7 @@ SlideFriction
 
 CarConfig
     RotationFriction rotationFriction
-    SlideFriction sotationFriction
+    SlideFriction slideFriction
 
 ```
 

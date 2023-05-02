@@ -1,15 +1,29 @@
 # Track
 
-Track define the characteristics of a racing track. It act as the physical engine. 
+Track system define the characteristics of a racing track. It act as the physical engine. 
 
-A track field is defined as a rectangular area consist of equal sized tiles. 
+TrackField capture a complete racing track, includes path, shoulder, wall, etc. 
+
+A track field is defined as a rectangular area consist of equal sized tiles. Each tile has its own property.
+
+
+## Design Goal
+
+The track field be able to handle any possible scenario for cars racing in it.
+
+- A car should never run out of the TrackField, even they want and try to.
+- No matter where the car is, it can always move, possible to go back on track.
+- TrackField data should be reasonable, though not always accurate, for a realistic racing track.
+- It is possible to increase its resolution, to be closer to real world.
 
 ## Coordinate
 
-When showing on screen, the upper left corner is at (0, 0). X direct from left to right. Y direct from up to low. A position in field is defined as a Point with positive value. A field of size 2000 meter wide and 500 meter height has: upper left corner (0, 0), upper right corner (0, 2000), lower left corner (500, 0), lower right corner (500, 2000).
+When showing on screen, the upper left corner is at (0, 0). X direct from left to right. Y direct from up to down. A position in field is defined as a Point with positive value. A field of size 2000 meter wide and 500 meter height has: upper left corner (0, 0), upper right corner (0, 2000), lower left corner (500, 0), lower right corner (500, 2000).
+
 
 ## Field Tile
-Each tile has its own tile type, which define its physical charactoristics such as the fraction ratio. Initial set of tiles include:
+
+Each tile has its own tile type, which define its physical characteristics such as the fraction ratio. Initial set of tiles include:
 
 | Type | TypeId | FrictionRatio |
 | --- | ---: | ---: |
@@ -19,22 +33,40 @@ Each tile has its own tile type, which define its physical charactoristics such 
 
 A car can run well on road, slower on shoulder, and quickly stop on wall. 
 
+The effective friction coefficient is:
 
-## CenterTiles
+```
+FrictionCoefficient =  FrictionRatio * CarConfig.rotationFriction.friction 
+```
 
-To track car's progress in the race, we use number of times it complete a whole track round. 
+## TrackDistance
 
-We use the center of a track as the logical route. A set of tiles is defined as center tiles. Each center tile's center point is the marker along the route. Neighbouring center tiles along the route touch in either corner or edge. Distances between consective center tiles is either ```1``` or ```sqrt(2)```.  
+TrackField may contain complex winding route with twists and turns. We want to assign a number for each FieldTile, to indicate its effective distance from starting line.  Using this number, a car can know how much effective distance it has covered. It can also help to choose which direction to move next.  
+- Moving into a tile with a larger number, it is getting closer toward the target line. 
+- Moving into a tile with a smaller number, it is moving backward, getting further from the target line.
+- Moving into a tile with equal number, it is moving sideways, stay same distance from starting line and toward the target line.
 
-Track distance is the sum of segment length along center tiles. Center tile's distance is calculated as some of distance along center route from start, divided by track distance. Other tile's distance is equal to its closest center tile's distance. If a tile has same distince to 2 different center tiles, use the smaller distance.
+Each track has a starting line. Each tile on the starting line have TrackDistance value 0. When race started, a tile is not on starting line and next to a starting line tile in the forward direction have TrackDistance value 1, a tile is not on starting line and next to a starting line tile in the backward direction have TrackDistance value -1.
 
-A car use the distince of the tile it touches. A car start race at distance 0. Finish a whole round along the track get progress of 1. If a car travel along the center tiles, its will be most efficient. 
+We define a tile's TrackDistance as the minimum number of tiles a car have to move into from starting line, toward the target direction. Moving in forward direction, TrackDistance of traveled tiles should not decrease. When completed a full route and reach a tile on the starting line, its TrackDistance should equal the RoundDistance, defined as the minimum number of tiles to cover to complete a closed route. Keep moving forward will increase TrackDistance. Each track has a sequence of tiles, that each tile overlap with the next tile by an edge or corner point, complete the whole route, and have the smallest number of tiles. We call this set of tiles the shortest path. Its number of tiles equal to the track's RoundDistance. 
+
+For each FieldTile of type Road, We can calculate it TrackDistance as:
+- Initialize all FieldTile's value as -1, indicate unknown.
+- Set all Road tiles on starting line's value as 0, set all Road tiles next to starting line tiles on the forward direction's value as 1
+- Set Key = 1
+- Loop
+    From each tile with value = Key, check each next tile it touches (have overlapped edge or corner point). 
+        If next tile's value == Key - 1, do nothing
+        If next tile's value == -1, set its value to Key+1
+
+    Key++
+
 
 ```
 Tile
     TypeId  typeId
-    bool    isCenter
-    float   distance    
+
+    UInt32  trackDistance    
 ```
 
 ## TrackField
@@ -48,23 +80,26 @@ TrackField:
 ```
 Row and column index start with 0. 
 
-A small TrackField of 5 by 11 meter consist of tile size of 1 by 1 meter, each tile is represent as {TypeId, IsCenter, discance} can be:
+A small TrackField of 6 by 11 meter consist of tile size of 1 by 1 meter, each tile is represent as {TypeId, TrackDistance} can be:
 
 ```
 {
     "Field" : 
     {
-        {{2,1,0}, {2,1,0.1}, {2,1,0.2}, {2,1,0.3}, {2,1,0.4}, {2,1,0.5}, {2,1,0.6}, {2,1,0.7}, {2,1,0.8}, {2,1,0.9}, {2,1,1}},
-        {{1,1,0}, {1,1,0.1}, {1,1,0.2}, {1,1,0.3}, {1,1,0.4}, {1,1,0.5}, {1,1,0.6}, {1,1,0.7}, {1,1,0.8}, {1,1,0.9}, {1,1,1}},
-        {{0,1,0}, {0,1,0.1}, {0,1,0.2}, {0,1,0.3}, {0,1,0.4}, {1,1,0.5}, {0,1,0.6}, {0,1,0.7}, {0,1,0.8}, {0,1,0.9}, {0,1,1}},
-        {{0,1,0}, {0,1,0.1}, {0,1,0.2}, {0,1,0.3}, {0,1,0.4}, {1,1,0.5}, {0,1,0.6}, {0,1,0.7}, {0,1,0.8}, {0,1,0.9}, {0,1,1}},
-        {{2,1,0}, {2,1,0.1}, {2,1,0.2}, {2,1,0.3}, {2,1,0.4}, {2,1,0.5}, {2,1,0.6}, {2,1,0.7}, {2,1,0.8}, {2,1,0.9}, {2,1,1}},
+        {{2,0}, {2,0}, {2,0}, {2,0}, {2,0}, {2,0}, {2,0}, {2,0}, {2,0}, {2,0}, {2,0}},
+        {{1,0}, {1,0}, {1,0}, {1,0}, {1,0}, {1,0}, {1,0}, {0,7}, {1,0}, {1,0}, {1,0}},
+        {{0,0}, {0,1}, {0,2}, {0,3}, {0,4}, {0,5}, {0,6}, {0,7}, {0,8}, {0,9}, {0,10}},
+        {{0,0}, {0,1}, {0,2}, {1,0}, {0,4}, {0,5}, {0,6}, {0,7}, {0,8}, {0,9}, {0,10}},
+        {{1,0}, {1,0}, {1,0}, {1,0}, {1,0}, {1,0}, {1,0}, {0,7}, {1,0}, {1,0}, {1,0}},
+        {{2,0}, {2,0}, {2,0}, {2,0}, {2,0}, {2,0}, {2,0}, {2,0}, {2,0}, {2,0}, {2,0}},
     }
 }
 ```
 
-In this track, top and bottom rows are wall. Logical route go through the 2 row, start at ```[2,0]```, end at ```[2,11]```. Track distance is 10. there is a shoulder tile on the logical route. This track only have a straight track, does not support multiple round race. 
+In this track, top and bottom rows are wall. Logical route go through the 2 row, start at ```[2,0]```, end at ```[2,10]```. Track distance is 10. there is a Shoulder tile at ```[3,3]```. Tile ```[3.4]``` have TrackDistance value 4, because a car can run through ```[3,0], [3,1], [3,2], [2,3], [3,4]``` cover distance of 4. 
 
+
+This track only have a straight track, does not support multiple round race. 
 
 
 # CarView
@@ -88,11 +123,11 @@ We can define how far the can can see. Assume we allow a car to see two tiles fr
         }
     "Field" : 
     {
-        {{2,1,0.1}, {2,1,0.2}, {2,1,0.3}, {2,1,0.4}, {2,1,0.5},},
-        {{1,1,0.1}, {1,1,0.2}, {1,1,0.3}, {1,1,0.4}, {1,1,0.5},},
-        {{0,1,0.1}, {0,1,0.2}, {0,1,0.3}, {0,1,0.4}, {1,1,0.5},},
-        {{0,1,0.1}, {0,1,0.2}, {0,1,0.3}, {0,1,0.4}, {1,1,0.5},},
-        {{2,1,0.1}, {2,1,0.2}, {2,1,0.3}, {2,1,0.4}, {2,1,0.5},},
+        {{2,0}, {2,0}, {2,0}, {2,0}, {2,0}, },
+        {{1,0}, {1,0}, {1,0}, {1,0}, {1,0}, },
+        {{0,1}, {0,2}, {0,3}, {0,4}, {0,5}, },
+        {{0,1}, {0,2}, {1,0}, {0,4}, {0,5}, },
+        {{1,0}, {1,0}, {1,0}, {1,0}, {1,0}, },
     }
 } 
 ```
