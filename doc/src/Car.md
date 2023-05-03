@@ -71,10 +71,11 @@ CarState
 
     float xVelocity // m/s
     float yVelocity // m/s
-    float angularVelocity // radiant/sec
 
-    Point location ; // Point(X,Y)
+    Point position ; // Point(X,Y)
     float angle ; // radiant
-    float distance ; 
+    
+    Int32 trackDistance; // same value as the tile the Car is on.    
+ 
 ```
 
