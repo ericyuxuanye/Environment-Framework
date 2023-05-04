@@ -1,91 +1,44 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
-@dataclass 
+@dataclass(slots=True)
 class Point2D :  
-    __slots__ = "x", "y"
-
-    x: float
-    y: float
-
-    def __init__(self, x=0, y=0):
-        self.x = x
-        self.y = y
+    x: float = 0.
+    y: float = 0.
 
 
-@dataclass
+@dataclass(slots=True)
 class RotationFriction:
-    __slots__ = "min_accel_start", "friction", "max_velocity"
+    min_accel_start: float = 0.          # The minimum acceleration needed to start the car
+    friction: float = 0.                 # The friction coefficient of the car
+    max_velocity: float = 0.             # The maximum velocity of the rotation of the car
 
-    min_accel_start: float          # The minimum acceleration needed to start the car
-    friction: float                 # The friction coefficient of the car
-    max_velocity: float             # The maximum velocity of the rotation of the car
-
-    def __init__(self, min_accel_start=0, friction=0, max_velocity=0):
-        self.min_accel_start = min_accel_start
-        self.friction = friction
-        self.max_velocity = max_velocity
-
-
-@dataclass
+@dataclass(slots=True)
 class SlideFriction:
-    __slots__ = "min_velocity_start", "friction"
+    min_velocity_start: float = 0.       # Minimum velocity need to start slide sideway
+    friction: float = 0.                 # Friction coefficient when sliding sideway
 
-    min_velocity_start: float       # Minimum velocity need to start slide sideway
-    friction: float                 # Friction coefficient when sliding sideway
-
-    def __init__(self, min_velocity_start=0, friction=0):
-        self.min_velocity_start = min_velocity_start
-        self.friction = friction
-
-
-@dataclass
+@dataclass(slots=True)
 class CarConfig:
-    __slots__ = "rotation_friction", "slide_friction"
+    rotation_friction: RotationFriction = field(default_factory=RotationFriction)  # Rotational friction parameters
+    slide_friction: SlideFriction = field(default_factory=SlideFriction)           # Slide friction parameters
 
-    rotation_friction: RotationFriction     # Rotational friction parameters
-    slide_friction: SlideFriction           # Slide friction parameters
-
-    def __init__(self, rotation_friction = RotationFriction(), slide_friction = SlideFriction()):
-        self.rotation_friction = rotation_friction
-        self.slide_friction = slide_friction
-
-
-@dataclass
+@dataclass(slots=True)
 class CarInfo:
-    __slots__ = "id", "team", "city", "state", "region"
-    id: int
-    team: str
-    city: str
-    state: str
-    region: str
-
-    def __init__(self, id = 0, team = '', city = '', state = '', region = ''):
-        self.id = id
-        self.team = team
-        self.city = city
-        self.state = state
-        self.region = region
+    id: int = 0
+    team: str = ''
+    city: str = ''
+    state: str = ''
+    region: str = ''
 
 
-@dataclass
+@dataclass(slots=True)
 class CarState:
-    __slots__ = "timestamp", "x_velocity", "y_velocity", "location", "angle", "trackDistance"
+    timestamp: int = 0                                  # Milliseconds since race start
 
-    timestamp: int          # Milliseconds since race start
+    x_velocity: float = 0.                              # m/s
+    y_velocity: float = 0.                              # m/s
 
-    x_velocity: float       # m/s
-    y_velocity: float       # m/s
+    location: Point2D = field(default_factory=Point2D)  # (x,y)
+    angle: float = 0.                                   # heading angle, radian
 
-    location: Point2D       # (x,y)
-    angle: float            # heading angle, radian
-
-    trackDistance: int      # TrackDistance of the Tile it is on
-
-    def __init__(self, timestamp = 0, x_velocity = 0, y_velocity = 0, location = Point2D(), angle = 0, trackDistance = 0):
-        self.timestamp = timestamp
-        self.x_velocity = x_velocity
-        self.y_velocity = y_velocity
-        self.location = location
-        self.angle = angle
-        self.trackDistance = trackDistance
-
+    trackDistance: int = 0                              # TrackDistance of the Tile it is on
