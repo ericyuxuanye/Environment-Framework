@@ -1,6 +1,16 @@
 from dataclasses import dataclass
 
-Point = tuple[int, int]
+@dataclass 
+class Point2D :
+
+    def __init__(self, x : float, y : float):
+        self.x = x
+        self.y = y
+
+    __slots__ = "x", "y"
+
+    x: float
+    y: float
 
 @dataclass
 class RotationFriction:
@@ -24,7 +34,7 @@ class SlideFriction:
     """The minimum velocity needed to start the sideways slide"""
 
     friction: float
-    """The friction coefficient"""
+    """The friction coefficient when sliding sideway"""
 
 
 @dataclass
@@ -48,19 +58,14 @@ class CarInfo:
 
 @dataclass
 class CarState:
-    __slots__ = "timestamp", "x_velocity", "y_velocity", "location", "angle", "distance"
+    __slots__ = "timestamp", "x_velocity", "y_velocity", "location", "angle", "trackDistance"
 
-    timestamp: int
-    """Milliseconds since start of race"""
+    timestamp: int      # Milliseconds since race start
 
-    x_velocity: float
-    """x velocity (m/s)"""
-    y_velocity: float
-    """y velocity (m/s)"""
+    x_velocity: float   # m/s
+    y_velocity: float   # m/s
 
-    location: Point
-    """Location of the car (x, y)"""
-    angle: float
-    """Angle of car in radians"""
-    distance: float
-    """Distance from start"""
+    location: Point2D   # (x,y)
+    angle: float    # heading angle, radian
+
+    trackDistance: int  # TrackDistance of the Tile it is on
