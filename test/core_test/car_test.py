@@ -149,6 +149,14 @@ class CarTest(unittest.TestCase):
         self.assertTrue(car_state.location.x == 1.5)
         self.assertTrue(car_state.location.y == 2)
 
+    def test_slots(self):
+        self.assertTrue(Point2D.__slots__, ('x', 'y'))
+        self.assertTrue(RotationFriction.__slots__, ('min_accel_start', 'friction', 'max_velocity'))
+        self.assertTrue(SlideFriction.__slots__, ('min_velocity_start', 'friction'))
+        self.assertTrue(CarConfig.__slots__, ('rotation_friction', 'slide_friction'))
+        self.assertTrue(CarInfo.__slots__, ("id", "team", "city", "state", "region"))
+        self.assertTrue(CarState.__slots__, ('timestamp', 'x_velocity', 'y_velocity', 'location', 'angle', 'trackDistance'))
+
 
 if __name__ == '__main__':
     unittest.main()
