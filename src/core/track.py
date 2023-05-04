@@ -1,13 +1,18 @@
+
+import numpy as np
+from dataclasses import dataclass
+from car import CarState
+from model import Action
+
 """
 This is the characteristics of the track. This file acts as the main physics engine.
 
-A track field consists of equally sized tiles, with upper left as (0, 0), upper right as (0, 1999),
-lower left corner as (499, 0), and lower right corner as (499, 1999)
+A track field consists of equally sized tiles, with upper left corner as (0, 0).
+
+A [500, 2000] track field has, upper right corner at (0, 1999),
+lower left corner at (499, 0), and lower right corner at (499, 1999)
 """
 
-import numpy as np
-from car import CarState
-from model import Action
 
 FieldTile = np.dtype(
     [("type_id", np.uint8), ("is_center", np.bool_), ("distance", np.float64)]
