@@ -1,7 +1,8 @@
+from dataclasses import dataclass
+from math import atan2, cos, sin, sqrt
 
 import numpy as np
-from dataclasses import dataclass
-from car import CarState
+from car import CarConfig, CarState, Point2D
 from model import Action
 
 """
@@ -14,9 +15,7 @@ lower left corner at (499, 0), and lower right corner at (499, 1999)
 """
 
 
-FieldTile = np.dtype(
-    [("type_id", np.uint8), ("is_center", np.bool_), ("distance", np.float64)]
-)
+FieldTile = np.dtype([("type_id", np.uint8), ("distance", np.float64)])
 
 Point = tuple[int, int]
 
@@ -34,7 +33,9 @@ class CarView:
     upper_left: Point
     field: np.ndarray
 
-    def __init__(self, track_field: TrackField, x: int, y: int, view_distance: int) -> None:
+    def __init__(
+        self, track_field: TrackField, x: int, y: int, view_distance: int
+    ) -> None:
         """
         Creates a new CarView
 
@@ -52,14 +53,83 @@ class CarView:
 
 
 class TrackSystem:
+    __slots__ = ["track_field", "view_distance"]
+    track_field: TrackField
+    view_distance: int
+
+    def __init__(self, track_field=TrackField(), view_distance=3):
+        self.track_field = track_field
+        self.view_distance = view_distance
+
     def get_car_view(self, state: CarState) -> CarView:
         """
         return subsection of TrackField visible to car at position of CarState.
         """
-        raise NotImplementedError
+        return CarView(
+            self.track_field,
+            round(state.location.x),
+            round(state.location.y),
+            self.view_distance,
+        )
 
-    def get_next_state(self, state: CarState, action: Action, interval: int):
+    def get_next_state(
+        self,
+        state: CarState,
+        action: Action,
+        interval: int,
+        config: CarConfig = CarConfig(),
+    ):
         """
         Returns the CarState using the Action after the time interval
         """
-        raise NotImplementedError
+        x, y = state.location.x, state.location.y
+        angle = state.angle
+        x_velocity = state.x_velocity
+        y_velocity = state.y_velocity
+
+        if (
+            abs(action.angular_velocity) > config.rotation_friction.min_accel_start
+            and abs(action.angular_velocity) > config.rotation_friction.friction
+        ):
+            # we have overcome friction to move
+            angle_delta = (
+                action.angular_velocity - config.rotation_friction.friction
+                if action.angular_velocity > 0
+                else action.angular_velocity + config.rotation_friction.friction
+            )
+            # clip the maximum velocity
+            angle_delta = max(
+                min(angle_delta, -config.rotation_friction.max_velocity),
+                config.rotation_friction.max_velocity,
+            )
+            angle += angle_delta * interval
+
+        # convert velocity to polar
+        velocity_r = sqrt(x_velocity * x_velocity + y_velocity * y_velocity)
+        velocity_theta = atan2(y_velocity, x_velocity)
+        # add speed in car's heading direction and subtract speed from friction
+        velocity_r += (
+            action.linear_acceleration - config.slide_friction.friction
+        ) * interval
+        # speed should not be negative (r is always positive)
+        velocity_r = max(velocity_r, 0)
+
+        # change back to cartesian coordinates
+        x_velocity = velocity_r * cos(velocity_theta)
+        y_velocity = velocity_r * sin(velocity_theta)
+
+        # move car only if velocity is enough
+        if velocity_r >= config.slide_friction.min_velocity_start:
+            x += x_velocity * interval
+            y += y_velocity * interval
+
+        x, y = round(x), round(y)
+
+        return CarState(
+            state.timestamp + interval,
+            round(x_velocity),
+            round(y_velocity),
+            Point2D(x, y),
+            round(angle),
+            self.track_field.field[x, y]["distance"],
+        )
