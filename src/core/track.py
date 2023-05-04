@@ -88,7 +88,7 @@ class TrackSystem:
         y_velocity = state.y_velocity
 
         if (
-            abs(action.angular_velocity) > config.rotation_friction.min_accel_start
+            abs(action.angular_velocity) >= config.rotation_friction.min_accel_start
             and abs(action.angular_velocity) > config.rotation_friction.friction
         ):
             # we have overcome friction to move
