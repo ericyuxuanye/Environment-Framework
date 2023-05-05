@@ -119,14 +119,16 @@ class TrackTest(unittest.TestCase):
 
         tf.fill_block(range(0, 20), range(0, 30), TileType.Wall.value, 0)
         tf.fill_block(range(2, 18), range(2, 28), TileType.Shoulder.value, 0)
-        tf.fill_block(range(4, 16), range(4, 26), TileType.Road.value, 32767)     
+        tf.fill_block(range(4, 16), range(4, 26), TileType.Road.value, TrackMark.Init.value)     
         tf.fill_block(range(7, 13), range(11, 19), TileType.Shoulder.value, 0)
         tf.fill_block(range(9, 11), range(13, 17), TileType.Wall.value, 0)
 
         # start line
-        tf.fill_block(range(4, 11), range(14, 15), TileType.Road.value, TrackMark.Start.value)
+        tf.mark_line(mark=TrackMark.Start, line=MarkLine(range(4, 7), range(14, 15)))
+
         # finish line
-        tf.fill_block(range(4, 11), range(13, 14), TileType.Road.value, TrackMark.End.value) 
+        tf.mark_line(mark=TrackMark.Finish, line=MarkLine(range(4, 7), range(13, 14)))
+
         return tf
     
     def test_301_tf(self):
@@ -138,6 +140,18 @@ class TrackTest(unittest.TestCase):
     def test_302_tf(self):
         print('\n===\ntest_302_tf')
         tf = self.__sample_track_field_2()
+        print('tf field:', tf.field)
+        print('tf field shape:', tf.field.shape)
+
+    def test_303_tf(self):
+        print('\n===\ntest_303_tf')
+        tf = self.__sample_track_field_2()
+
+        print('tf field:', tf.field)
+        print('tf field shape:', tf.field.shape)
+
+        tf.compute_track_distance()
+        print('\n=============\ncompute_track_distance()')
         print('tf field:', tf.field)
         print('tf field shape:', tf.field.shape)
 

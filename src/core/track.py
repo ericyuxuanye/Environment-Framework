@@ -21,17 +21,43 @@ class TileType(Enum):
     Wall = 1024
     Block = 65535
 
+
+@dataclass 
+class TileCell :  
+    __slots__ = "row", "col"
+
+    row: int
+    col: int
+    def __init__(self, row:int = 0, col:int = 0):
+        self.row = row
+        self.col = col
+
+
 # Special value for distance
 class TrackMark(Enum):
-    Start = 0                   # starting position
-    End = 65535                 # end position, reach here means finished a round
-    Init = 32767                # unknown value, not set 
+    Start = 0                   
+    Finish = 65535             
+    Init = 65000       
 
-@dataclass
+
+@dataclass 
+class MarkLine :  
+    __slots__ = "y_range", "x_range"
+
+    y_range: range
+    x_range: range
+
+    def __init__(self, y_range:range, x_range:range):
+        self.y_range = y_range
+        self.x_range = x_range
+
+
 class TrackField:
-    __slots__ = ["field"]
+    __slots__ = ["field", "start_line", "finish_line"]
 
     field: np.ndarray
+    start_line: MarkLine
+    finish_line: MarkLine
 
     def __init__(self, row:int= 10, column:int = 10):
         self.field = np.zeros((row, column), dtype=np.dtype([('type', 'H'), ('distance', 'H')]))
@@ -41,6 +67,55 @@ class TrackField:
             for x in x_range :
                 self.field[y, x]['type'] = type
                 self.field[y, x]['distance'] = distance
+
+    def mark_line(self, mark:TrackMark, line: MarkLine) :
+        if mark == TrackMark.Start :
+            self.start_line = line
+        elif mark == TrackMark.Finish :
+            self.finish_line = line
+
+        for y in line.y_range :
+            for x in line.x_range :
+                self.field[y, x]['distance'] = mark.value
+    
+    def compute_track_distance(self):
+        # Create a queue for BFS
+        queue = []
+
+		# Add the start line
+        for y in self.start_line.y_range :
+            for x in self.start_line.x_range :
+                cell = TileCell(y, x)
+                queue.append(cell)
+                # print ('Init queue', cell)
+        
+        while queue:
+            center = queue.pop(0)
+            # print ('\ncenter', center)
+            center_distance = self.field[center.row, center.col]['distance']
+
+            for y in [-1,0,1] :
+                for x in [-1,0,1] :
+                    if y == 0 and x == 0:
+                        continue    # center
+                    
+                    target = TileCell(center.row + y, center.col + x)
+                    if target.row < 0 or target.row >= self.field.shape[0] :
+                        continue # row out of bound
+                    if target.col < 0 or target.col >= self.field.shape[1] :
+                        continue # col out of bound
+                    if self.field[target.row, target.col]['type'] != TileType.Road.value :
+                        continue # only deal with bound
+                    if self.field[target.row, target.col]['distance'] == TrackMark.Finish.value :
+                        continue # finish line
+                    if self.field[target.row, target.col]['distance'] == TrackMark.Init.value :
+                        queue.append(target)
+                        # print('append queue', target) 
+
+                    target_distance = self.field[target.row, target.col]['distance']
+                    if target_distance > center_distance + 1 :
+                        self.field[target.row, target.col]['distance'] = center_distance + 1
+                        # print (target, " update:", target_distance, '=>', self.field[target.row, target.col]['distance'])
 
 
 @dataclass
