@@ -6,7 +6,7 @@ from enum import Enum
 from . import car
 
 """
-Track system acts as the main physics engine.
+Track system acts as physics engine.
 
 A track field consists of equally sized tiles, with upper left corner as (0, 0).
 
@@ -19,17 +19,31 @@ class TileType(Enum):
     Road = 1
     Shoulder = 3
     Wall = 1024
+    Block = 65535
 
+# Special value for distance
+class TrackMark(Enum):
+    Start = 0                   # starting position
+    End = 65535                 # end position, reach here means finished a round
+    Init = 32767                # unknown value, not set 
 
+@dataclass
 class TrackField:
     __slots__ = ["field"]
 
     field: np.ndarray
 
-    def __init__(self, row = 10, column = 10):
+    def __init__(self, row:int= 10, column:int = 10):
         self.field = np.zeros((row, column), dtype=np.dtype([('type', 'H'), ('distance', 'H')]))
 
+    def fill_block(self, y_range: range, x_range: range , type: int, distance: int) :
+        for y in y_range :
+            for x in x_range :
+                self.field[y, x]['type'] = type
+                self.field[y, x]['distance'] = distance
 
+
+@dataclass
 class CarView:
     __slots__ = ["up", "left", "field"]
 
@@ -70,25 +84,28 @@ class CarView:
         self.field = field[up:down, :][:, left:right]
 
 
+"""
+TrackSystem acts as the physics engine.
 
-"""
-class TrackSystem:
-    def get_car_view(self, state: CarState) -> CarView:
-"""
-"""
-        return subsection of TrackField visible to car at position of CarState.
-"""
+It owns the TrackField, CarView radius. 
 
-"""
-        raise NotImplementedError
+Usage:
+    1. Construct TrackField, specify dimision, populate each tile type
+    2. Specify Starting and Ending tiles
+        Tiles between Starting and Ending tiles are properly edged on all side of the path
+        Starting and Ending tiles can be same for round track. 
+    3. Calculate distance for all road tiles. After this, the TrackSystem is initialized.
 
-    def get_next_state(self, state: CarState, action: Action, interval: int):
-"""
-"""
-        Returns the CarState using the Action after the time interval
-        """
-"""
-        raise NotImplementedError
 
 
 """
+
+# class TrackSystem:
+    
+    
+    # def get_car_view(self, car_state: car.CarState) :
+    #: CarView
+    #    pass
+
+    # def get_next_state(self, state: car.CarState, action: Action, interval: int):
+    #    pass
