@@ -2,6 +2,7 @@
 import numpy as np
 from dataclasses import dataclass
 from enum import Enum
+import math
 
 from . import car
 
@@ -143,7 +144,7 @@ class CarView:
         right = int(position.x + view_radius + 1)
         if right > field.shape[1] :
             right = field.shape[1]
-        right = int(right)
+        right = right
 
         up = int(position.y - view_radius)
         if up < 0 :
@@ -153,7 +154,7 @@ class CarView:
         down = int(position.y + view_radius + 1)
         if down > field.shape[0] :
             down = field.shape[0]
-        down = int(down)
+        down = down
 
         # print('[', up, ':', down, '][', left, ':', right, ']')
         self.field = field[up:down, :][:, left:right]
@@ -174,13 +175,58 @@ Usage:
 
 
 """
+class TrackSystem:
 
-# class TrackSystem:
+    track_field : TrackField
+    view_radius : int
     
-    
-    # def get_car_view(self, car_state: car.CarState) :
-    #: CarView
-    #    pass
+    def __init__(self, track_field: TrackField, view_radius: int) -> None:
+        self.track_field = track_field
+        self.view_radius = view_radius
 
-    # def get_next_state(self, state: car.CarState, action: Action, interval: int):
-    #    pass
+    def get_car_view(self, car_state: car.CarState) -> CarView:
+        return CarView(self.track_field, car_state.location, self.view_radius)
+    
+    def get_next_state(
+            self, 
+            car_config: car.CarConfig, 
+            car_state: car.CarState, 
+            action: car.Action, 
+            time_interval: int) -> car.CarState :
+
+        forward_acceleration:float = 0
+        if car_state.forward_velocity != 0:
+            forward_acceleration = action.forward_acceleration - car_config.rotation_friction.friction
+        elif action.forward_acceleration > car_config.rotation_friction.min_accel_start :
+            forward_acceleration = action.forward_acceleration - car_config.rotation_friction.friction
+        
+        slide_acceleration:float = 0
+        if math.abs(car_state.slide_velocity) > car_config.slide_friction.min_velocity_start :
+            if car_state.slide_velocity > 0 :
+                slide_acceleration = -1 * car_config.slide_friction.friction
+            else :
+                slide_acceleration = car_config.slide_friction.friction
+        
+        time_sec:float = 0.001 * time_interval
+        forward_distance:float = car_state.forward_velocity * time_sec
+        slide_distance:float = car_state.slide_velocity * time_sec
+
+        next_position_x = (car_state.location.x 
+                           + forward_distance * math.cos(car_state.heading) 
+                           + slide_distance * math.cos(car_state.heading + math.pi / 2))
+        next_position_y = (car_state.location.y 
+                           + forward_distance * math.sin(car_state.heading) 
+                           + slide_distance * math.sin(car_state.heading + math.pi / 2))
+        next_cell = TileCell(int(next_position_y), int(next_position_x))
+        next_trackDistance = self.track_field[next_cell.row, next_cell.col]['distance']
+
+        return car.CarState( 
+            timestamp = car_state.timestamp + time_interval, 
+            heading = car_state.heading + action.angular_velocity * time_sec, 
+            forward_velocity = car_state.forward_velocity + forward_acceleration * time_sec,  
+            slide_velocity = car_state.slide_velocity + slide_acceleration * time_sec,
+            position = car.Point2D(x = next_position_x, y = next_position_y), 
+            trackDistance = next_trackDistance)
+
+
+

@@ -18,7 +18,22 @@ The track field be able to handle any possible scenario for cars racing in it.
 
 ## Coordinate
 
-When showing on screen, the upper left corner is at (0, 0). X direct from left to right. Y direct from up to down. A position in field is defined as a Point with positive value. A field of size 2000 meter wide and 500 meter height has: upper left corner (0, 0), upper right corner (0, 2000), lower left corner (500, 0), lower right corner (500, 2000).
+When showing on screen, the upper left corner is at (0, 0). X direct from left to right. Y direct from up to down. 
+
+A position in field is defined as a Point2D with positive float value. 
+
+A field of size 2000 meter wide and 500 meter height has
+- upper left corner (0, 0)
+- upper right corner (0, 2000)
+- lower left corner (500, 0)
+- lower right corner (500, 2000).
+
+
+Angle is meansured in radian, use right direction as 0, increase in clockwise. 
+- right direction is 0, 2*PI
+- down direction is PI/2
+- left direction is PI
+- up direction is 3/2*PI
 
 
 ## Field Tile

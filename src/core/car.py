@@ -69,23 +69,39 @@ class CarInfo:
 
 @dataclass
 class CarState:
-    __slots__ = "timestamp", "x_velocity", "y_velocity", "location", "angle", "trackDistance"
+    __slots__ = "timestamp", "heading", "forward_velocity", "slide_velocity", "position",  "trackDistance"
 
-    timestamp: int          # Milliseconds since race start
+    timestamp: int              # Milliseconds since race start
 
-    x_velocity: float       # m/s
-    y_velocity: float       # m/s
+    heading: float              # forward angle, radian
+    forward_velocity: float     # m/s, at 
+    slide_velocity: float       # m/s
 
-    location: Point2D       # (x,y)
-    angle: float            # heading angle, radian
+    position: Point2D           # (x,y)
 
-    trackDistance: int      # TrackDistance of the Tile it is on
+    trackDistance: int          # TrackDistance of the Tile it is on
 
-    def __init__(self, timestamp = 0, x_velocity = 0, y_velocity = 0, location = Point2D(), angle = 0, trackDistance = 0):
+    def __init__(self, 
+            timestamp = 0, 
+            heading = 0, 
+            forward_velocity = 0, 
+            slide_velocity = 0, 
+            position = Point2D(), 
+            trackDistance = 0):
+        
         self.timestamp = timestamp
-        self.x_velocity = x_velocity
-        self.y_velocity = y_velocity
-        self.location = location
-        self.angle = angle
+
+        self.heading = heading
+        self.forward_velocity = forward_velocity
+        self.slide_velocity = slide_velocity
+
+        self.position = position
         self.trackDistance = trackDistance
 
+
+@dataclass
+class Action:
+    __slots__ = "forward_acceleration", "angular_velocity"
+
+    forward_acceleration:float     # wheel forward direction acceleration
+    angular_velocity: float        # wheel angle change rate

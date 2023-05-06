@@ -13,7 +13,7 @@ class TrackTest(unittest.TestCase):
         print(TileType.Road.value)
         print(list(TileType))
 
-    def __sample_track_field_0(cls) :
+    def sample_track_field_0(self) :
         y_size = 5
         x_size = 8
         tf = TrackField(y_size, x_size)
@@ -28,7 +28,7 @@ class TrackTest(unittest.TestCase):
         return tf
 
     def test_100_tf(self):
-        tf = self.__sample_track_field_0()
+        tf = self.sample_track_field_0()
         print('\n===\ntest_tf()')
         print(tf)
         print(tf.field)
@@ -55,7 +55,7 @@ class TrackTest(unittest.TestCase):
    
     def test_200_cv(self):
         print('\n===\ntest_cv')
-        tf = self.__sample_track_field_0()
+        tf = self.sample_track_field_0()
         print('tf field:', tf.field)
         print('tf field shape:', tf.field.shape)
 
@@ -67,7 +67,7 @@ class TrackTest(unittest.TestCase):
 
     def test_201_cv(self):
         print('\n===\ntest_cv')
-        tf = self.__sample_track_field_0()
+        tf = self.sample_track_field_0()
         print('tf field:', tf.field)
         print('tf field shape:', tf.field.shape)
 
