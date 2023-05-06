@@ -39,13 +39,35 @@ class SlideFriction:
 
 
 @dataclass
+class MotionProfile:
+    __slots__ = "max_acceleration", "max_velocity", "max_angular_velocity"
+
+    max_acceleration: float         # max power produced acceleration in wheel forward direction m/s/s
+    max_velocity: float             # wheel forward direction maximum velocity m/s
+    max_angular_velocity: float     # radian/sec
+
+    def __init__(self, 
+            max_acceleration = 0, 
+            max_velocity = 0,
+            max_angular_velocity = 0):
+        self.max_acceleration = max_acceleration
+        self.max_velocity = max_velocity
+        self.max_angular_velocity = max_angular_velocity
+
+
+@dataclass
 class CarConfig:
-    __slots__ = "rotation_friction", "slide_friction"
+    __slots__ = "rotation_friction", "slide_friction", "motion_profile"
 
     rotation_friction: RotationFriction     # Rotational friction parameters
     slide_friction: SlideFriction           # Slide friction parameters
+    motion_profile: MotionProfile           # limit on wheel acceleration and velocity
 
-    def __init__(self, rotation_friction = RotationFriction(), slide_friction = SlideFriction()):
+    def __init__(self, 
+            rotation_friction = RotationFriction(), 
+            slide_friction = SlideFriction(),
+            motion_profile = MotionProfile()):
+
         self.rotation_friction = rotation_friction
         self.slide_friction = slide_friction
 
@@ -69,31 +91,30 @@ class CarInfo:
 
 @dataclass
 class CarState:
-    __slots__ = "timestamp", "heading", "forward_velocity", "slide_velocity", "position",  "trackDistance"
+    __slots__ = "timestamp", "wheel_angle", "velocity_x", "velocity_y", "position",  "trackDistance"
 
     timestamp: int              # Milliseconds since race start
 
-    heading: float              # forward angle, radian
-    forward_velocity: float     # m/s, at 
-    slide_velocity: float       # m/s
+    wheel_angle: float          # whee angle, radian
+    velocity_x: float           # m/s
+    velocity_y: float           # m/s
 
     position: Point2D           # (x,y)
-
     trackDistance: int          # TrackDistance of the Tile it is on
 
     def __init__(self, 
             timestamp = 0, 
-            heading = 0, 
-            forward_velocity = 0, 
-            slide_velocity = 0, 
+            wheel_angle = 0, 
+            velocity_x = 0, 
+            velocity_y = 0, 
             position = Point2D(), 
             trackDistance = 0):
         
         self.timestamp = timestamp
 
-        self.heading = heading
-        self.forward_velocity = forward_velocity
-        self.slide_velocity = slide_velocity
+        self.wheel_angle = wheel_angle
+        self.velocity_x = velocity_x
+        self.velocity_y = velocity_y
 
         self.position = position
         self.trackDistance = trackDistance
@@ -101,7 +122,7 @@ class CarState:
 
 @dataclass
 class Action:
-    __slots__ = "forward_acceleration", "angular_velocity"
+    __slots__ = "acceleration_forward", "angular_velocity"
 
-    forward_acceleration:float     # wheel forward direction acceleration
+    acceleration_forward:float     # wheel forward acceleration
     angular_velocity: float        # wheel angle change rate

@@ -194,39 +194,69 @@ class TrackSystem:
             action: car.Action, 
             time_interval: int) -> car.CarState :
 
-        forward_acceleration:float = 0
-        if car_state.forward_velocity != 0:
-            forward_acceleration = action.forward_acceleration - car_config.rotation_friction.friction
-        elif action.forward_acceleration > car_config.rotation_friction.min_accel_start :
-            forward_acceleration = action.forward_acceleration - car_config.rotation_friction.friction
+        # Limit action by motion profile
+        action_forward_acceleration = action.forward_acceleration
+        if math.abs(action.forward_acceleration) > car_config.motion_profile.max_acceleration :
+            action_forward_acceleration = (car_config.motion_profile.max_acceleration 
+                * action.forward_acceleration / math.abs(action.forward_acceleration))
         
-        slide_acceleration:float = 0
-        if math.abs(car_state.slide_velocity) > car_config.slide_friction.min_velocity_start :
-            if car_state.slide_velocity > 0 :
-                slide_acceleration = -1 * car_config.slide_friction.friction
-            else :
-                slide_acceleration = car_config.slide_friction.friction
-        
+        angular_velocity = action.angular_velocity
+        if math.abs(action.angular_velocity) > car_config.motion_profile.max_angular_velocity :
+            action_forward_acceleration = (car_config.motion_profile.max_angular_velocity 
+                * action.angular_velocity / math.abs(action.angular_velocity))
+    
+        # next position
         time_sec:float = 0.001 * time_interval
-        forward_distance:float = car_state.forward_velocity * time_sec
-        slide_distance:float = car_state.slide_velocity * time_sec
+        next_position = car.Point2D(
+            x = car_state.position.x + car_state.velocity_x * time_sec, 
+            y = car_state.position.y + car_state.velocity_y * time_sec)
+        next_cell = TileCell(int(next_position.y), int(next_position.x))
+        next_state = car.CarState(
+            timestamp = car_state.timestamp + time_interval,
+            wheel_angle = car_state.wheel_angle + angular_velocity * time_sec,
+            position = next_position,
+            trackDistance = self.track_field[next_cell.row, next_cell.col]['distance'])
 
-        next_position_x = (car_state.location.x 
-                           + forward_distance * math.cos(car_state.heading) 
-                           + slide_distance * math.cos(car_state.heading + math.pi / 2))
-        next_position_y = (car_state.location.y 
-                           + forward_distance * math.sin(car_state.heading) 
-                           + slide_distance * math.sin(car_state.heading + math.pi / 2))
-        next_cell = TileCell(int(next_position_y), int(next_position_x))
-        next_trackDistance = self.track_field[next_cell.row, next_cell.col]['distance']
+        # next velocity
+        velocity_forward: float = (car_state.velocity_x * math.cos(0 - car_state.wheel_angle) 
+            + car_state.velocity_y * math.cos(math.pi / 2 - car_state.wheel_angle))
 
-        return car.CarState( 
-            timestamp = car_state.timestamp + time_interval, 
-            heading = car_state.heading + action.angular_velocity * time_sec, 
-            forward_velocity = car_state.forward_velocity + forward_acceleration * time_sec,  
-            slide_velocity = car_state.slide_velocity + slide_acceleration * time_sec,
-            position = car.Point2D(x = next_position_x, y = next_position_y), 
-            trackDistance = next_trackDistance)
+        velocity_slide_right: float = (car_state.velocity_y * math.sin(math.pi / 2 - car_state.wheel_angle) 
+            - car_state.velocity_x * math.sin(0 - car_state.wheel_angle))
+        if math.abs(velocity_slide_right) <= car_config.slide_friction.min_velocity_start :
+            velocity_slide_right = 0
+        
+        cell = TileCell(int(car_state.position.y), int(car_state.position.x))
+        friction_ratio = self.track_field[cell.row, cell.col]['type']
+
+        acceleration_forward: float = 0
+        if velocity_forward != 0:
+            acceleration_forward = (action_forward_acceleration 
+                - car_config.rotation_friction.friction * friction_ratio)
+        elif action_forward_acceleration > car_config.rotation_friction.min_accel_start :
+            acceleration_forward = (action_forward_acceleration 
+                - car_config.rotation_friction.friction * friction_ratio)
+        
+        acceleration_slide_right:float = 0
+        if math.abs(velocity_slide_right) > car_config.slide_friction.min_velocity_start :
+            if velocity_slide_right > 0 :
+                acceleration_slide_right = -1 * car_config.slide_friction.friction * friction_ratio
+            else :
+                acceleration_slide_right = car_config.slide_friction.friction * friction_ratio
+        
+        next_velocity_forward = velocity_forward + acceleration_forward * time_sec
+        if math.abs(next_velocity_forward) > car_config.motion_profile.max_velocity:
+            next_velocity_forward = (car_config.motion_profile.max_velocity 
+                * next_velocity_forward / math.abs(next_velocity_forward))
+
+        next_velocity_slide_right = velocity_slide_right + acceleration_slide_right * time_sec
+
+        next_state.velocity_x = (next_velocity_forward * math.cos(car_state.wheel_angle)
+            + next_velocity_slide_right * math.cos(car_state.wheel_angle + math.pi / 2))
+        next_state.velocity_y = (next_velocity_forward * math.sin(car_state.wheel_angle)
+            + next_velocity_slide_right * math.sin(car_state.wheel_angle + math.pi / 2))
+
+        return next_state
 
 
 
