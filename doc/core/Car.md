@@ -36,6 +36,12 @@ A wheel movement can be:
 
 On track field, the friction caused acceleration is calculated as multiplication of tile's FrictionRatio and the wheel friction. 
 
+A wheel can only rotate forward only, never backward. 
+
+A wheel can have negative acceleration like applying brake to slow down. 
+
+To move backward, wheel can steer by `math.pi` then rotate forward.
+
 ```
 RotationFriction
     float minimumAccelerationToStart
