@@ -2,7 +2,8 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
-import unittest 
+import unittest
+import math
 from src.core.car import *
 
 class CarTest(unittest.TestCase):
@@ -45,26 +46,22 @@ class CarTest(unittest.TestCase):
         print(r_friction)
         self.assertTrue(r_friction.min_accel_start == 0)
         self.assertTrue(r_friction.friction == 0)
-        self.assertTrue(r_friction.max_velocity == 0)
 
 
     def test_101_rf(self):
         print('\n===\ntest_101_rf()')
-        r_friction = RotationFriction(friction = 1, max_velocity=10.25)
+        r_friction = RotationFriction(friction = 1)
         print(r_friction)
         self.assertTrue(r_friction.min_accel_start == 0)
         self.assertTrue(r_friction.friction == 1)
-        self.assertTrue(r_friction.max_velocity == 10.25)
 
 
     def test_102_rf(self):
         print('\n===\ntest_102_rf()')
-        r_friction = RotationFriction(min_accel_start = 1, friction = 0.5, max_velocity = 50)
+        r_friction = RotationFriction(min_accel_start = 1, friction = 0.5)
         print(r_friction)
         self.assertTrue(r_friction.min_accel_start == 1)
         self.assertTrue(r_friction.friction == 0.5)
-        self.assertTrue(r_friction.max_velocity < 50.01)
-        self.assertTrue(r_friction.max_velocity > 50 - .01)
 
 
     def test_200_sf(self):
@@ -83,9 +80,26 @@ class CarTest(unittest.TestCase):
         self.assertTrue(s_friction.friction == 5)
 
 
+    def test_210_mp(self):
+        print('\n===\ntest_210_mp()')
+        mp = MotionProfile()
+        print(mp)
+        self.assertTrue(mp.max_acceleration == 0)
+        self.assertTrue(mp.max_velocity == 0)
+        self.assertTrue(mp.max_angular_velocity == 0)
+
+    def test_211_mp(self):
+        print('\n===\ntest_211_mp()')
+        mp = MotionProfile(max_velocity = 31, max_angular_velocity = math.pi, max_acceleration = 3)
+        print(mp)
+        self.assertTrue(mp.max_acceleration == 3)
+        self.assertTrue(mp.max_velocity == 31.0)
+        self.assertTrue(mp.max_angular_velocity > 3.1415)
+
+
     def test_300_cf(self):
         print('\n===\ntest_300_cf()')
-        car_config= CarConfig()
+        car_config = CarConfig()
         print(car_config)
         self.assertTrue(car_config.rotation_friction.min_accel_start == 0)
         self.assertTrue(car_config.slide_friction.min_velocity_start == 0)
@@ -93,14 +107,16 @@ class CarTest(unittest.TestCase):
 
     def test_301_cf(self):
         print('\n===\ntest_301_cf()')
-        r_friction = RotationFriction(min_accel_start = 1, friction = 0.5, max_velocity = 50)
-        s_friction= SlideFriction(min_velocity_start = 30, friction = 5)
-        car_config= CarConfig(rotation_friction = r_friction, slide_friction = s_friction)
+        rf = RotationFriction(min_accel_start = 1, friction = 0.5)
+        sf = SlideFriction(min_velocity_start = 30, friction = 5)
+        mp = MotionProfile(max_velocity = 38.9, max_angular_velocity = math.pi, max_acceleration = 3)
+       
+        car_config= CarConfig(motion_profile = mp, rotation_friction = rf, slide_friction = sf)
 
         print(car_config)
         self.assertTrue(car_config.rotation_friction.min_accel_start == 1)
         self.assertTrue(car_config.slide_friction.min_velocity_start == 30)
-
+        self.assertTrue(car_config.motion_profile.max_velocity == 38.9)
 
     def test_400_cf(self):
         print('\n===\ntest_400_cf()')
@@ -134,21 +150,21 @@ class CarTest(unittest.TestCase):
 
     def test_601_cs(self):
         print('\n===\ntest_601_cs()')
-        car_state = CarState(forward_velocity=25)
+        car_state = CarState(velocity_x=25)
         print(car_state)
         self.assertTrue(car_state.position.x == 0)
         self.assertTrue(car_state.position.y == 0)
-        self.assertTrue(car_state.forward_velocity == 25)
+        self.assertTrue(car_state.velocity_x == 25)
 
-        car_state.forward_velocity += .2
+        car_state.velocity_x += .2
         print(car_state)
-        self.assertTrue(car_state.forward_velocity == 25.2)
+        self.assertTrue(car_state.velocity_x == 25.2)
 
 
     def test_602_cs(self):
         print('\n===\ntest_602_cs()')
         car_state = CarState(position = Point2D(1.5, 2), timestamp=14696, 
-            forward_velocity=25, slide_velocity=20.53, heading=.23, trackDistance=124)
+            velocity_x=25, velocity_y=20.53, wheel_angle=.23, trackDistance=124)
         print('\n')
         print(car_state)
         self.assertTrue(car_state.position.x == 1.5)

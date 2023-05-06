@@ -14,16 +14,14 @@ class Point2D :
 
 @dataclass
 class RotationFriction:
-    __slots__ = "min_accel_start", "friction", "max_velocity"
+    __slots__ = "min_accel_start", "friction"
 
     min_accel_start: float          # The minimum acceleration needed to start the car
     friction: float                 # The friction coefficient of the car
-    max_velocity: float             # The maximum velocity of the rotation of the car
 
-    def __init__(self, min_accel_start=0, friction=0, max_velocity=0):
+    def __init__(self, min_accel_start=0, friction=0):
         self.min_accel_start = min_accel_start
         self.friction = friction
-        self.max_velocity = max_velocity
 
 
 @dataclass
@@ -70,6 +68,7 @@ class CarConfig:
 
         self.rotation_friction = rotation_friction
         self.slide_friction = slide_friction
+        self.motion_profile = motion_profile
 
 
 @dataclass
@@ -122,7 +121,7 @@ class CarState:
 
 @dataclass
 class Action:
-    __slots__ = "acceleration_forward", "angular_velocity"
+    __slots__ = "forward_acceleration", "angular_velocity"
 
-    acceleration_forward:float     # wheel forward acceleration
-    angular_velocity: float        # wheel angle change rate
+    forward_acceleration: float     # wheel forward acceleration
+    angular_velocity: float         # wheel angle change rate

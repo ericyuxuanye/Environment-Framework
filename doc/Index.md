@@ -6,15 +6,23 @@ Define key components in car racing system that will support interaction between
 
 ### [Car](core\car.md) 
 Represent data unique to a car. At beginning, all cars can be same except its identity.
-    - Static data - like size, friction ratio(static, sliding, rotation), maximum (linear, angular) velocity and acceleration. 
-    - Runtime data 
-        - Field location : (X, Y), velocity (V_x, V_y), Angle, etc.
-        - Route location : number of rounds (used to track progress), time stamp.
+- Static data - like size, friction ratio(static, sliding, rotation), maximum (linear, angular) velocity and acceleration. 
+- Runtime data 
+    - Field location : (X, Y), velocity (V_x, V_y), Angle, etc.
+    - Route location : number of rounds (used to track progress), time stamp.
+- Action
+    - Forward acceleration from power output
+    - Angular velocity from steering 
 
 ### [Track](core\track.md) 
-Define the characteristics of a racing track. It act as the physical engine. Given a car's current state, it will provide:
-    - CarView: what a car can see of the track environment.
-    - Given Model's output, what is the car's state after delta time. 
+Define the characteristics of a track field.
+    - size, coordinate
+    - characteristic of field
+
+### [Arena](core\arena.md) 
+Combina Car and Track together to provide the physics engine. Given a car's current state, it will provide:
+- CarView: what a car can see of the track environment.
+- Given an Action, what is the car's state after delta time. 
 
 ### [Model](core\model.md) 
 Represents the AI function. Taking in CarState, CarView, it generates an Action to drive the car.  
