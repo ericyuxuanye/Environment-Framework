@@ -78,8 +78,8 @@ class ArenaTest(unittest.TestCase):
         self.assertTrue(state_3.position.y == self.start_state.position.y)
 
 
-    def test_400_startable_fix_power(self):
-        print('\n===\ntest_300_startable_power()')
+    def test_301_startable_fix_power(self):
+        print('\n===\ntest_301_startable_fix_power()')
 
         startable_power_action = car.Action(2,0)
 
@@ -89,6 +89,17 @@ class ArenaTest(unittest.TestCase):
             current_state = self.arena.get_next_state(current_state, startable_power_action, self.time_interval)
             print(current_state)
 
+
+    def test_302_out_of_bound(self):
+        print('\n===\ntest_302_out_of_bound()')
+
+        startable_power_action = car.Action(2,0)
+
+        current_state = self.start_state
+        print(current_state)
+        while current_state.timestamp < 5600:
+            current_state = self.arena.get_next_state(current_state, startable_power_action, self.time_interval)
+            print(current_state)
 
 if __name__ == '__main__':
     unittest.main()

@@ -125,10 +125,13 @@ class Arena:
         # print('acceleration_slide_right = ', acceleration_slide_right)
     
         next_velocity_forward = velocity_forward + acceleration_forward * time_sec
+        # never rotate backward
+        if next_velocity_forward < 0 :
+            next_velocity_forward = 0
+
         # print('before limit, next_velocity_forward = ', next_velocity_forward)
-        if abs(next_velocity_forward) > car_config.motion_profile.max_velocity:
-            next_velocity_forward = (car_config.motion_profile.max_velocity 
-                * next_velocity_forward / abs(next_velocity_forward))
+        if next_velocity_forward > car_config.motion_profile.max_velocity:
+            next_velocity_forward = car_config.motion_profile.max_velocity 
         # print('after limit, next_velocity_forward = ', next_velocity_forward)
 
         next_velocity_slide_right = velocity_slide_right + acceleration_slide_right * time_sec
