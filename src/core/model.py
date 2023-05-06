@@ -1,17 +1,10 @@
 from dataclasses import dataclass
 from abc import ABC, abstractmethod
-from car import CarState
+from . import car
 from race import RaceDataset
 
 
-@dataclass
-class Action:
-    __slots__ = ["linear_acceleration", "angular_velocity"]
 
-    linear_acceleration: float
-    """The linear acceleration of the car in the direction of the wheel"""
-
-    angular_velocity: float
 
 
 class IModel(ABC):

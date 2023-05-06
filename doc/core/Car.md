@@ -22,6 +22,8 @@ A wheel movement can be:
 
     Need a start acceleration to overcome static friction. Once start rotation, the rotational friction act as a negative acceleration. Car output power minuse rotational friction create acceleration in this direction. Car velocity along this direction has an upper limit. Once reached, any more power will cause tire to slide, not increase velocity. 
 
+    `forward_velocity` measure velocity in wheel heading direction.
+
 -   Slide at perpendicular to wheel angle direction
 
     Velocity projected on this direction determine whether it stay static or slide. 
@@ -29,6 +31,8 @@ A wheel movement can be:
     When velocity projected is less than the threshold, there is no sliding. Any velocity projected  become 0 instantly, generate no movement in this direction. 
 
     When velocity projected is more than the threshold, wheel slides. Friction generates a negative acceleration to reduce velocity projected value.
+
+    `slide_velocity` measure sliding velocity in right-hand direction.
 
 On track field, the friction caused acceleration is calculated as multiplication of tile's FrictionRatio and the wheel friction. 
 
@@ -69,13 +73,12 @@ CarState
     Int32 timeStamp 
     ; miliseconds elapsed since race started
 
-    float xVelocity // m/s
-    float yVelocity // m/s
+    float forward_velocity  # m/s
+    float slide_velocity    # m/s
 
-    Point position ; // Point(X,Y)
-    float angle ; // radian
+    Point position          # Point(X,Y)
+    float angle             # radian
     
     Int32 trackDistance; // same value as the tile the Car is on.    
  
 ```
-

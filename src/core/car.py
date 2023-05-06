@@ -14,16 +14,14 @@ class Point2D :
 
 @dataclass
 class RotationFriction:
-    __slots__ = "min_accel_start", "friction", "max_velocity"
+    __slots__ = "min_accel_start", "friction"
 
     min_accel_start: float          # The minimum acceleration needed to start the car
     friction: float                 # The friction coefficient of the car
-    max_velocity: float             # The maximum velocity of the rotation of the car
 
-    def __init__(self, min_accel_start=0, friction=0, max_velocity=0):
+    def __init__(self, min_accel_start=0, friction=0):
         self.min_accel_start = min_accel_start
         self.friction = friction
-        self.max_velocity = max_velocity
 
 
 @dataclass
@@ -39,15 +37,38 @@ class SlideFriction:
 
 
 @dataclass
+class MotionProfile:
+    __slots__ = "max_acceleration", "max_velocity", "max_angular_velocity"
+
+    max_acceleration: float         # max power produced acceleration in wheel forward direction m/s/s
+    max_velocity: float             # wheel forward direction maximum velocity m/s
+    max_angular_velocity: float     # radian/sec
+
+    def __init__(self, 
+            max_acceleration = 0, 
+            max_velocity = 0,
+            max_angular_velocity = 0):
+        self.max_acceleration = max_acceleration
+        self.max_velocity = max_velocity
+        self.max_angular_velocity = max_angular_velocity
+
+
+@dataclass
 class CarConfig:
-    __slots__ = "rotation_friction", "slide_friction"
+    __slots__ = "rotation_friction", "slide_friction", "motion_profile"
 
     rotation_friction: RotationFriction     # Rotational friction parameters
     slide_friction: SlideFriction           # Slide friction parameters
+    motion_profile: MotionProfile           # limit on wheel acceleration and velocity
 
-    def __init__(self, rotation_friction = RotationFriction(), slide_friction = SlideFriction()):
+    def __init__(self, 
+            rotation_friction = RotationFriction(), 
+            slide_friction = SlideFriction(),
+            motion_profile = MotionProfile()):
+
         self.rotation_friction = rotation_friction
         self.slide_friction = slide_friction
+        self.motion_profile = motion_profile
 
 
 @dataclass
@@ -69,23 +90,38 @@ class CarInfo:
 
 @dataclass
 class CarState:
-    __slots__ = "timestamp", "x_velocity", "y_velocity", "location", "angle", "trackDistance"
+    __slots__ = "timestamp", "wheel_angle", "velocity_x", "velocity_y", "position",  "trackDistance"
 
-    timestamp: int          # Milliseconds since race start
+    timestamp: int              # Milliseconds since race start
 
-    x_velocity: float       # m/s
-    y_velocity: float       # m/s
+    wheel_angle: float          # whee angle, radian
+    velocity_x: float           # m/s
+    velocity_y: float           # m/s
 
-    location: Point2D       # (x,y)
-    angle: float            # heading angle, radian
+    position: Point2D           # (x,y)
+    trackDistance: int          # TrackDistance of the Tile it is on
 
-    trackDistance: int      # TrackDistance of the Tile it is on
-
-    def __init__(self, timestamp = 0, x_velocity = 0, y_velocity = 0, location = Point2D(), angle = 0, trackDistance = 0):
+    def __init__(self, 
+            timestamp = 0, 
+            wheel_angle = 0, 
+            velocity_x = 0, 
+            velocity_y = 0, 
+            position = Point2D(), 
+            trackDistance = 0):
+        
         self.timestamp = timestamp
-        self.x_velocity = x_velocity
-        self.y_velocity = y_velocity
-        self.location = location
-        self.angle = angle
+
+        self.wheel_angle = wheel_angle
+        self.velocity_x = velocity_x
+        self.velocity_y = velocity_y
+
+        self.position = position
         self.trackDistance = trackDistance
 
+
+@dataclass
+class Action:
+    __slots__ = "forward_acceleration", "angular_velocity"
+
+    forward_acceleration: float     # wheel forward acceleration
+    angular_velocity: float         # wheel angle change rate

@@ -2,6 +2,7 @@
 import numpy as np
 from dataclasses import dataclass
 from enum import Enum
+import math
 
 from . import car
 
@@ -143,7 +144,7 @@ class CarView:
         right = int(position.x + view_radius + 1)
         if right > field.shape[1] :
             right = field.shape[1]
-        right = int(right)
+        right = right
 
         up = int(position.y - view_radius)
         if up < 0 :
@@ -153,34 +154,8 @@ class CarView:
         down = int(position.y + view_radius + 1)
         if down > field.shape[0] :
             down = field.shape[0]
-        down = int(down)
+        down = down
 
         # print('[', up, ':', down, '][', left, ':', right, ']')
         self.field = field[up:down, :][:, left:right]
 
-
-"""
-TrackSystem acts as the physics engine.
-
-It owns the TrackField, CarView radius. 
-
-Usage:
-    1. Construct TrackField, specify dimision, populate each tile type
-    2. Specify Starting and Ending tiles
-        Tiles between Starting and Ending tiles are properly edged on all side of the path
-        Starting and Ending tiles can be same for round track. 
-    3. Calculate distance for all road tiles. After this, the TrackSystem is initialized.
-
-
-
-"""
-
-# class TrackSystem:
-    
-    
-    # def get_car_view(self, car_state: car.CarState) :
-    #: CarView
-    #    pass
-
-    # def get_next_state(self, state: car.CarState, action: Action, interval: int):
-    #    pass
