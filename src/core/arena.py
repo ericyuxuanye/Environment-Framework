@@ -55,9 +55,10 @@ class Arena:
             self, 
             car_state: car.CarState, 
             action: car.Action, 
-            time_interval: int) -> car.CarState :
+            time_interval: int, 
+            debug: bool = False) -> car.CarState :
         
-        return self.__get_next_state(self.car_config, car_state, action, time_interval)
+        return self.__get_next_state(self.car_config, car_state, action, time_interval, debug)
 
 
     def __get_next_state(
@@ -65,20 +66,26 @@ class Arena:
             car_config: car.CarConfig, 
             car_state: car.CarState, 
             action: car.Action, 
-            time_interval: int) -> car.CarState :
+            time_interval: int,
+            debug: bool = False) -> car.CarState :
+        
+        if debug: 
+            print('get_next_state() >>>n')
 
         # Limit action by motion profile
         action_forward_acceleration = action.forward_acceleration
         if abs(action.forward_acceleration) > car_config.motion_profile.max_acceleration :
             action_forward_acceleration = (car_config.motion_profile.max_acceleration 
                 * action.forward_acceleration / abs(action.forward_acceleration))
-        # print('action_forward_acceleration = ', action_forward_acceleration)
+        if debug:
+            print('action_forward_acceleration = ', action_forward_acceleration)
 
         angular_velocity = action.angular_velocity
         if abs(action.angular_velocity) > car_config.motion_profile.max_angular_velocity :
             action_forward_acceleration = (car_config.motion_profile.max_angular_velocity 
                 * action.angular_velocity / abs(action.angular_velocity))
-        # print('angular_velocity = ', angular_velocity)
+        if debug:
+            print('angular_velocity = ', angular_velocity)
 
         # next position
         time_sec:float = 0.001 * time_interval
@@ -95,13 +102,15 @@ class Arena:
         # next velocity
         velocity_forward: float = (car_state.velocity_x * math.cos(0 - car_state.wheel_angle) 
             + car_state.velocity_y * math.cos(math.pi / 2 - car_state.wheel_angle))
-        # print('velocity_forward = ', velocity_forward)
+        if debug: 
+            print('velocity_forward = ', velocity_forward)
 
         velocity_slide_right: float = (car_state.velocity_y * math.sin(math.pi / 2 - car_state.wheel_angle) 
-            - car_state.velocity_x * math.sin(0 - car_state.wheel_angle))
+            + car_state.velocity_x * math.sin(0 - car_state.wheel_angle))
         if abs(velocity_slide_right) <= car_config.slide_friction.min_velocity_start :
             velocity_slide_right = 0
-        # print('velocity_slide_right = ', velocity_slide_right)
+        if debug: 
+            print('velocity_slide_right = ', velocity_slide_right)
     
         cell = track.TileCell(int(car_state.position.y), int(car_state.position.x))
         friction_ratio = self.track_field.field[cell.row, cell.col]['type']
@@ -114,7 +123,8 @@ class Arena:
         elif action_forward_acceleration >= car_config.rotation_friction.min_accel_start :
             acceleration_forward = (action_forward_acceleration 
                 - car_config.rotation_friction.friction * friction_ratio)
-        # print('acceleration_forward = ', acceleration_forward)
+        if debug: 
+            print('acceleration_forward = ', acceleration_forward)
 
         acceleration_slide_right:float = 0
         if abs(velocity_slide_right) > car_config.slide_friction.min_velocity_start :
@@ -122,26 +132,32 @@ class Arena:
                 acceleration_slide_right = -1 * car_config.slide_friction.friction * friction_ratio
             else :
                 acceleration_slide_right = car_config.slide_friction.friction * friction_ratio
-        # print('acceleration_slide_right = ', acceleration_slide_right)
+        if debug: 
+            print('acceleration_slide_right = ', acceleration_slide_right)
     
         next_velocity_forward = velocity_forward + acceleration_forward * time_sec
         # never rotate backward
         if next_velocity_forward < 0 :
             next_velocity_forward = 0
 
-        # print('before limit, next_velocity_forward = ', next_velocity_forward)
+        if debug:
+            print('before limit, next_velocity_forward = ', next_velocity_forward)
         if next_velocity_forward > car_config.motion_profile.max_velocity:
             next_velocity_forward = car_config.motion_profile.max_velocity 
-        # print('after limit, next_velocity_forward = ', next_velocity_forward)
+        if debug: 
+            print('after limit, next_velocity_forward = ', next_velocity_forward)
 
         next_velocity_slide_right = velocity_slide_right + acceleration_slide_right * time_sec
-        # print('next_velocity_slide_right = ', next_velocity_slide_right)
+        if debug: 
+            print('next_velocity_slide_right = ', next_velocity_slide_right)
 
         next_state.velocity_x = (next_velocity_forward * math.cos(car_state.wheel_angle)
             + next_velocity_slide_right * math.cos(car_state.wheel_angle + math.pi / 2))
         next_state.velocity_y = (next_velocity_forward * math.sin(car_state.wheel_angle)
             + next_velocity_slide_right * math.sin(car_state.wheel_angle + math.pi / 2))
 
+        if debug: 
+            print('get_next_state() <<<\n')
         return next_state
 
 

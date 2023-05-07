@@ -52,8 +52,8 @@ class ArenaTest(unittest.TestCase):
         self.assertTrue(state_1.timestamp == self.time_interval)
 
 
-    def test_300_startable_power(self):
-        print('\n===\ntest_300_startable_power()')
+    def test_201_startable_power(self):
+        print('\n===\ntest_201_startable_power()')
 
         startable_power_action = car.Action(2,0)
         print('startable_power_action = ', startable_power_action)
@@ -78,8 +78,8 @@ class ArenaTest(unittest.TestCase):
         self.assertTrue(state_3.position.y == self.start_state.position.y)
 
 
-    def test_301_startable_fix_power(self):
-        print('\n===\ntest_301_startable_fix_power()')
+    def test_202_startable_fix_power(self):
+        print('\n===\ntest_202_startable_fix_power()')
 
         startable_power_action = car.Action(2,0)
 
@@ -90,8 +90,8 @@ class ArenaTest(unittest.TestCase):
             print(current_state)
 
 
-    def test_302_out_of_bound(self):
-        print('\n===\ntest_302_out_of_bound()')
+    def test_203_out_of_bound(self):
+        print('\n===\ntest_203_out_of_bound()')
 
         startable_power_action = car.Action(2,0)
 
@@ -100,6 +100,75 @@ class ArenaTest(unittest.TestCase):
         while current_state.timestamp < 5600:
             current_state = self.arena.get_next_state(current_state, startable_power_action, self.time_interval)
             print(current_state)
+
+    
+    def test_204_wall_step(self):
+        print('\n===\ntest_204_wall_step()')
+
+        startable_power_action = car.Action(2,0)
+
+        state = car.CarState(
+            timestamp=4200, 
+            wheel_angle=0.0, 
+            velocity_x=6.1, 
+            velocity_y=0.0,
+            position = car.Point2D(y = 5.5, x = 28.015))
+        print('before: ', state, '\n')
+        start_view = self.arena.get_car_view(state)
+        print('\nstart_view = ', start_view, '\n')
+
+        next = self.arena.get_next_state(
+            state, startable_power_action, self.time_interval, debug=True)
+        print('\nafter: ', next, '\n')
+       
+
+    def test_205_right_turn(self):
+        print('\n===\ntest_205_right_turn()')
+
+        startable_power_action = car.Action(2,1)
+
+        current_state = car.CarState(
+            timestamp=1900, 
+            wheel_angle=0.0, 
+            velocity_x=2.5, 
+            velocity_y=0.0,
+            position = car.Point2D(y = 5.5, x = 17.065),
+            trackDistance=3)
+        print(current_state)
+
+        while current_state.timestamp < 10000 and abs(current_state.velocity_x) > 0:
+            current_state = self.arena.get_next_state(
+                current_state, startable_power_action, self.time_interval)
+            print(current_state)
+        # stop on wall
+
+    def test_206_right_complete(self):
+        print('\n===\ntest_206_right_complete()')
+
+        startable_power_action = car.Action(2,1.2)
+
+        current_state = car.CarState(
+            timestamp=1900, 
+            wheel_angle=0.0, 
+            velocity_x=2.5, 
+            velocity_y=0.0,
+            position = car.Point2D(y = 5.5, x = 17.065),
+            trackDistance=3)
+        print(current_state)
+
+        reach_finish = False
+        cross_loop = False
+        while (current_state.timestamp < 10000 
+               and abs(current_state.velocity_x) > 0
+               and not(cross_loop)) :
+            current_state = self.arena.get_next_state(
+                current_state, startable_power_action, self.time_interval)
+            if current_state.trackDistance == TrackMark.Finish.value :
+                reach_finish = True
+            if reach_finish and current_state.position.x > 14 and current_state.trackDistance > 0 :
+                cross_loop = True
+            print(current_state)
+        # reach Finish block, cross to Shoulder, back on Road going right
 
 if __name__ == '__main__':
     unittest.main()
