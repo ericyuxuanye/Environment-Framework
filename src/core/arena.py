@@ -10,15 +10,6 @@ from . import track
 """
 Arena acts as physics engine.
 
-A track field consists of equally sized tiles, with upper left corner as (0, 0).
-
-A [500, 2000] track field has, upper right corner at (0, 1999),
-lower left corner at (499, 0), and lower right corner at (499, 1999)
-"""
-
-"""
-TrackSystem acts as the physics engine.
-
 It owns the TrackField, CarView radius. 
 
 Usage:
@@ -27,7 +18,6 @@ Usage:
         Tiles between Starting and Ending tiles are properly edged on all side of the path
         Starting and Ending tiles can be same for round track. 
     3. Calculate distance for all road tiles. After this, the TrackSystem is initialized.
-
 
 
 """
@@ -41,7 +31,7 @@ class Arena:
     def __init__(self, 
             track_field: track.TrackField, 
             view_radius: int,
-            car_config : car.CarConfig = car.CarConfig()) -> None:
+            car_config : car.CarConfig) -> None:
         self.track_field = track_field
         self.view_radius = view_radius
         self.car_config = car_config
