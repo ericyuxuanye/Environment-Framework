@@ -1,52 +1,50 @@
-from dataclasses import dataclass
 from abc import ABC, abstractmethod
 from . import car
-from race import RaceDataset
+from . import track
 
 
-
-
-
-class IModel(ABC):
+class IModelLoad(ABC):
     @abstractmethod
-    def load(self) -> bool:
+    def load(self, folder:str) -> bool:
         """
-        Loads the model from a saved file
+        Loads the model from a folder
         """
         raise NotImplementedError
+    
 
+class IModelSave(ABC):
     @abstractmethod
-    def save(self) -> bool:
+    def save(self, folder:str) -> bool:
         """
-        Saves the model to a file
+        Saves the model into a folder
         """
         raise NotImplementedError
 
+
+class IModelInference(IModelLoad):
     @abstractmethod
-    def get_action(self, state: CarState) -> Action:
+    def get_action(self, car_state: car.CarState, car_view: track.CarView) -> car.Action:
         """
-        Returns the appropriate action given the state
-        """
-        raise NotImplementedError
-
-    def update_online(self, new_state: CarState) -> bool:
-        """
-        Should be called right after the environment
-        performed the action. This method should calculate
-        the reward and update the model parameters in order
-        to maximize the reward.
-
-        This method specifically is for online training
+        Returns the appropriate action given car state and visible track view
         """
         raise NotImplementedError
 
+
+class IModelTrainOnline(IModelLoad, IModelSave):
+    def update_online(self, start: car.CarState, action: car.Action, end: car.CarState) -> bool:
+        """
+        for each interaction (state, action) -> next_state
+        """
+        raise NotImplementedError
+
+
+class IModelTrainOffline(IModelLoad, IModelSave):
+    pass
+
+    """
     def update_offline(self, dataset: RaceDataset) -> bool:
-        """
-        Should be called right after the environment
-        performed the action. This method should calculate
-        the reward and update the model parameters in order
-        to maximize the reward.
 
-        For offline training
-        """
+        For offline training, tun with dataset from a complete race
+
         raise NotImplementedError
+    """

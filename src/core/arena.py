@@ -60,7 +60,7 @@ class Arena:
             debug: bool = False) -> car.CarState :
         
         if debug: 
-            print('get_next_state() >>>n')
+            print('\nget_next_state() >>>')
 
         # Limit action by motion profile
         action_forward_acceleration = action.forward_acceleration
@@ -83,11 +83,13 @@ class Arena:
             x = car_state.position.x + car_state.velocity_x * time_sec, 
             y = car_state.position.y + car_state.velocity_y * time_sec)
         next_cell = track.TileCell(int(next_position.y), int(next_position.x))
+        next_track_distance = self.track_field.field[next_cell.row, next_cell.col]['distance']
         next_state = car.CarState(
             timestamp = car_state.timestamp + time_interval,
             wheel_angle = car_state.wheel_angle + angular_velocity * time_sec,
             position = next_position,
-            trackDistance = self.track_field.field[next_cell.row, next_cell.col]['distance'])
+            track_distance = next_track_distance,
+            round_count = car_state.round_count)
 
         # next velocity
         velocity_forward: float = (car_state.velocity_x * math.cos(0 - car_state.wheel_angle) 
@@ -103,8 +105,26 @@ class Arena:
             print('velocity_slide_right = ', velocity_slide_right)
     
         cell = track.TileCell(int(car_state.position.y), int(car_state.position.x))
-        friction_ratio = self.track_field.field[cell.row, cell.col]['type']
-        # print('friction_ratio = ', friction_ratio)
+        cell_type = self.track_field.field[cell.row, cell.col]['type']
+        next_cell_type = self.track_field.field[next_cell.row, next_cell.col]['type']
+        track_distance = self.track_field.field[cell.row, cell.col]['distance']
+        if (cell_type == track.TileType.Road.value 
+            and next_cell_type == track.TileType.Road.value):
+                if (track_distance == track.TrackMark.Start.value
+                    and next_track_distance == track.TrackMark.Finish.value) :
+                    next_state.round_count = car_state.round_count - 1        # start to finish backward
+                if (track_distance == track.TrackMark.Finish.value 
+                    and next_track_distance == track.TrackMark.Start.value) :
+                    next_state.round_count = car_state.round_count + 1        # finish to start, complete a round
+        if debug and next_state.round_count != car_state.round_count: 
+            print('from cell', cell , 'Tile', self.track_field.field[cell.row, cell.col], 
+                  'round_count', car_state.round_count,
+                  'to cell', next_cell, 'Tile', self.track_field.field[next_cell.row, next_cell.col], 
+                  'round_count', next_state.round_count)
+
+        friction_ratio = cell_type
+        if debug: 
+            print('friction_ratio = ', friction_ratio)
 
         acceleration_forward: float = 0
         if velocity_forward != 0:

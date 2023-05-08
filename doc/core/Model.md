@@ -1,53 +1,36 @@
 # Model
 
-Model represents the AI function. Taking in CarState, CarView, it generates an Action to drive the car.
+Model represents the AI function. Input CarState, CarView, output Action to drive a car.
 
-## Action
+Model class capture the data and function of AI system. Each model have its own code, and training generated model parameter dataset. 
 
-Action is the output of Model. 
+During a race, a model is used in inference mode. It loads from saved model data, generate `Action` in responding to `CarState` and `CarView`.
+
+In training mode, a model adjusts internal parameter dataset, based on `CarState` and `CarView`. After trainging, a model saves paramter dataset for later use in inference or training.
+
+
+
+## Inference 
+
 
 ``` 
-Action
-    float linearAcceleration ; linear acceleration in wheel direction
-    float angularVelocity ; 
+    Action get_action(self, CarState, CarView)
 ```
 
 
+## Train
 
-## Model
-
-Model class capture the data and function of AI system. Each model have its own code, and trained result data. 
-
-During a race, a model is used in referencing mode. It loads from saved model data, generate ```Action``` in responding ```CarState``` and ```CarView```.
-
-In training mode, a model adjusts internal data according to data from ```Car``` and ```Track```. A model saves  data for later use in referencing or training.
-
-
-### Reference 
-
-``` 
-IModelReference
-    bool Load() // load model data from saved file
-
-    Action GetAction(CarState, CarView, deltaTime)
+### Online
+```
+    bool Update(self, start_car_state, action, result_car_state)
 ```
 
-### Training
-
+### Offline
 ```
-IModelTrain
-    bool Load() // load model data from saved file
-
-    bool Update(CarState, Action, UpdatedCarState) // for online training
-
-    bool Update(RaceDataset) // for offline training
-
-    bool Save(string folderPath) // save model data to a folder, may generate multiple files. 
+    bool Update(self, race_dataset)
 ```
 
-
-
-## Model Implementation
+## Implementation
 
 Internal data and code logic across different models may be very different. A model may use only part of data it sees, while ignore other part.
 

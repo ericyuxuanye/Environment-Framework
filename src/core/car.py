@@ -7,7 +7,7 @@ class Point2D :
     x: float
     y: float
 
-    def __init__(self, x=0, y=0):
+    def __init__(self, x:float = 0, y:float = 0):
         self.x = x
         self.y = y
 
@@ -19,7 +19,7 @@ class RotationFriction:
     min_accel_start: float          # The minimum acceleration needed to start the car
     friction: float                 # The friction coefficient of the car
 
-    def __init__(self, min_accel_start=0, friction=0):
+    def __init__(self, min_accel_start:float = 0, friction:float = 0):
         self.min_accel_start = min_accel_start
         self.friction = friction
 
@@ -90,7 +90,7 @@ class CarInfo:
 
 @dataclass
 class CarState:
-    __slots__ = "timestamp", "wheel_angle", "velocity_x", "velocity_y", "position",  "trackDistance"
+    __slots__ = "timestamp", "wheel_angle", "velocity_x", "velocity_y", "position",  "track_distance", "round_count"
 
     timestamp: int              # Milliseconds since race start
 
@@ -99,7 +99,8 @@ class CarState:
     velocity_y: float           # m/s
 
     position: Point2D           # (x,y)
-    trackDistance: int          # TrackDistance of the Tile it is on
+    track_distance: int         # track_distance of the Tile it is on
+    round_count: int            # full track round completed
 
     def __init__(self, 
             timestamp = 0, 
@@ -107,7 +108,8 @@ class CarState:
             velocity_x = 0, 
             velocity_y = 0, 
             position = Point2D(), 
-            trackDistance = 0):
+            track_distance = 0,
+            round_count = 0):
         
         self.timestamp = timestamp
 
@@ -116,8 +118,8 @@ class CarState:
         self.velocity_y = velocity_y
 
         self.position = position
-        self.trackDistance = trackDistance
-
+        self.track_distance = track_distance
+        self.round_count = round_count
 
 @dataclass
 class Action:

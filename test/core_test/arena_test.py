@@ -20,7 +20,7 @@ class ArenaTest(unittest.TestCase):
 
         self.start_state = car.CarState(position = car.Point2D(y = 5.5, x = 14.5))
         print('start_state = ', self.start_state)
-        self.assertTrue(self.start_state.trackDistance == 0)
+        self.assertTrue(self.start_state.track_distance == 0)
         self.assertTrue(self.start_state.velocity_x == 0)
         self.assertTrue(self.start_state.velocity_y == 0)
         self.assertTrue(self.start_state.wheel_angle == 0)
@@ -48,7 +48,7 @@ class ArenaTest(unittest.TestCase):
         self.assertTrue(state_1.velocity_x == 0)
         self.assertTrue(state_1.velocity_y == 0)
         self.assertTrue(state_1.wheel_angle == 0)
-        self.assertTrue(state_1.trackDistance == 0)
+        self.assertTrue(state_1.track_distance == 0)
         self.assertTrue(state_1.timestamp == self.time_interval)
 
 
@@ -62,7 +62,7 @@ class ArenaTest(unittest.TestCase):
         self.assertTrue(abs(state_2.velocity_x - 0.15) < 1e-5)
         self.assertTrue(state_2.velocity_y == 0)
         self.assertTrue(state_2.wheel_angle == 0)
-        self.assertTrue(state_2.trackDistance == 0)
+        self.assertTrue(state_2.track_distance == 0)
         self.assertTrue(state_2.timestamp == self.time_interval)
         self.assertTrue(state_2.position.x == self.start_state.position.x)
         self.assertTrue(state_2.position.y == self.start_state.position.y)
@@ -72,7 +72,7 @@ class ArenaTest(unittest.TestCase):
         self.assertTrue(abs(state_3.velocity_x - 0.3) < 1e-5)
         self.assertTrue(state_3.velocity_y == 0)
         self.assertTrue(state_3.wheel_angle == 0)
-        self.assertTrue(state_3.trackDistance == 0)
+        self.assertTrue(state_3.track_distance == 0)
         self.assertTrue(state_3.timestamp - state_2.timestamp == self.time_interval)
         self.assertTrue(abs(state_3.position.x - self.start_state.position.x - 0.015) < 1e-5)
         self.assertTrue(state_3.position.y == self.start_state.position.y)
@@ -133,7 +133,7 @@ class ArenaTest(unittest.TestCase):
             velocity_x=2.5, 
             velocity_y=0.0,
             position = car.Point2D(y = 5.5, x = 17.065),
-            trackDistance=3)
+            track_distance=3)
         print(current_state)
 
         while current_state.timestamp < 10000 and abs(current_state.velocity_x) > 0:
@@ -145,7 +145,7 @@ class ArenaTest(unittest.TestCase):
     def test_206_right_complete(self):
         print('\n===\ntest_206_right_complete()')
 
-        startable_power_action = car.Action(2,1.2)
+        startable_power_action = car.Action(2,1.21)
 
         current_state = car.CarState(
             timestamp=1900, 
@@ -153,22 +153,15 @@ class ArenaTest(unittest.TestCase):
             velocity_x=2.5, 
             velocity_y=0.0,
             position = car.Point2D(y = 5.5, x = 17.065),
-            trackDistance=3)
+            track_distance=3)
         print(current_state)
 
-        reach_finish = False
-        cross_loop = False
         while (current_state.timestamp < 10000 
                and abs(current_state.velocity_x) > 0
-               and not(cross_loop)) :
+               and current_state.round_count == 0) :
             current_state = self.arena.get_next_state(
-                current_state, startable_power_action, self.time_interval)
-            if current_state.trackDistance == TrackMark.Finish.value :
-                reach_finish = True
-            if reach_finish and current_state.position.x > 14 and current_state.trackDistance > 0 :
-                cross_loop = True
+                current_state, startable_power_action, self.time_interval, True)
             print(current_state)
-        # reach Finish block, cross to Shoulder, back on Road going right
 
 if __name__ == '__main__':
     unittest.main()

@@ -72,7 +72,9 @@ class TrackSample:
         tf.mark_line(mark=TrackMark.Start, line=MarkLine(range(4, 7), range(14, 15)))
 
         # finish line
+        tf.fill_block(range(3, 4), range(12, 15), TileType.Wall.value, 0)   # block top by wall
         tf.mark_line(mark=TrackMark.Finish, line=MarkLine(range(4, 7), range(13, 14)))
-
+        tf.fill_block(range(7, 8), range(12, 15), TileType.Wall.value, 0)   # block bottom by wall
+        
         return tf
     
