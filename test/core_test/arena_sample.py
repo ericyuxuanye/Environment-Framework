@@ -23,6 +23,6 @@ class ArenaSample:
         tf.compute_track_distance()
         car_config = __class__.default_car_config()
 
-        return Arena(track_field = tf, view_radius = 2, car_config = car_config)
+        return Arena(track_field = tf, view_radius = 2, time_interval = 100, car_config = car_config)
 
 

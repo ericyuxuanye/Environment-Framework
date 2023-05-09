@@ -26,29 +26,31 @@ class Arena:
 
     track_field : track.TrackField
     view_radius : int
+    time_interval : int # msec
     car_config : car.CarConfig
     
     def __init__(self, 
             track_field: track.TrackField, 
             view_radius: int,
+            time_interval : int,
             car_config : car.CarConfig) -> None:
         self.track_field = track_field
         self.view_radius = view_radius
+        self.time_interval = time_interval
         self.car_config = car_config
 
 
     def get_car_view(self, car_state: car.CarState) -> track.CarView:
         return track.CarView(self.track_field, car_state.position, self.view_radius)
-    
-    
+
+
     def get_next_state(
             self, 
             car_state: car.CarState, 
             action: car.Action, 
-            time_interval: int, 
             debug: bool = False) -> car.CarState :
         
-        return self.__get_next_state(self.car_config, car_state, action, time_interval, debug)
+        return self.__get_next_state(self.car_config, car_state, action, debug)
 
 
     def __get_next_state(
@@ -56,7 +58,6 @@ class Arena:
             car_config: car.CarConfig, 
             car_state: car.CarState, 
             action: car.Action, 
-            time_interval: int,
             debug: bool = False) -> car.CarState :
         
         if debug: 
@@ -78,14 +79,14 @@ class Arena:
             print('angular_velocity = ', angular_velocity)
 
         # next position
-        time_sec:float = 0.001 * time_interval
+        time_sec:float = 0.001 * self.time_interval
         next_position = car.Point2D(
             x = car_state.position.x + car_state.velocity_x * time_sec, 
             y = car_state.position.y + car_state.velocity_y * time_sec)
         next_cell = track.TileCell(int(next_position.y), int(next_position.x))
         next_track_distance = self.track_field.field[next_cell.row, next_cell.col]['distance']
         next_state = car.CarState(
-            timestamp = car_state.timestamp + time_interval,
+            timestamp = car_state.timestamp + self.time_interval,
             wheel_angle = car_state.wheel_angle + angular_velocity * time_sec,
             position = next_position,
             track_distance = next_track_distance,
@@ -124,7 +125,7 @@ class Arena:
 
         friction_ratio = cell_type
         if debug: 
-            print('friction_ratio = ', friction_ratio)
+            print('cell', cell, 'cell_type', cell_type, 'friction_ratio = ', friction_ratio)
 
         acceleration_forward: float = 0
         if velocity_forward != 0:

@@ -14,7 +14,7 @@ class RaceSample:
         arena = ArenaSample.sample_arena_0()
         arena_info = race.ArenaInfo(track_name="sample_track_field_2", view_radius = arena.view_radius, car_config = arena.car_config)
         
-        model = ModelForwardRight()
+        model = ModelSpecialNumber()
         model_info = race.ModelInfo(name='simplefixedrightturn', version='0.0.21')
         
         car_info = car.CarInfo(id = 1024, team = 'kirin')
@@ -24,6 +24,7 @@ class RaceSample:
             model_info = model_info,
             car_info = car_info)
 
-        return race.Race(race_config = race_config, model = model)
+        start_state = car.CarState(position = car.Point2D(y = 5.5, x = 14.5))
+        return race.Race(race_config = race_config, arena =arena, model = model, start_state = start_state)
 
 

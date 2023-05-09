@@ -25,14 +25,11 @@ class ArenaTest(unittest.TestCase):
         self.assertTrue(self.start_state.velocity_y == 0)
         self.assertTrue(self.start_state.wheel_angle == 0)
 
-        self.time_interval = 100 # 100 msec
-
 
     def test_100_startview(self):
         print('\n===\ntest_100_startview()')
 
         print('car_config = ', self.arena.car_config)
-        print('time_interval = ', self.time_interval)
 
         start_view = self.arena.get_car_view(self.start_state)
         print('start_view = ', start_view)
@@ -43,13 +40,13 @@ class ArenaTest(unittest.TestCase):
     
         low_power_action = car.Action(1,0)
         print('low_power_action = ', low_power_action)
-        state_1 = self.arena.get_next_state(self.start_state, low_power_action, self.time_interval)
+        state_1 = self.arena.get_next_state(self.start_state, low_power_action)
         print('state_1 = ', state_1)
         self.assertTrue(state_1.velocity_x == 0)
         self.assertTrue(state_1.velocity_y == 0)
         self.assertTrue(state_1.wheel_angle == 0)
         self.assertTrue(state_1.track_distance == 0)
-        self.assertTrue(state_1.timestamp == self.time_interval)
+        self.assertTrue(state_1.timestamp == self.arena.time_interval)
 
 
     def test_201_startable_power(self):
@@ -57,23 +54,23 @@ class ArenaTest(unittest.TestCase):
 
         startable_power_action = car.Action(2,0)
         print('startable_power_action = ', startable_power_action)
-        state_2 = self.arena.get_next_state(self.start_state, startable_power_action, self.time_interval)
+        state_2 = self.arena.get_next_state(self.start_state, startable_power_action)
         print('state_2 = ', state_2)
         self.assertTrue(abs(state_2.velocity_x - 0.15) < 1e-5)
         self.assertTrue(state_2.velocity_y == 0)
         self.assertTrue(state_2.wheel_angle == 0)
         self.assertTrue(state_2.track_distance == 0)
-        self.assertTrue(state_2.timestamp == self.time_interval)
+        self.assertTrue(state_2.timestamp == self.arena.time_interval)
         self.assertTrue(state_2.position.x == self.start_state.position.x)
         self.assertTrue(state_2.position.y == self.start_state.position.y)
 
-        state_3 = self.arena.get_next_state(state_2, startable_power_action, self.time_interval)
+        state_3 = self.arena.get_next_state(state_2, startable_power_action)
         print('state_3 = ', state_3)
         self.assertTrue(abs(state_3.velocity_x - 0.3) < 1e-5)
         self.assertTrue(state_3.velocity_y == 0)
         self.assertTrue(state_3.wheel_angle == 0)
         self.assertTrue(state_3.track_distance == 0)
-        self.assertTrue(state_3.timestamp - state_2.timestamp == self.time_interval)
+        self.assertTrue(state_3.timestamp - state_2.timestamp == self.arena.time_interval)
         self.assertTrue(abs(state_3.position.x - self.start_state.position.x - 0.015) < 1e-5)
         self.assertTrue(state_3.position.y == self.start_state.position.y)
 
@@ -86,7 +83,7 @@ class ArenaTest(unittest.TestCase):
         current_state = self.start_state
         print(current_state)
         while current_state.timestamp < 3000:
-            current_state = self.arena.get_next_state(current_state, startable_power_action, self.time_interval)
+            current_state = self.arena.get_next_state(current_state, startable_power_action)
             print(current_state)
 
 
@@ -98,7 +95,7 @@ class ArenaTest(unittest.TestCase):
         current_state = self.start_state
         print(current_state)
         while current_state.timestamp < 5600:
-            current_state = self.arena.get_next_state(current_state, startable_power_action, self.time_interval)
+            current_state = self.arena.get_next_state(current_state, startable_power_action)
             print(current_state)
 
     
@@ -118,7 +115,7 @@ class ArenaTest(unittest.TestCase):
         print('\nstart_view = ', start_view, '\n')
 
         next = self.arena.get_next_state(
-            state, startable_power_action, self.time_interval, debug=True)
+            state, startable_power_action, debug=True)
         print('\nafter: ', next, '\n')
        
 
@@ -138,14 +135,14 @@ class ArenaTest(unittest.TestCase):
 
         while current_state.timestamp < 10000 and abs(current_state.velocity_x) > 0:
             current_state = self.arena.get_next_state(
-                current_state, startable_power_action, self.time_interval)
+                current_state, startable_power_action)
             print(current_state)
         # stop on wall
 
     def test_206_right_complete(self):
         print('\n===\ntest_206_right_complete()')
 
-        startable_power_action = car.Action(2,1.21)
+        startable_power_action = car.Action(2, 1.21)
 
         current_state = car.CarState(
             timestamp=1900, 
@@ -158,9 +155,9 @@ class ArenaTest(unittest.TestCase):
 
         while (current_state.timestamp < 10000 
                and abs(current_state.velocity_x) > 0
-               and current_state.round_count == 0) :
+               and current_state.round_count < 1) :
             current_state = self.arena.get_next_state(
-                current_state, startable_power_action, self.time_interval, True)
+                current_state, startable_power_action)
             print(current_state)
 
 if __name__ == '__main__':

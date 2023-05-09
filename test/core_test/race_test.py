@@ -6,6 +6,7 @@ import unittest
 import math
 from src.core import race
 from race_sample import RaceSample
+import json
 
 class RaceTest(unittest.TestCase):
 
@@ -13,8 +14,9 @@ class RaceTest(unittest.TestCase):
         print('\n===\ntest_000_simple')
         race = RaceSample.sample_race_0()
 
-        race.run()
-        print('race data\n', race.data)
+        race.run(debug=True)
+        #print('race data\n', race.data)
+
 
 if __name__ == '__main__':
     unittest.main()
