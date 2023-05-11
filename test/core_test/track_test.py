@@ -19,7 +19,7 @@ class TrackTest(unittest.TestCase):
         print('\n===\ntest_100_tf')
 
         tf = TrackSample.sample_track_field_0()
-        print(tf)
+        #print(tf)
         print(tf.field)
         print('shape', tf.field.shape)
 
