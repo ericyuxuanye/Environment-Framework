@@ -25,6 +25,8 @@ class ModelSpecialNumber(model.IModelInference):
             return Action(2, 1.75)     
         return Action(2, 0)
 
+
+
 class Factory:
 
     @classmethod
