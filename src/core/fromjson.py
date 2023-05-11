@@ -5,10 +5,15 @@ from src.core.car import *
 
 
 type_registry = {}
-type_registry['CarConfig'] = CarConfig
+type_registry['Point2D'] = Point2D
 type_registry['RotationFriction'] = RotationFriction
 type_registry['MotionProfile'] = MotionProfile
 type_registry['SlideFriction'] = SlideFriction
+type_registry['CarConfig'] = CarConfig
+type_registry['CarInfo'] = CarInfo
+type_registry['CarState'] = CarState
+type_registry['Action'] = Action
+
 
 def json_to_object(json_obj, type_registry):
     if isinstance(json_obj, dict):
