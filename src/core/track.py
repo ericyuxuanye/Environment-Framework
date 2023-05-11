@@ -25,11 +25,11 @@ class TileType(Enum):
 
 @dataclass 
 class TileCell :  
-    __slots__ = "row", "col"
 
     row: int
     col: int
     def __init__(self, row:int = 0, col:int = 0):
+        self.type = 'TileCell'
         self.row = row
         self.col = col
 
@@ -43,24 +43,24 @@ class TrackMark(Enum):
 
 @dataclass 
 class MarkLine :  
-    __slots__ = "y_range", "x_range"
 
     y_range: range
     x_range: range
 
     def __init__(self, y_range:range, x_range:range):
+        self.type = 'MarkLine'
         self.y_range = y_range
         self.x_range = x_range
 
-
+@dataclass
 class TrackField:
-    __slots__ = ["field", "start_line", "finish_line"]
 
     field: np.ndarray
     start_line: MarkLine
     finish_line: MarkLine
 
     def __init__(self, row:int= 10, column:int = 10):
+        self.type = 'TrackField'
         self.field = np.zeros((row, column), dtype=np.dtype([('type', 'H'), ('distance', 'H')]))
 
     def fill_block(self, y_range: range, x_range: range , type: int, distance: int) :
@@ -118,16 +118,16 @@ class TrackField:
                         self.field[target.row, target.col]['distance'] = center_distance + 1
                         # print (target, " update:", target_distance, '=>', self.field[target.row, target.col]['distance'])
 
-
 @dataclass
 class CarView:
-    __slots__ = ["up", "left", "field"]
 
     up: int
     left: int
     field: np.ndarray
 
     def __init__(self, track_field: TrackField, position: car.Point2D, view_radius: int) -> None:
+        
+        self.type = 'CarView'
         """
         Creates a new CarView:
             track_field: the complete track field
