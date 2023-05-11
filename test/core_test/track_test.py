@@ -4,7 +4,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
 import unittest 
 from src.core.track import *
-from track_sample import TrackSample
+from samples import Factory
 
 class TrackTest(unittest.TestCase):
     
@@ -18,7 +18,7 @@ class TrackTest(unittest.TestCase):
     def test_100_tf(self):
         print('\n===\ntest_100_tf')
 
-        tf = TrackSample.sample_track_field_0()
+        tf = Factory.sample_track_field_0()
         #print(tf)
         print(tf.field)
         print('shape', tf.field.shape)
@@ -46,7 +46,7 @@ class TrackTest(unittest.TestCase):
     def test_200_cv(self):
         print('\n===\ntest_200_cv')
     
-        tf = TrackSample.sample_track_field_0()
+        tf = Factory.sample_track_field_0()
         print('tf field:', tf.field)
         print('tf field shape:', tf.field.shape)
 
@@ -59,7 +59,7 @@ class TrackTest(unittest.TestCase):
     def test_201_cv(self):
         print('\n===\ntest_201_cv')
     
-        tf = TrackSample.sample_track_field_0()
+        tf = Factory.sample_track_field_0()
         print('tf field:', tf.field)
         print('tf field shape:', tf.field.shape)
 
@@ -73,7 +73,7 @@ class TrackTest(unittest.TestCase):
     def test_301_tf(self):
         print('\n===\ntest_301_tf')
 
-        tf = TrackSample.sample_track_field_1()
+        tf = Factory.sample_track_field_1()
         print('tf field:', tf.field)
         print('tf field shape:', tf.field.shape)
 
@@ -81,7 +81,7 @@ class TrackTest(unittest.TestCase):
     def test_302_tf(self):
         print('\n===\ntest_302_tf')
 
-        tf = TrackSample.sample_track_field_2()
+        tf = Factory.sample_track_field_2()
         print('tf field:', tf.field)
         print('tf field shape:', tf.field.shape)
 
@@ -89,7 +89,7 @@ class TrackTest(unittest.TestCase):
     def test_303_tf(self):
         print('\n===\ntest_303_tf')
 
-        tf = TrackSample.sample_track_field_2()
+        tf = Factory.sample_track_field_2()
         print('tf field:', tf.field)
         print('tf field shape:', tf.field.shape)
 

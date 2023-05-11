@@ -3,8 +3,29 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
 from src.core.track import *
+from src.core.arena import *
+from src.core.car import *
+from src.core.race import *
 
-class TrackSample:
+
+@dataclass 
+class ModelSpecialNumber(model.IModelInference):
+
+    def load(self, folder:str) -> bool:
+        return True
+
+    def get_action(self, car_state: CarState, car_view: CarView) -> Action:
+        if car_state.position.x > 14 and car_state.position.x < 18 and car_state.position.y < 7:
+            return Action(2, 0)
+        elif car_state.position.x > 18 and car_state.position.y < 14:
+            return Action(2, 1.2)
+        elif car_state.position.x > 11 and car_state.position.y > 12: 
+            return Action(2, 0)
+        elif car_state.position.x < 11 and car_state.position.y < 14: 
+            return Action(2, 1.75)     
+        return Action(2, 0)
+
+class Factory:
 
     @classmethod
     def sample_track_field_0(cls) -> TrackField:
@@ -78,3 +99,40 @@ class TrackSample:
         
         return tf
     
+    @classmethod
+    def default_car_config(cls) -> CarConfig:
+
+        return CarConfig(
+            rotation_friction = RotationFriction(min_accel_start = 2, friction = 0.5),
+            slide_friction = SlideFriction(min_velocity_start = 4, friction = 2),
+            motion_profile = MotionProfile(max_acceleration = 5, max_velocity = 50, max_angular_velocity = math.pi/2))
+
+
+    @classmethod
+    def sample_arena_0(cls) -> Arena:
+
+        tf = cls.sample_track_field_2()
+        tf.compute_track_distance()
+        car_config = cls.default_car_config()
+
+        return Arena(track_field = tf, view_radius = 2, time_interval = 100, car_config = car_config)
+
+
+    @classmethod
+    def sample_race_0(cls) -> Race:
+        arena = cls.sample_arena_0()
+        arena_info = ArenaInfo(track_name="sample_track_field_2", view_radius = arena.view_radius, car_config = arena.car_config)
+        
+        model = ModelSpecialNumber()
+        model_info = ModelInfo(name='simplefixedrightturn', version='0.0.21')
+        
+        car_info = CarInfo(id = 1024, team = 'kirin')
+        race_config = RaceConfig(
+            arena_info = arena_info, 
+            round_to_finish = 1, 
+            model_info = model_info,
+            car_info = car_info)
+
+        start_state = CarState(position = Point2D(y = 5.5, x = 14.5))
+        return Race(race_config = race_config, arena =arena, model = model, start_state = start_state)
+

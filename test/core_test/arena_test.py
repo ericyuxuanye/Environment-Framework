@@ -4,13 +4,13 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
 import unittest 
 from src.core.track import *
-from arena_sample import ArenaSample
+from samples import Factory
 
 class ArenaTest(unittest.TestCase):
     def setUp(self):
         print('\n===\nArenaTest.setUp()')
     
-        self.arena = ArenaSample.sample_arena_0()
+        self.arena = Factory.sample_arena_0()
         print(self.arena)
         print('view_radius =', self.arena.view_radius)
         print('car_config =', self.arena.car_config)
