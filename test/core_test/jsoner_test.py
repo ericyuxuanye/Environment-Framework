@@ -7,7 +7,7 @@ import math
 from src.core import car
 
 import json
-from src.core.fromjson import from_json
+from src.core.jsoner import Jsoner
 
 class JsonTest(unittest.TestCase):
 
@@ -23,41 +23,42 @@ class JsonTest(unittest.TestCase):
         print('\n===\ntest_100_cc()')
 
         cc_1= self.default_car_config()
-        print('cc_1', cc_1)
-        print('type(cc_1)', type(cc_1))
-        cc_json = json.dumps(cc_1, default=lambda o: o.__dict__, indent=4)
-        
-        print('cc_json', cc_json)
+        print('cc_1:', cc_1)
+        print('type(cc_1):', type(cc_1))
+
+        cc_json = Jsoner.to_json(cc_1)
+        print('cc_json:', cc_json)
 
         cc_2 = json.loads(cc_json)
-        print('cc_2', cc_2)
-        print('type(cc_2)', type(cc_2))
+        print('cc_2:', cc_2)
+        print('type(cc_2):', type(cc_2))
 
-        cc_3 = from_json(cc_2)
-        print('cc_3', cc_3)
-        print('type(cc_3)', type(cc_3))
+        cc_3 = Jsoner.from_json(cc_2)
+        print('cc_3:', cc_3)
+        print('type(cc_3):', type(cc_3))
 
-        print('cc_1 == cc_3', cc_1 == cc_3) 
+        print('cc_1 == cc_3:', cc_1 == cc_3) 
 
 
     def test_101_cc(self):
         print('\n===\ntest_101_cc()')
 
         cc_1= self.default_car_config()
-        with open('data\carconfig\cc_1.json', 'w') as f:
-            json.dump(cc_1, f, default=lambda o: o.__dict__, indent=4)
-        
-        with open('data\carconfig\cc_1.json', 'r') as f:
-            cc_2 = json.load(f)
-        
-        print('cc_2', cc_2)
-        print('type(cc_2)', type(cc_2))
+        print('cc_1:', cc_1)
+        print('type(cc_1):', type(cc_1))
 
-        cc_3 = from_json(cc_2)
-        print('cc_3', cc_3)
-        print('type(cc_3)', type(cc_3))
+        file_name = 'data\carconfig\cc_1.json'
+        Jsoner.to_json_file(cc_1, file_name)
 
-        print('cc_1 == cc_3', cc_1 == cc_3) 
+        cc_2 = Jsoner.json_from_file(file_name)
+        print('cc_2:', cc_2)
+        print('type(cc_2):', type(cc_2))
+
+        cc_3 = Jsoner.from_json_file(file_name)
+        print('cc_3:', cc_3)
+        print('type(cc_3):', type(cc_3))
+
+        print('cc_1 == cc_3:', cc_1 == cc_3) 
 
 
 if __name__ == '__main__':
