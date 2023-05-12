@@ -43,6 +43,8 @@ class ActionCarState:
 @dataclass 
 class RaceInfo:
 
+    id: str 
+    name: str
     arena_info: ArenaInfo
     round_to_finish: int
     model_info: ModelInfo
@@ -50,11 +52,15 @@ class RaceInfo:
 
 
     def __init__(self, 
+                 name: str,
+                 id: str,
                  arena_info: ArenaInfo, 
                  round_to_finish: int, 
                  model_info: ModelInfo, 
                  car_info: car.CarInfo):
         self.type = 'RaceInfo'
+        self.name = name
+        self.id = id  
         self.arena_info = arena_info
         self.round_to_finish = round_to_finish
         self.model_info = model_info
@@ -85,8 +91,9 @@ class Race:
         self.steps = []
 
     def run(self, debug:bool = False):
+    
+        self.race_info.id = self.race_info.name + "_" + datetime.now().strftime("%Y%m%d_%H%M%S")
 
-        self.start_time = datetime.now()
         current_state = self.start_state
 
         self.steps = []

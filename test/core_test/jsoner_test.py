@@ -12,7 +12,6 @@ from src.core.jsoner import Jsoner
 
 class JsonTest(unittest.TestCase):
 
-
     def test_100_cc(self):
         print('\n===\ntest_100_cc()')
 
@@ -27,7 +26,7 @@ class JsonTest(unittest.TestCase):
         print('cc_2:', cc_2)
         print('type(cc_2):', type(cc_2))
 
-        cc_3 = Jsoner.from_json(cc_2)
+        cc_3 = Jsoner.from_json_dict(cc_2)
         print('cc_3:', cc_3)
         print('type(cc_3):', type(cc_3))
 
@@ -44,11 +43,11 @@ class JsonTest(unittest.TestCase):
         file_name = 'data\carconfig\cc_1.json'
         Jsoner.to_json_file(cc_1, file_name)
 
-        cc_2 = Jsoner.json_from_file(file_name)
+        cc_2 = Jsoner.dict_from_json_file(file_name)
         print('cc_2:', cc_2)
         print('type(cc_2):', type(cc_2))
 
-        cc_3 = Jsoner.from_json_file(file_name)
+        cc_3 = Jsoner.object_from_json_file(file_name)
         print('cc_3:', cc_3)
         print('type(cc_3):', type(cc_3))
 
