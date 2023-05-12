@@ -3,7 +3,7 @@ from datetime import datetime
 import json
 
 from src.core.car import *
-
+from src.core.race import *
 
 class Jsoner:
 
@@ -17,14 +17,19 @@ class Jsoner:
     type_registry['CarState'] = CarState
     type_registry['Action'] = Action
 
+    type_registry['ModelInfo'] = ModelInfo
+    type_registry['ArenaInfo'] = ArenaInfo
+    type_registry['ActionCarState'] = ActionCarState
+    type_registry['RaceInfo'] = RaceInfo
+
     @classmethod
     def to_json(cls, input: object) ->str :
-        return json.dumps(input, default=lambda o: o.__dict__, indent=4)
+        return json.dumps(input, default=lambda o: o.__dict__)
     
     @classmethod
     def to_json_file(cls, input: object, file_path:str) ->None :
         with open(file_path, 'w') as f:
-            json.dump(input, f, default=lambda o: o.__dict__, indent=4)
+            json.dump(input, f, default=lambda o: o.__dict__)
     
     @classmethod
     def from_json(cls, json_dict: dict):

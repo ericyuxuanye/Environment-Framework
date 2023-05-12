@@ -7,7 +7,7 @@ from src.core.track import *
 from samples import Factory
 
 class TrackTest(unittest.TestCase):
-    
+
     def test_000_tt(self):
         print('\n===\ntest_000_tt')
         print(TileType.Road)
@@ -81,7 +81,7 @@ class TrackTest(unittest.TestCase):
     def test_302_tf(self):
         print('\n===\ntest_302_tf')
 
-        tf = Factory.sample_track_field_2()
+        tf = Factory.sample_track_field_2(False)
         print('tf field:', tf.field)
         print('tf field shape:', tf.field.shape)
 
@@ -89,11 +89,8 @@ class TrackTest(unittest.TestCase):
     def test_303_tf(self):
         print('\n===\ntest_303_tf')
 
-        tf = Factory.sample_track_field_2()
-        print('tf field:', tf.field)
-        print('tf field shape:', tf.field.shape)
+        tf = Factory.sample_track_field_2(True)
 
-        tf.compute_track_distance()
         print('\n=============\ncompute_track_distance()')
         print('tf field:', tf.field)
         print('tf field shape:', tf.field.shape)

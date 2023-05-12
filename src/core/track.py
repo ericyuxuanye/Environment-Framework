@@ -43,21 +43,21 @@ class TrackMark(Enum):
 
 @dataclass 
 class MarkLine :  
-
+    mark: TrackMark
     y_range: range
     x_range: range
 
-    def __init__(self, y_range:range, x_range:range):
+    def __init__(self, mark: TrackMark, y_range:range, x_range:range):
         self.type = 'MarkLine'
+        self.mark = mark
         self.y_range = y_range
         self.x_range = x_range
+
 
 @dataclass
 class TrackField:
 
     field: np.ndarray
-    start_line: MarkLine
-    finish_line: MarkLine
 
     def __init__(self, row:int= 10, column:int = 10):
         self.type = 'TrackField'
@@ -69,23 +69,22 @@ class TrackField:
                 self.field[y, x]['type'] = type
                 self.field[y, x]['distance'] = distance
 
-    def mark_line(self, mark:TrackMark, line: MarkLine) :
-        if mark == TrackMark.Start :
-            self.start_line = line
-        elif mark == TrackMark.Finish :
-            self.finish_line = line
-
+    def mark_line(self, line: MarkLine) :
         for y in line.y_range :
             for x in line.x_range :
-                self.field[y, x]['distance'] = mark.value
+                self.field[y, x]['distance'] = line.mark.value
     
-    def compute_track_distance(self):
+    def compute_track_distance(self, start_line: MarkLine, finish_line: MarkLine):
+
+        self.mark_line(start_line)
+        self.mark_line(finish_line)
+
         # Create a queue for BFS
         queue = []
 
 		# Add the start line
-        for y in self.start_line.y_range :
-            for x in self.start_line.x_range :
+        for y in start_line.y_range :
+            for x in start_line.x_range :
                 cell = TileCell(y, x)
                 queue.append(cell)
                 # print ('Init queue', cell)
