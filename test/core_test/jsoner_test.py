@@ -6,23 +6,17 @@ import unittest
 import math
 from src.core import car
 
+from samples import Factory
 import json
 from src.core.jsoner import Jsoner
 
 class JsonTest(unittest.TestCase):
 
-    def default_car_config(cls) -> car.CarConfig:
-
-        return car.CarConfig(
-            rotation_friction = car.RotationFriction(min_accel_start = 2, friction = 0.5),
-            slide_friction = car.SlideFriction(min_velocity_start = 4, friction = 2),
-            motion_profile = car.MotionProfile(max_acceleration = 5, max_velocity = 50, max_angular_velocity = math.pi/2))
-
 
     def test_100_cc(self):
         print('\n===\ntest_100_cc()')
 
-        cc_1= self.default_car_config()
+        cc_1= Factory.default_car_config()
         print('cc_1:', cc_1)
         print('type(cc_1):', type(cc_1))
 
@@ -43,7 +37,7 @@ class JsonTest(unittest.TestCase):
     def test_101_cc(self):
         print('\n===\ntest_101_cc()')
 
-        cc_1= self.default_car_config()
+        cc_1= Factory.default_car_config()
         print('cc_1:', cc_1)
         print('type(cc_1):', type(cc_1))
 
@@ -59,6 +53,14 @@ class JsonTest(unittest.TestCase):
         print('type(cc_3):', type(cc_3))
 
         print('cc_1 == cc_3:', cc_1 == cc_3) 
+
+    
+    def test_200_tf(self):
+        print('\n===\ntest_200_tf()')
+
+        tf_1= Factory.sample_track_field_0()
+        print('tf0:', tf_1)
+        print('type(tf0):', type(tf_1))
 
 
 if __name__ == '__main__':

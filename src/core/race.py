@@ -5,44 +5,56 @@ from src.core import model, car, track, arena
 
 @dataclass 
 class ModelInfo:
-    __slots__ = "name", "version"
-    
+
     name: str
     version: str
 
+    def __init__(self, name:str , version:str):
+        self.type = 'ModelInfo'
+        self.name = name
+        self.version = version
 
 @dataclass 
 class ArenaInfo:
-    __slots__ = "track_name", "view_radius", "car_config"
 
     track_name: str
     view_radius: int
     car_config: car.CarConfig
 
+    def __init__(self, track_name:str, view_radius: int, car_config:car.CarConfig):
+        self.type = 'ArenaInfo'
+        self.track_name = track_name
+        self.view_radius = view_radius
+        self.car_config = car_config
+
 
 @dataclass 
-class CarActionState:
-    __slots__ = "action", "car_state"
+class ActionCarState:
 
     action:     car.Action
     car_state:  car.CarState
 
+    def __init__(self, action:car.Action, car_state:car.CarState):
+        self.type = 'ActionCarState'
+        self.action = action
+        self.car_state = car_state
 
 
 @dataclass 
-class RaceConfig:
-    __slots__ = "arena_info", "round_to_finish", "model_info", "car_info"
+class RaceInfo:
 
     arena_info: ArenaInfo
     round_to_finish: int
     model_info: ModelInfo
     car_info: car.CarInfo
 
+
     def __init__(self, 
                  arena_info: ArenaInfo, 
                  round_to_finish: int, 
                  model_info: ModelInfo, 
                  car_info: car.CarInfo):
+        self.type = 'RaceInfo'
         self.arena_info = arena_info
         self.round_to_finish = round_to_finish
         self.model_info = model_info
@@ -50,54 +62,48 @@ class RaceConfig:
 
 
 @dataclass 
-class RaceDataset:
-    __slots__ = "race_config", "start_time", "steps"
-
-    race_config: RaceConfig
-    start_time: datetime
-    steps : list[CarActionState]
-
-    def __init__(self, race_config:RaceConfig):
-        self.race_config = race_config
-        self.steps = []
-
-
-@dataclass 
 class Race:
-    __slots__ = "data", "arena", "model", "start_state"
 
-    data : RaceDataset
+    race_info : RaceInfo
     arena : arena.Arena
     model : model.IModelInference
+    
+    start_time: datetime
     start_state : car.CarState
+    steps: list[ActionCarState]
 
     def __init__(self, 
-            race_config:RaceConfig, 
-            arena:arena.Arena, 
+            race_info:RaceInfo, 
+            arena: arena.Arena, 
             model: model.IModelInference, 
             start_state: car.CarState):
-        self.data = RaceDataset(race_config)
+        
+        self.race_info = race_info
         self.arena = arena
         self.model = model
         self.start_state = start_state
+        self.steps = []
 
     def run(self, debug:bool = False):
 
-        self.data.start_time = datetime.now()
+        self.start_time = datetime.now()
         current_state = self.start_state
-        self.data.steps.append(CarActionState(None, current_state))
+
+        self.steps = []
+        self.steps.append(ActionCarState(None, current_state))
+
         if debug:
-            print('Race start at time', self.data.start_time)
+            print('Race start at time', self.start_time)
             print(current_state)
 
         while ((current_state.timestamp < 1000 # let it start
                or (current_state.velocity_x != 0 or current_state.velocity_y != 0))
-               and current_state.round_count < self.data.race_config.round_to_finish) :
+               and current_state.round_count < self.race_info.round_to_finish) :
             
             current_view = self.arena.get_car_view(current_state)
             action = self.model.get_action(current_state, current_view)
             next_state = self.arena.get_next_state(current_state, action, debug)
-            self.data.steps.append(CarActionState(action, next_state))
+            self.steps.append(ActionCarState(action, next_state))
             
             if debug:
                 print(action, next_state)
@@ -107,6 +113,7 @@ class Race:
         if debug:
             print('Race finished at time', datetime.now())
             print(current_state)
+        
 
     def save_data(folder: str):
         pass

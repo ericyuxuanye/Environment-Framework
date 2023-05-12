@@ -80,7 +80,7 @@ class Factory:
         return tf
 
     @classmethod
-    def sample_track_field_2(cls) -> TrackField:
+    def sample_track_field_2(cls, compute_distance:bool = False) -> TrackField:
         y_size = 20
         x_size = 30
         tf = TrackField(y_size, x_size)
@@ -92,13 +92,16 @@ class Factory:
         tf.fill_block(range(9, 11), range(13, 17), TileType.Wall.value, 0)
 
         # start line
-        tf.mark_line(mark=TrackMark.Start, line=MarkLine(range(4, 7), range(14, 15)))
+        start_line = MarkLine(TrackMark.Start, range(4, 7), range(14, 15))
 
         # finish line
         tf.fill_block(range(3, 4), range(12, 15), TileType.Wall.value, 0)   # block top by wall
-        tf.mark_line(mark=TrackMark.Finish, line=MarkLine(range(4, 7), range(13, 14)))
+        finish_line = MarkLine(TrackMark.Finish, range(4, 7), range(13, 14))
         tf.fill_block(range(7, 8), range(12, 15), TileType.Wall.value, 0)   # block bottom by wall
         
+        if compute_distance:
+            tf.compute_track_distance(start_line, finish_line)
+
         return tf
     
     @classmethod
@@ -113,8 +116,7 @@ class Factory:
     @classmethod
     def sample_arena_0(cls) -> Arena:
 
-        tf = cls.sample_track_field_2()
-        tf.compute_track_distance()
+        tf = cls.sample_track_field_2(True)
         car_config = cls.default_car_config()
 
         return Arena(track_field = tf, view_radius = 2, time_interval = 100, car_config = car_config)
@@ -129,12 +131,12 @@ class Factory:
         model_info = ModelInfo(name='simplefixedrightturn', version='0.0.21')
         
         car_info = CarInfo(id = 1024, team = 'kirin')
-        race_config = RaceConfig(
+        race_info = RaceInfo(
             arena_info = arena_info, 
             round_to_finish = 1, 
             model_info = model_info,
             car_info = car_info)
 
         start_state = CarState(position = Point2D(y = 5.5, x = 14.5))
-        return Race(race_config = race_config, arena =arena, model = model, start_state = start_state)
+        return Race(race_info = race_info, arena =arena, model = model, start_state = start_state)
 

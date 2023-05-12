@@ -84,7 +84,7 @@ class Arena:
             x = car_state.position.x + car_state.velocity_x * time_sec, 
             y = car_state.position.y + car_state.velocity_y * time_sec)
         next_cell = track.TileCell(int(next_position.y), int(next_position.x))
-        next_track_distance = self.track_field.field[next_cell.row, next_cell.col]['distance']
+        next_track_distance = int(self.track_field.field[next_cell.row, next_cell.col]['distance'])
         next_state = car.CarState(
             timestamp = car_state.timestamp + self.time_interval,
             wheel_angle = car_state.wheel_angle + angular_velocity * time_sec,
@@ -108,7 +108,7 @@ class Arena:
         cell = track.TileCell(int(car_state.position.y), int(car_state.position.x))
         cell_type = self.track_field.field[cell.row, cell.col]['type']
         next_cell_type = self.track_field.field[next_cell.row, next_cell.col]['type']
-        track_distance = self.track_field.field[cell.row, cell.col]['distance']
+        track_distance = int(self.track_field.field[cell.row, cell.col]['distance'])
         if (cell_type == track.TileType.Road.value 
             and next_cell_type == track.TileType.Road.value):
                 if (track_distance == track.TrackMark.Start.value
