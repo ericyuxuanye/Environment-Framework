@@ -5,8 +5,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 import unittest
 
 from samples import Factory
-from src.core.race import ActionCarState
-from src.core.jsoner import Jsoner
+from src.core.race import ActionCarState, Race
+from src.core.jsoner import *
 
 class RaceTest(unittest.TestCase):
 
@@ -16,7 +16,7 @@ class RaceTest(unittest.TestCase):
 
         race.run(debug=False)
 
-        directory = os.path.join('data/race', race.race_info.id)
+        directory = os.path.join('data/race', )
         if not os.path.exists(directory):
             os.makedirs(directory)
         
@@ -52,7 +52,19 @@ class RaceTest(unittest.TestCase):
 
         print('steps: ', steps)
 
-        
+
+    def test_100_simple(self):
+        print('\n===\ntest_100_simple')
+        race = Factory.sample_race_0()
+        race_data = race.run(debug=False) 
+        race_data.race_info.id = 'TrackField2Radius2_20230512_000000'
+        RaceDataSaver.save(race_data, 'data/race')
+
+    def test_101_readback(self):
+        info_path = 'data/race/TrackField2Radius2_20230512_000000'
+        race_data = RaceDataSaver.load(info_path)
+        print('race_data : ', race_data)
+
 if __name__ == '__main__':
     unittest.main()
 

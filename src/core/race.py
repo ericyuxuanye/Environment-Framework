@@ -50,7 +50,6 @@ class RaceInfo:
     model_info: ModelInfo
     car_info: car.CarInfo
 
-
     def __init__(self, 
                  name: str,
                  id: str,
@@ -66,6 +65,15 @@ class RaceInfo:
         self.model_info = model_info
         self.car_info = car_info
 
+@dataclass
+class RaceData:
+    
+    race_info:RaceInfo
+    steps: list[ActionCarState]
+
+    def __init__(self, race_info:RaceInfo, steps: list[ActionCarState]):
+        self.race_info = race_info
+        self.steps = steps
 
 @dataclass 
 class Race:
@@ -90,7 +98,7 @@ class Race:
         self.start_state = start_state
         self.steps = []
 
-    def run(self, debug:bool = False):
+    def run(self, debug:bool = False) -> RaceData:
     
         self.race_info.id = self.race_info.name + "_" + datetime.now().strftime("%Y%m%d_%H%M%S")
 
@@ -120,7 +128,6 @@ class Race:
         if debug:
             print('Race finished at time', datetime.now())
             print(current_state)
-        
 
-    def save_data(folder: str):
-        pass
+        return RaceData(self.race_info, self.steps)
+        

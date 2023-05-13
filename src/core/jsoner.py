@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from datetime import datetime
 import json
+import os
 
 from src.core.car import *
 from src.core.race import *
@@ -65,3 +66,46 @@ class Jsoner:
         else:
             return json_dict
         
+
+class RaceDataSaver:
+
+    @classmethod
+    def save(cls, race_data: RaceData, folder: str):
+        directory = os.path.join(folder, race_data.race_info.id)
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+        
+        info_file = 'info.json'
+        info_path = os.path.join(directory, info_file)
+        with open(info_path, 'w') as infofile:
+            info_json = Jsoner.to_json(race_data.race_info, indent=4)
+            # print('race_json', info_json)
+            infofile.write(info_json)
+
+        step_path = os.path.join(directory, 'action_state.log')
+        with open(step_path, 'w') as logfile:
+            for step in race_data.steps: 
+                step_json = Jsoner.to_json(step)
+                # print(step_json)
+                logfile.write(step_json + '\n')
+    
+    @classmethod
+    def load(cls, directory: str) -> RaceData:
+        if not os.path.exists(directory):
+            return None, None
+        
+        info_file = 'info.json'
+        info_path = os.path.join(directory, info_file)
+        race_info = Jsoner.object_from_json_file(info_path)
+        #  print('race_info_read : ', race_info)
+
+        
+        steps: list[ActionCarState] = []
+        step_path = os.path.join(directory, 'action_state.log')
+        with open(step_path, 'r') as logfile:
+            Lines = logfile.readlines()
+            for line in Lines:
+                steps.append(Jsoner.from_json_str(line))
+
+        # print('steps: ', steps)
+        return RaceData(race_info, steps)
