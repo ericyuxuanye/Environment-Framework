@@ -82,7 +82,6 @@ class Race:
     arena : arena.Arena
     model : model.IModelInference
     
-    start_time: datetime
     start_state : car.CarState
     steps: list[ActionCarState]
 
@@ -100,7 +99,8 @@ class Race:
 
     def run(self, debug:bool = False) -> RaceData:
     
-        self.race_info.id = self.race_info.name + "_" + datetime.now().strftime("%Y%m%d_%H%M%S")
+        start_time = datetime.now().strftime("%Y%m%d_%H%M%S")
+        self.race_info.id = self.race_info.name + "_" + start_time
 
         current_state = self.start_state
 
@@ -108,7 +108,7 @@ class Race:
         self.steps.append(ActionCarState(None, current_state))
 
         if debug:
-            print('Race start at time', self.start_time)
+            print('Race start at time', start_time)
             print(current_state)
 
         while ((current_state.timestamp < 1000 # let it start

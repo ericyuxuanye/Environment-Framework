@@ -1,8 +1,7 @@
-
 import numpy as np
 from dataclasses import dataclass
 from enum import Enum
-import math
+
 
 from . import car
 
@@ -62,22 +61,49 @@ class TrackView:
     field: np.ndarray
 
     def __init__(self, up:int = 0, left:int = 0, field:np.ndarray = None):
-        self.type = 'CarView'
+        self.type = 'TrackView'
         self.up = up
         self.left = left
         self.field = field
 
 
 @dataclass
+class TrackInfo:
+
+        name: str
+        row: int
+        column: int
+        start_line: MarkLine
+        finish_line: MarkLine
+        round_distance: int
+    
+        def __init__(self, 
+                name:str = 'trackinfo', 
+                round_distance:int = 0, 
+                row:int= 1, 
+                column:int = 1, 
+                start_line:MarkLine = None, 
+                finish_line:MarkLine = None):
+            
+            self.type = 'TrackInfo'
+            self.name = name
+            self.row = row
+            self.column = column
+            self.start_line = start_line
+            self.finish_line = finish_line
+            self.round_distance = round_distance
+    
+
+@dataclass
 class TrackField:
 
+    track_info: TrackInfo 
     field: np.ndarray
-    round_distance: int 
 
     def __init__(self, row:int= 10, column:int = 10):
-        self.type = 'TrackField'
+        self.track_info = TrackInfo()
         self.field = np.zeros((row, column), dtype=np.dtype([('type', 'H'), ('distance', 'H')]))
-        self.round_distance = 0 
+
 
     def fill_block(self, y_range: range, x_range: range , type: int, distance: int) :
         for y in y_range :
