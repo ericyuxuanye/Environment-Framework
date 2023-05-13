@@ -55,13 +55,29 @@ class MarkLine :
 
 
 @dataclass
+class TrackView:
+
+    up: int
+    left: int
+    field: np.ndarray
+
+    def __init__(self, up:int = 0, left:int = 0, field:np.ndarray = None):
+        self.type = 'CarView'
+        self.up = up
+        self.left = left
+        self.field = field
+
+
+@dataclass
 class TrackField:
 
     field: np.ndarray
+    round_distance: int 
 
     def __init__(self, row:int= 10, column:int = 10):
         self.type = 'TrackField'
         self.field = np.zeros((row, column), dtype=np.dtype([('type', 'H'), ('distance', 'H')]))
+        self.round_distance = 0 
 
     def fill_block(self, y_range: range, x_range: range , type: int, distance: int) :
         for y in y_range :
@@ -89,11 +105,15 @@ class TrackField:
                 queue.append(cell)
                 # print ('Init queue', cell)
         
+        self.round_distance = 0 
         while queue:
             center = queue.pop(0)
             # print ('\ncenter', center)
-            center_distance = self.field[center.row, center.col]['distance']
-
+            center_distance = int(self.field[center.row, center.col]['distance'])
+            if center_distance > self.round_distance :
+                self.round_distance = center_distance
+                # print('round', self.round_distance)   
+            
             for y in [-1,0,1] :
                 for x in [-1,0,1] :
                     if y == 0 and x == 0:
@@ -117,44 +137,30 @@ class TrackField:
                         self.field[target.row, target.col]['distance'] = center_distance + 1
                         # print (target, " update:", target_distance, '=>', self.field[target.row, target.col]['distance'])
 
-@dataclass
-class CarView:
-
-    up: int
-    left: int
-    field: np.ndarray
-
-    def __init__(self, track_field: TrackField, position: car.Point2D, view_radius: int) -> None:
+        self.round_distance += 2 # add 2 for start and finish line
+    
+    def get_track_view(self, position: car.Point2D, view_radius: int) -> TrackView:
         
-        self.type = 'CarView'
-        """
-        Creates a new CarView:
-            track_field: the complete track field
-            position : car position, center of car view
-            view_radius: car visible distance in any direction, in meter.
-        """
-        field = track_field.field
-
         left = int(position.x - view_radius)
         if left < 0 :
             left = 0
-        self.left = left
 
         right = int(position.x + view_radius + 1)
-        if right > field.shape[1] :
-            right = field.shape[1]
+        if right > self.field.shape[1] :
+            right = self.field.shape[1]
         right = right
 
         up = int(position.y - view_radius)
         if up < 0 :
             up = 0
-        self.up = up
 
         down = int(position.y + view_radius + 1)
-        if down > field.shape[0] :
-            down = field.shape[0]
+        if down > self.field.shape[0] :
+            down = self.field.shape[0]
         down = down
 
         # print('[', up, ':', down, '][', left, ':', right, ']')
-        self.field = field[up:down, :][:, left:right]
+        field = self.field[up:down, :][:, left:right]
 
+        return TrackView(up, left, field)
+    

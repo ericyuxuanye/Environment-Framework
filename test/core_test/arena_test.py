@@ -31,7 +31,7 @@ class ArenaTest(unittest.TestCase):
 
         print('car_config = ', self.arena.car_config)
 
-        start_view = self.arena.get_car_view(self.start_state)
+        start_view = self.arena.get_track_view(self.start_state)
         print('start_view = ', start_view)
 
 
@@ -111,7 +111,7 @@ class ArenaTest(unittest.TestCase):
             velocity_y=0.0,
             position = car.Point2D(y = 5.5, x = 28.015))
         print('before: ', state, '\n')
-        start_view = self.arena.get_car_view(state)
+        start_view = self.arena.get_track_view(state)
         print('\nstart_view = ', start_view, '\n')
 
         next = self.arena.get_next_state(

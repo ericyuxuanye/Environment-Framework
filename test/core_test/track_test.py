@@ -49,26 +49,18 @@ class TrackTest(unittest.TestCase):
         tf = Factory.sample_track_field_0()
         print('tf field:', tf.field)
         print('tf field shape:', tf.field.shape)
+        self.assertTrue(tf.field.shape[0] == 5)
+        self.assertTrue(tf.field.shape[1] == 8)
 
-        cv = CarView(track_field = tf, position = car.Point2D(4.89, 2.16), view_radius = 2)
-        print('\ncar view:', cv, '(up =', cv.up, ', left =', cv.left, ')')
-        print('field:', cv.field)
-        print('field shape:', cv.field.shape)
+        tv = tf.get_track_view(position = car.Point2D(4.89, 2.16), view_radius = 2)
+        print('\n track view:', tv, '(up =', tv.up, ', left =', tv.left, ')')
+        print('field:', tv.field)
+        print('field shape:', tv.field.shape)
+        self.assertTrue(tv.up == 0)
+        self.assertTrue(tv.left == 2)
+        self.assertTrue(tv.field.shape[0] == 5)
+        self.assertTrue(tv.field.shape[1] == 5)
 
-
-    def test_201_cv(self):
-        print('\n===\ntest_201_cv')
-    
-        tf = Factory.sample_track_field_0()
-        print('tf field:', tf.field)
-        print('tf field shape:', tf.field.shape)
-
-        cv = CarView(track_field = tf, position = car.Point2D(4.89, 2.16), view_radius = 3)
-        print('\ncar view:', cv, '(up =', cv.up, ', left =', cv.left, ')')
-        print('field:', cv.field)
-        print('field shape:', cv.field.shape)
-
-        print('\nrange-type', type(range(0,4)))
   
     def test_301_tf(self):
         print('\n===\ntest_301_tf')
@@ -76,6 +68,9 @@ class TrackTest(unittest.TestCase):
         tf = Factory.sample_track_field_1()
         print('tf field:', tf.field)
         print('tf field shape:', tf.field.shape)
+
+        self.assertTrue(tf.field.shape[0] == 20)
+        self.assertTrue(tf.field.shape[1] == 30)
 
 
     def test_302_tf(self):
@@ -90,10 +85,15 @@ class TrackTest(unittest.TestCase):
         print('\n===\ntest_303_tf')
 
         tf = Factory.sample_track_field_2(True)
+        self.assertTrue(tf.field.shape[0] == 20)
+        self.assertTrue(tf.field.shape[1] == 30)
 
         print('\n=============\ncompute_track_distance()')
         print('tf field:', tf.field)
         print('tf field shape:', tf.field.shape)
+        print('tf round_distance:', tf.round_distance)
+        self.assertTrue(tf.round_distance == 29)
+
 
 if __name__ == '__main__':
     unittest.main()
