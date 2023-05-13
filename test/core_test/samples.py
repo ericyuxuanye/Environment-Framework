@@ -14,7 +14,7 @@ class ModelSpecialNumber(model.IModelInference):
     def load(self, folder:str) -> bool:
         return True
 
-    def get_action(self, car_state: CarState, car_view: CarView) -> Action:
+    def get_action(self, car_state: CarState, car_view: TrackView) -> Action:
         if car_state.position.x > 14 and car_state.position.x < 18 and car_state.position.y < 7:
             return Action(2, 0)
         elif car_state.position.x > 18 and car_state.position.y < 14:

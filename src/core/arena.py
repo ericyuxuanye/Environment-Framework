@@ -40,8 +40,8 @@ class Arena:
         self.car_config = car_config
 
 
-    def get_car_view(self, car_state: car.CarState) -> track.CarView:
-        return track.CarView(self.track_field, car_state.position, self.view_radius)
+    def get_track_view(self, car_state: car.CarState) -> track.TrackView:
+        return track.TrackView(self.track_field, car_state.position, self.view_radius)
 
 
     def get_next_state(

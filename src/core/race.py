@@ -115,7 +115,7 @@ class Race:
                or (current_state.velocity_x != 0 or current_state.velocity_y != 0))
                and current_state.round_count < self.race_info.round_to_finish) :
             
-            current_view = self.arena.get_car_view(current_state)
+            current_view = self.arena.get_track_view(current_state)
             action = self.model.get_action(current_state, current_view)
             next_state = self.arena.get_next_state(current_state, action, debug)
             self.steps.append(ActionCarState(action, next_state))
