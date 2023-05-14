@@ -341,5 +341,116 @@ class TrackField:
 
         if debug: 
             print('get_next_state() <<<\n')
+        
+        next_state.calc_velocity_polar()
+        next_state.rays = self.get_rays(next_state)
+
         return next_state
+
+
+    def get_rays(self, car_state: car.CarState) -> list[float]:
+        angles = [0, -math.pi/2, math.pi/2, -math.pi/4, math.pi/4, -math.pi*1/8, math.pi*1/8, -math.pi*3/8, math.pi*3/8]
+        rays = []
+        for angle in angles:
+            rays.append(self.get_ray(car_state, angle))
+        return rays
+    
+    def get_ray(self, car_state: car.CarState, angle:float, debug=False) -> float:
+
+        start_x = car_state.position.x
+        start_y = car_state.position.y
+        target_angle = car_state.wheel_angle + angle
+
+        use_x = abs(math.cos(target_angle)) > abs(math.sin(target_angle))
+        if debug:
+            print('start_x = ', start_x
+                , ', start_y = ', start_y
+                , ', target_angle = ', target_angle
+                , ', use_x = ', use_x)
+            
+        if use_x:
+            step_x = abs(math.cos(target_angle))/math.cos(target_angle)
+            step_y = math.tan(target_angle)
+            if debug:
+                print('step_x = ', step_x, 'step_y = ', step_y)
+                
+            for step in range(self.track_info.column):
+                x = start_x + step * step_x
+                y = start_y + step * step_x * step_y
+
+                cell = TileCell(int(y), int(x))
+                if debug:
+                    print('x = ', x, ', y = ', y, ', cell = ', cell)
+            
+                if cell.row < 0 or cell.row >= self.track_info.row or cell.col < 0 or cell.col >= self.track_info.column:
+                    return 0
+
+                tile_type = self.field[cell.row, cell.col]['type']
+                if debug:
+                    print('tile_type = ', tile_type)
+                if tile_type == TileType.Wall.value:
+                    if start_x < x :
+                        x_edge = int(x)
+                    else:
+                        x_edge = int(x) + 1
+
+                    y_edge = ( x_edge - start_x) /step_x * step_y + start_y
+                    if int(y) <= y_edge and y_edge <= int(y) + 1:
+                        if debug:
+                            print('vertial: x_edge = ', x_edge, ', y_edge = ', y_edge)
+                        return math.sqrt((x_edge - start_x)**2 + (y_edge - start_y)**2)
+                    
+                    if start_y < y :
+                        y_edge = int(y)
+                    else:
+                        y_edge = int(y) + 1
+                    x_edge = (y_edge - start_y) / step_y * step_x + start_x
+                    if debug:
+                        print('horizontal: x_edge = ', x_edge, ', y_edge = ', y_edge)
+                    return math.sqrt((x_edge - start_x)**2 + (y_edge - start_y)**2)
+        else:
+            step_y = abs(math.sin(target_angle))/math.sin(target_angle)
+            step_x = math.cos(target_angle) / math.sin(target_angle)
+
+            if debug:
+                print('step_x = ', step_x, 'step_y = ', step_y)
+                
+            for step in range(self.track_info.row):
+                y = start_y + step * step_y
+                x = start_x + step * step_y * step_x
+            
+                cell = TileCell(int(y), int(x))
+                if debug:
+                    print('x = ', x, ', y = ', y, ', cell = ', cell)
+            
+                if cell.row < 0 or cell.row >= self.track_info.row or cell.col < 0 or cell.col >= self.track_info.column:
+                    return 0
+
+                tile_type = self.field[cell.row, cell.col]['type']
+                if debug:
+                    print('tile_type = ', tile_type)
+                if tile_type == TileType.Wall.value:
+                    if start_y < y :
+                        y_edge = int(y)
+                    else:
+                        y_edge = int(y) + 1
+
+                    x_edge = (y_edge - start_y) * step_x + start_x
+                    if debug:
+                        print('x_edge = ', x_edge, ', y_edge = ', y_edge)
+                    if int(x) <= x_edge and x_edge <= int(x) + 1:
+                        if debug:
+                            print('horizontal, use x_edge = ', x_edge, ', y_edge = ', y_edge)
+                        return math.sqrt((x_edge - start_x)**2 + (y_edge - start_y)**2)
+                    
+                    if start_x < x :
+                        x_edge = int(x)
+                    else:
+                        x_edge = int(x) + 1
+                    y_edge = (x_edge - start_x) / step_x * step_y + start_y
+                    if debug:
+                        print('vertial: x_edge = ', x_edge, ', y_edge = ', y_edge)
+                    return math.sqrt((x_edge - start_x)**2 + (y_edge - start_y)**2)
+
+                        
 
