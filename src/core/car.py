@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+import math
 
 @dataclass 
 class Point2D :  
@@ -96,6 +97,10 @@ class CarState:
     velocity_x: float           # m/s
     velocity_y: float           # m/s
 
+    velocity_distance: float    # polar coordinate velocity distance
+    velocity_angle_wheel: float # polar coordinate velocity angle relative to wheel_angle
+    rays:list[float]            # list of ray distance
+
     position: Point2D           # (x,y)
     tile_type: int              # tile type of the Tile it is on
     tile_distance: int          # distance from the start of the track
@@ -107,7 +112,10 @@ class CarState:
             timestamp:int = 0, 
             wheel_angle:float = 0, 
             velocity_x:float = 0, 
-            velocity_y :float = 0, 
+            velocity_y :float = 0,
+            velocity_distance: float = 0,    
+            velocity_angle_wheel: float = 0,       
+            rays:list[float] = [],           
             position = Point2D(),
             tile_type:int = 0,
             tile_distance:int = 0,
@@ -121,6 +129,9 @@ class CarState:
         self.wheel_angle = wheel_angle
         self.velocity_x = velocity_x
         self.velocity_y = velocity_y
+        self.velocity_distance = velocity_distance
+        self.velocity_angle_wheel = velocity_angle_wheel
+        self.rays = rays        
 
         self.position = position
         self.tile_type = tile_type
@@ -128,6 +139,10 @@ class CarState:
         self.round_count = round_count
         self.max_round_distance = max_round_distance
         self.max_total_distance = max_total_distance
+    
+    def calc_velocity_polar(self)->None:
+        self.velocity_distance = math.sqrt(self.velocity_x**2 + self.velocity_y**2)
+        self.velocity_angle_wheel = math.atan2(self.velocity_y, self.velocity_x) - self.wheel_angle
 
 
 @dataclass

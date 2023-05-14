@@ -249,6 +249,76 @@ class TrackTest(unittest.TestCase):
                 action=startable_power_action)
             print(current_state)
 
+
+    def test_500_ray(self):
+        print('\n===\ntest_500_ray()')
+        state = self.start_state
+        state.calc_velocity_polar()
+
+        debug = False
+
+        angle = 0
+        print('\nwheel_angle=', state.wheel_angle, ', angle=', angle)
+        ray = self.tf.get_ray(state, angle, debug)
+        self.assertTrue(abs(ray - 13.5) < 1e-5)
+        print('ray', ray)
+
+        angle = math.pi/2
+        print('\nwheel_angle=', state.wheel_angle, ', angle=', angle)
+        ray = self.tf.get_ray(state, angle, debug)
+        print('ray', ray)
+        self.assertTrue(abs(ray - 1.5) < 1e-5)
+
+        angle = -math.pi/2
+        print('\nwheel_angle=', state.wheel_angle, ', angle=', angle)
+        ray = self.tf.get_ray(state, angle, debug)
+        print('ray', ray)
+        self.assertTrue(abs(ray - 1.5) < 1e-5)
+
+        angle = -math.pi
+        print('\nwheel_angle=', state.wheel_angle, ', angle=', angle)
+        ray = self.tf.get_ray(state, angle, debug)
+        print('ray', ray)
+        self.assertTrue(abs(ray - 12.5) < 1e-5)
+
+        angle = math.pi/4
+        print('\nwheel_angle=', state.wheel_angle, ', angle=', angle)
+        ray = self.tf.get_ray(state, angle, debug)
+        print('ray', ray)
+        self.assertTrue(abs(ray - 17.67767) < 1e-5)
+
+        angle = -math.pi/4
+        print('\nwheel_angle=', state.wheel_angle, ', angle=', angle)
+        ray = self.tf.get_ray(state, angle, debug)
+        print('ray', ray)
+        self.assertTrue(abs(ray - 4.94975) < 1e-5)
+
+        angle = math.pi/8
+        print('\nwheel_angle=', state.wheel_angle, ', angle=', angle)
+        ray = self.tf.get_ray(state, angle, debug)
+        print('ray', ray)
+        self.assertTrue(abs(ray - 14.61229) < 1e-5)
+
+        angle = -math.pi/8
+        print('\nwheel_angle=', state.wheel_angle, ', angle=', angle)
+        ray = self.tf.get_ray(state, angle, debug)
+        print('ray', ray)
+        self.assertTrue(abs(ray - 9.20033) < 1e-5)
+
+        state.wheel_angle = math.pi
+        angle = 0
+        print('\nwheel_angle=', state.wheel_angle, ', angle=', angle)
+        ray = self.tf.get_ray(state, angle, debug)
+        print('ray', ray)
+        self.assertTrue(abs(ray - 12.5) < 1e-5)
+
+        state.wheel_angle = math.pi
+        angle = math.pi/3
+        print('\nwheel_angle=', state.wheel_angle, ', angle=', angle)
+        ray = self.tf.get_ray(state, angle, debug)
+        print('ray', ray)
+        self.assertTrue(abs(ray - 1.73205) < 1e-5)
+
 if __name__ == '__main__':
     unittest.main()
 
