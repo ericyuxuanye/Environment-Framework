@@ -1,0 +1,9 @@
+{
+    "type": "TrackInfo",
+    "name": "sample_track_field_2",
+    "row": 20,
+    "column": 30,
+    "view_radius": 2,
+    "time_interval": 100,
+    "round_distance": 29
+}
