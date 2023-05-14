@@ -78,21 +78,6 @@ class RaceTest(unittest.TestCase):
 
         print('steps: ', steps)
 
-    
-    def test_102_save(self):
-        print('\n===\ntest_102_save()')
-        race = Factory.sample_race_0()
-        race_data = race.run(debug=False) 
-        race_data.race_info.id = 'TrackField2Radius2_20230512_010101'
-        RaceDataSaver.save(race_data, 'data/race')
-
-    def test_103_load(self):
-        print('\n===\ntest_103_load()')
-        info_path = 'data/race/TrackField2Radius2_20230512_010101'
-        race_data = RaceDataSaver.load(info_path)
-        print('race_data : ', race_data)
-
-
     def test_200_too_low_power(self):
         print('\n===\ntest_400_too_low_power')
 

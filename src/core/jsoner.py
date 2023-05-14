@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from datetime import datetime
 import json
 import os
+import pickle
 
 from src.core.car import *
 from src.core.track import *
@@ -111,3 +112,40 @@ class RaceDataSaver:
 
         # print('steps: ', steps)
         return RaceData(race_info, steps)
+
+
+class TrackFieldSaver:
+
+    @classmethod
+    def save(cls, track_field: TrackField, folder: str):
+        directory = os.path.join(folder, track_field.track_info.name)
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+        
+        info_file = 'info.json'
+        info_path = os.path.join(directory, info_file)
+        with open(info_path, 'w') as infofile:
+            info_json = Jsoner.to_json(track_field.track_info, indent=4)
+            # print('race_json', info_json)
+            infofile.write(info_json)
+        
+        field_path = os.path.join(directory, 'field')
+        with open(field_path, 'wb') as field_file:
+            pickle.dump(track_field.field, field_file)
+        
+    
+    @classmethod
+    def load(cls, directory: str) -> TrackField:
+        if not os.path.exists(directory):
+            return None, None
+        
+        info_file = 'info.json'
+        info_path = os.path.join(directory, info_file)
+        track_info = Jsoner.object_from_json_file(info_path)
+        tf = TrackField(track_info)
+
+        field_path = os.path.join(directory, 'field')
+        with open(field_path, 'rb') as field_file:
+            tf.field = pickle.load(field_file)
+    
+        return tf
