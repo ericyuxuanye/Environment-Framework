@@ -40,7 +40,11 @@ class JsonTest(unittest.TestCase):
         print('cc_1:', cc_1)
         print('type(cc_1):', type(cc_1))
 
-        file_name = 'data\carconfig\cc_1.json'
+        directory = 'data/carconfig'
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+
+        file_name = 'data/carconfig/cc_1.json'
         Jsoner.to_json_file(cc_1, file_name)
 
         cc_2 = Jsoner.dict_from_json_file(file_name)
