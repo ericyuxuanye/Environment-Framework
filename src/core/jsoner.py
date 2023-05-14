@@ -4,6 +4,7 @@ import json
 import os
 
 from src.core.car import *
+from src.core.track import *
 from src.core.race import *
 
 class Jsoner:
@@ -18,10 +19,11 @@ class Jsoner:
     type_registry['CarState'] = CarState
     type_registry['Action'] = Action
 
+    type_registry['MarkLine'] = MarkLine
+    type_registry['TrackInfo'] = TrackInfo
     type_registry['ModelInfo'] = ModelInfo
-    type_registry['ArenaInfo'] = ArenaInfo
-    type_registry['ActionCarState'] = ActionCarState
     type_registry['RaceInfo'] = RaceInfo
+    type_registry['ActionCarState'] = ActionCarState
 
     @classmethod
     def to_json(cls, input: object, indent=None) ->str :

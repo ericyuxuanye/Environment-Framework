@@ -3,7 +3,6 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
 from src.core.track import *
-from src.core.arena import *
 from src.core.car import *
 from src.core.race import *
 
@@ -31,10 +30,16 @@ class Factory:
 
     @classmethod
     def sample_track_field_0(cls) -> TrackField:
-        y_size = 5
-        x_size = 8
-        tf = TrackField(y_size, x_size)
-        for x in range(x_size) :
+
+        track_info = TrackInfo(
+            name='sample_track_field_0', 
+            row=5, 
+            column=8, 
+            view_radius=2, 
+            time_interval = 1000)
+    
+        tf = TrackField(track_info)
+        for x in range(track_info.column) :
             tf.field[0, x]['type'] = TileType.Wall.value
             tf.field[1, x]['type'] = TileType.Shoulder.value
             tf.field[2, x]['type'] = TileType.Road.value
@@ -46,9 +51,13 @@ class Factory:
 
     @classmethod
     def sample_track_field_1(cls) -> TrackField:
-        y_size = 20
-        x_size = 30
-        tf = TrackField(y_size, x_size)
+        track_info = TrackInfo(
+            name='sample_track_field_1', 
+            row=20, 
+            column=30, 
+            view_radius=2, 
+            time_interval = 1000)
+        tf = TrackField(track_info)
 
         # inner Wall
         tf.fill_block(range(8, 12), range(8, 22), TileType.Wall.value, 0)
@@ -81,9 +90,14 @@ class Factory:
 
     @classmethod
     def sample_track_field_2(cls, compute_distance:bool = False) -> TrackField:
-        y_size = 20
-        x_size = 30
-        tf = TrackField(y_size, x_size)
+        track_info = TrackInfo(
+            name='sample_track_field_2', 
+            row=20, 
+            column=30, 
+            view_radius=2, 
+            time_interval = 100)
+
+        tf = TrackField(track_info)
 
         tf.fill_block(range(0, 20), range(0, 30), TileType.Wall.value, 0)
         tf.fill_block(range(2, 18), range(2, 28), TileType.Shoulder.value, 0)
@@ -100,7 +114,7 @@ class Factory:
         tf.fill_block(range(7, 8), range(12, 15), TileType.Wall.value, 0)   # block bottom by wall
         
         if compute_distance:
-            tf.compute_track_distance(start_line, finish_line)
+            tf.compute_tile_distance(start_line, finish_line)
 
         return tf
     
@@ -114,31 +128,23 @@ class Factory:
 
 
     @classmethod
-    def sample_arena_0(cls) -> Arena:
-
-        tf = cls.sample_track_field_2(True)
-        car_config = cls.default_car_config()
-
-        return Arena(track_field = tf, view_radius = 2, time_interval = 100, car_config = car_config)
-
-
-    @classmethod
     def sample_race_0(cls) -> Race:
-        arena = cls.sample_arena_0()
-        arena_info = ArenaInfo(track_name="sample_track_field_2", view_radius = arena.view_radius, car_config = arena.car_config)
         
+        track_field = cls.sample_track_field_2(True)
+ 
         model = ModelSpecialNumber()
         model_info = ModelInfo(name='simplefixedrightturn', version='0.0.21')
         
         car_info = CarInfo(id = 1024, team = 'kirin')
+
         race_info = RaceInfo(
             name = 'TrackField2Radius2',
             id = 'NotStarted',
-            arena_info = arena_info, 
+            track_info = track_field.track_info, 
             round_to_finish = 1, 
             model_info = model_info,
-            car_info = car_info)
+            car_info = car_info,
+            car_config= cls.default_car_config(),
+            start_state = CarState(position = Point2D(y = 5.5, x = 14.5)))
 
-        start_state = CarState(position = Point2D(y = 5.5, x = 14.5))
-        return Race(race_info = race_info, arena =arena, model = model, start_state = start_state)
-
+        return Race(race_info = race_info, track_field = track_field, model = model)

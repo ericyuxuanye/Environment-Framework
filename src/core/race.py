@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from datetime import datetime
 
-from src.core import model, car, track, arena
+from . import model, car, track
 
 @dataclass 
 class ModelInfo:
@@ -13,19 +13,6 @@ class ModelInfo:
         self.type = 'ModelInfo'
         self.name = name
         self.version = version
-
-@dataclass 
-class ArenaInfo:
-
-    track_name: str
-    view_radius: int
-    car_config: car.CarConfig
-
-    def __init__(self, track_name:str, view_radius: int, car_config:car.CarConfig):
-        self.type = 'ArenaInfo'
-        self.track_name = track_name
-        self.view_radius = view_radius
-        self.car_config = car_config
 
 
 @dataclass 
@@ -45,25 +32,33 @@ class RaceInfo:
 
     id: str 
     name: str
-    arena_info: ArenaInfo
+    track_info: track.TrackInfo
     round_to_finish: int
     model_info: ModelInfo
     car_info: car.CarInfo
+    car_config : car.CarConfig
+    start_state : car.CarState
 
     def __init__(self, 
                  name: str,
                  id: str,
-                 arena_info: ArenaInfo, 
+                 track_info: track.TrackInfo, 
                  round_to_finish: int, 
                  model_info: ModelInfo, 
-                 car_info: car.CarInfo):
+                 car_info: car.CarInfo,
+                 car_config : car.CarConfig,
+                 start_state : car.CarState):
+
         self.type = 'RaceInfo'
         self.name = name
         self.id = id  
-        self.arena_info = arena_info
+        self.track_info = track_info
         self.round_to_finish = round_to_finish
         self.model_info = model_info
         self.car_info = car_info
+        self.car_config = car_config
+        self.start_state = start_state
+
 
 @dataclass
 class RaceData:
@@ -79,45 +74,42 @@ class RaceData:
 class Race:
 
     race_info : RaceInfo
-    arena : arena.Arena
+    track_field : track.TrackField
     model : model.IModelInference
-    
-    start_time: datetime
-    start_state : car.CarState
+
     steps: list[ActionCarState]
 
     def __init__(self, 
-            race_info:RaceInfo, 
-            arena: arena.Arena, 
-            model: model.IModelInference, 
-            start_state: car.CarState):
+            race_info: RaceInfo, 
+            track_field: track.TrackField, 
+            model: model.IModelInference):
         
         self.race_info = race_info
-        self.arena = arena
+        self.track_field = track_field
         self.model = model
-        self.start_state = start_state
         self.steps = []
 
     def run(self, debug:bool = False) -> RaceData:
     
-        self.race_info.id = self.race_info.name + "_" + datetime.now().strftime("%Y%m%d_%H%M%S")
+        start_time = datetime.now().strftime("%Y%m%d_%H%M%S")
+        self.race_info.id = self.race_info.name + "_" + start_time
 
-        current_state = self.start_state
+        current_state = self.race_info.start_state
 
         self.steps = []
         self.steps.append(ActionCarState(None, current_state))
 
         if debug:
-            print('Race start at time', self.start_time)
+            print('Race start at time', start_time)
             print(current_state)
 
         while ((current_state.timestamp < 1000 # let it start
                or (current_state.velocity_x != 0 or current_state.velocity_y != 0))
                and current_state.round_count < self.race_info.round_to_finish) :
             
-            current_view = self.arena.get_track_view(current_state)
+            current_view = self.track_field.get_track_view(current_state.position)
             action = self.model.get_action(current_state, current_view)
-            next_state = self.arena.get_next_state(current_state, action, debug)
+            next_state = self.track_field.get_next_state(self.race_info.car_config, current_state, action, debug)
             self.steps.append(ActionCarState(action, next_state))
             
             if debug:
