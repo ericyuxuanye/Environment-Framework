@@ -97,17 +97,24 @@ class CarState:
     velocity_y: float           # m/s
 
     position: Point2D           # (x,y)
-    track_distance: int         # track_distance of the Tile it is on
+    tile_type: int              # tile type of the Tile it is on
+    tile_distance: int          # distance from the start of the track
     round_count: int            # full track round completed
+    max_round_distance: int     # max distance from the start of the track in a round
+    max_total_distance: int     # max total distance from the start, = round_count * track_info.round_distance + max_round_distance
 
     def __init__(self, 
-            timestamp = 0, 
-            wheel_angle = 0, 
-            velocity_x = 0, 
-            velocity_y = 0, 
-            position = Point2D(), 
-            track_distance = 0,
-            round_count = 0):
+            timestamp:int = 0, 
+            wheel_angle:float = 0, 
+            velocity_x:float = 0, 
+            velocity_y :float = 0, 
+            position = Point2D(),
+            tile_type:int = 0,
+            tile_distance:int = 0,
+            round_count:int = 0,
+            max_round_distance:int = 0,
+            max_total_distance:int = 0):
+
         self.type = 'CarState'
         self.timestamp = timestamp
 
@@ -116,8 +123,11 @@ class CarState:
         self.velocity_y = velocity_y
 
         self.position = position
-        self.track_distance = track_distance
+        self.tile_type = tile_type
+        self.tile_distance = tile_distance
         self.round_count = round_count
+        self.max_round_distance = max_round_distance
+        self.max_total_distance = max_total_distance
 
 
 @dataclass

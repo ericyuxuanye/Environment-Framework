@@ -10,13 +10,36 @@ from src.core.jsoner import *
 
 class RaceTest(unittest.TestCase):
 
-    def ttest_000_simple(self):
-        print('\n===\ntest_000_simple')
+    def test_000_simple(self):
+        print('\n===\ntest_000_simple()')
         race = Factory.sample_race_0()
+        # print('track:\r', race.race_info.track_info)
 
-        race.run(debug=False)
+        race.run(debug=True)
+    
+    
+    def test_001_back(self):
+        print('\n===\ntest_001_back()')
+        race = Factory.sample_race_0()
+        race.race_info.start_state = CarState(position = Point2D(y = 5.5, x = 14.5), wheel_angle=3.14)
+        print('track:\r', race.race_info.track_info)
+        self.assertTrue(race.race_info.track_info.round_distance == 29)
 
-        directory = os.path.join('data/race', )
+        race.run(debug=True)
+        self.assertTrue(race.steps[-1].car_state.round_count == -1)
+        self.assertTrue(race.steps[-1].car_state.max_round_distance == 28)
+        self.assertTrue(race.steps[-1].car_state.max_total_distance == -1)
+
+
+    def test_100_save(self):
+        print('\n===\nttest_100_save()')
+        race = Factory.sample_race_0()
+        race_data = race.run(debug=False) 
+        race_data.race_info.id = 'TrackField2Radius2_20230512_000000'
+
+           
+
+        directory = os.path.join('data/race', race_data.race_info.id)
         if not os.path.exists(directory):
             os.makedirs(directory)
         
@@ -27,6 +50,7 @@ class RaceTest(unittest.TestCase):
             print('race_json', info_json)
             infofile.write(info_json)
 
+
         print('steps:====================')
         step_path = os.path.join(directory, 'action_state.log')
         with open(step_path, 'w') as logfile:
@@ -35,15 +59,17 @@ class RaceTest(unittest.TestCase):
                 print(step_json)
                 logfile.write(step_json + '\n')
 
-        
+    
+    def test_101_readback(self):
+        print('\n===\ntest_101_readback()')
 
-    def test_001_readback(self):
-        info_path = 'data/race/TrackField2Radius2_20230511_221852/info.json'
+        directory = os.path.join('data/race/', 'TrackField2Radius2_20230512_000000')
+        info_path = os.path.join(directory, 'info.json')
         race_info_read = Jsoner.object_from_json_file(info_path)
         print('race_info_read : ', race_info_read)
 
         steps: list[ActionCarState] = []
-        log_path = 'data/race/TrackField2Radius2_20230511_221852/action_state.log'
+        log_path = os.path.join(directory, 'action_state.log')
         with open(log_path, 'r') as logfile:
             Lines = logfile.readlines()
         
@@ -52,18 +78,38 @@ class RaceTest(unittest.TestCase):
 
         print('steps: ', steps)
 
-
-    def test_100_simple(self):
-        print('\n===\ntest_100_simple')
+    
+    def test_102_save(self):
+        print('\n===\ntest_102_save()')
         race = Factory.sample_race_0()
         race_data = race.run(debug=False) 
-        race_data.race_info.id = 'TrackField2Radius2_20230512_000000'
+        race_data.race_info.id = 'TrackField2Radius2_20230512_010101'
         RaceDataSaver.save(race_data, 'data/race')
 
-    def test_101_readback(self):
-        info_path = 'data/race/TrackField2Radius2_20230512_000000'
+    def test_103_load(self):
+        print('\n===\ntest_103_load()')
+        info_path = 'data/race/TrackField2Radius2_20230512_010101'
         race_data = RaceDataSaver.load(info_path)
         print('race_data : ', race_data)
+
+
+    def test_200_too_low_power(self):
+        print('\n===\ntest_400_too_low_power')
+
+        race = Factory.sample_race_0()
+        
+        low_power_action = car.Action(1,0)
+        print('low_power_action = ', low_power_action)
+        state_1 = race.track_field.get_next_state(
+            car_config=race.race_info.car_config, 
+            car_state=race.race_info.start_state, 
+            action=low_power_action)
+        print('state_1 = ', state_1)
+        self.assertTrue(state_1.velocity_x == 0)
+        self.assertTrue(state_1.velocity_y == 0)
+        self.assertTrue(state_1.wheel_angle == 0)
+        self.assertTrue(state_1.tile_distance == 0)
+        self.assertTrue(state_1.timestamp == race.race_info.track_info.time_interval)
 
 if __name__ == '__main__':
     unittest.main()

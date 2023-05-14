@@ -52,7 +52,7 @@ class TrackTest(unittest.TestCase):
         self.assertTrue(tf.field.shape[0] == 5)
         self.assertTrue(tf.field.shape[1] == 8)
 
-        tv = tf.get_track_view(position = car.Point2D(4.89, 2.16), view_radius = 2)
+        tv = tf.get_track_view(position = car.Point2D(4.89, 2.16))
         print('\n track view:', tv, '(up =', tv.up, ', left =', tv.left, ')')
         print('field:', tv.field)
         print('field shape:', tv.field.shape)
@@ -91,9 +91,32 @@ class TrackTest(unittest.TestCase):
         print('\n=============\ncompute_track_distance()')
         print('tf field:', tf.field)
         print('tf field shape:', tf.field.shape)
-        print('tf round_distance:', tf.round_distance)
-        self.assertTrue(tf.round_distance == 29)
+        print('tf round_distance:', tf.track_info.round_distance)
+        self.assertTrue(tf.track_info.round_distance == 29)
 
+        print('track_info:', tf.track_info)
+
+
+
+    def test_400_too_low_power(self):
+        print('\n===\ntest_400_too_low_power')
+
+        tf = Factory.sample_track_field_2(True)
+        
+        low_power_action = car.Action(1,0)
+        print('low_power_action = ', low_power_action)
+
+        start_state = car.CarState(position = car.Point2D(y = 5.5, x = 14.5))
+        state_1 = tf.get_next_state(
+            car_config=Factory.default_car_config(), 
+            car_state=start_state, 
+            action=low_power_action)
+        print('state_1 = ', state_1)
+        self.assertTrue(state_1.velocity_x == 0)
+        self.assertTrue(state_1.velocity_y == 0)
+        self.assertTrue(state_1.wheel_angle == 0)
+        self.assertTrue(state_1.tile_distance == 0)
+        self.assertTrue(state_1.timestamp == tf.track_info.time_interval)
 
 if __name__ == '__main__':
     unittest.main()

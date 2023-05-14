@@ -1,7 +1,7 @@
 import numpy as np
 from dataclasses import dataclass
 from enum import Enum
-
+import math
 
 from . import car
 
@@ -73,24 +73,24 @@ class TrackInfo:
         name: str
         row: int
         column: int
-        start_line: MarkLine
-        finish_line: MarkLine
         round_distance: int
+        view_radius : int
+        time_interval : int # msec
     
         def __init__(self, 
                 name:str = 'trackinfo', 
                 round_distance:int = 0, 
                 row:int= 1, 
-                column:int = 1, 
-                start_line:MarkLine = None, 
-                finish_line:MarkLine = None):
+                column:int = 1,
+                view_radius:int = 1,
+                time_interval:int = 100):
             
             self.type = 'TrackInfo'
             self.name = name
             self.row = row
             self.column = column
-            self.start_line = start_line
-            self.finish_line = finish_line
+            self.view_radius = view_radius
+            self.time_interval = time_interval
             self.round_distance = round_distance
     
 
@@ -100,9 +100,9 @@ class TrackField:
     track_info: TrackInfo 
     field: np.ndarray
 
-    def __init__(self, row:int= 10, column:int = 10):
-        self.track_info = TrackInfo()
-        self.field = np.zeros((row, column), dtype=np.dtype([('type', 'H'), ('distance', 'H')]))
+    def __init__(self, track_info: TrackInfo):
+        self.track_info = track_info
+        self.field = np.zeros((track_info.row, track_info.column), dtype=np.dtype([('type', 'H'), ('distance', 'H')]))
 
 
     def fill_block(self, y_range: range, x_range: range , type: int, distance: int) :
@@ -116,7 +116,8 @@ class TrackField:
             for x in line.x_range :
                 self.field[y, x]['distance'] = line.mark.value
     
-    def compute_track_distance(self, start_line: MarkLine, finish_line: MarkLine):
+    
+    def compute_tile_distance(self, start_line: MarkLine, finish_line: MarkLine):
 
         self.mark_line(start_line)
         self.mark_line(finish_line)
@@ -131,14 +132,14 @@ class TrackField:
                 queue.append(cell)
                 # print ('Init queue', cell)
         
-        self.round_distance = 0 
+        self.track_info.round_distance = 0 
         while queue:
             center = queue.pop(0)
             # print ('\ncenter', center)
             center_distance = int(self.field[center.row, center.col]['distance'])
-            if center_distance > self.round_distance :
-                self.round_distance = center_distance
-                # print('round', self.round_distance)   
+            if center_distance > self.track_info.round_distance :
+                self.track_info.round_distance = center_distance
+                # print('round', self.track_info.round_distance)   
             
             for y in [-1,0,1] :
                 for x in [-1,0,1] :
@@ -163,24 +164,24 @@ class TrackField:
                         self.field[target.row, target.col]['distance'] = center_distance + 1
                         # print (target, " update:", target_distance, '=>', self.field[target.row, target.col]['distance'])
 
-        self.round_distance += 2 # add 2 for start and finish line
+        self.track_info.round_distance += 2 # add 2 for start and finish line
     
-    def get_track_view(self, position: car.Point2D, view_radius: int) -> TrackView:
+    def get_track_view(self, position:car.Point2D) -> TrackView:
         
-        left = int(position.x - view_radius)
+        left = int(position.x - self.track_info.view_radius)
         if left < 0 :
             left = 0
 
-        right = int(position.x + view_radius + 1)
+        right = int(position.x + self.track_info.view_radius + 1)
         if right > self.field.shape[1] :
             right = self.field.shape[1]
         right = right
 
-        up = int(position.y - view_radius)
+        up = int(position.y - self.track_info.view_radius)
         if up < 0 :
             up = 0
 
-        down = int(position.y + view_radius + 1)
+        down = int(position.y + self.track_info.view_radius + 1)
         if down > self.field.shape[0] :
             down = self.field.shape[0]
         down = down
@@ -189,4 +190,156 @@ class TrackField:
         field = self.field[up:down, :][:, left:right]
 
         return TrackView(up, left, field)
+
+    def get_next_state(self, 
+            car_config: car.CarConfig, 
+            car_state: car.CarState, 
+            action: car.Action, 
+            debug: bool = False) -> car.CarState :
+        
+        if debug: 
+            print('\nget_next_state() >>>')
+
+        # Limit action by motion profile
+        action_forward_acceleration = action.forward_acceleration
+        if abs(action.forward_acceleration) > car_config.motion_profile.max_acceleration :
+            action_forward_acceleration = (car_config.motion_profile.max_acceleration 
+                * action.forward_acceleration / abs(action.forward_acceleration))
+        if debug:
+            print('action_forward_acceleration = ', action_forward_acceleration)
+
+        angular_velocity = action.angular_velocity
+        if abs(action.angular_velocity) > car_config.motion_profile.max_angular_velocity :
+            action_forward_acceleration = (car_config.motion_profile.max_angular_velocity 
+                * action.angular_velocity / abs(action.angular_velocity))
+        if debug:
+            print('angular_velocity = ', angular_velocity)
+
+        # next position
+        time_sec:float = 0.001 * self.track_info.time_interval
+        next_position = car.Point2D(
+            x = car_state.position.x + car_state.velocity_x * time_sec, 
+            y = car_state.position.y + car_state.velocity_y * time_sec)
+        
+        if (next_position.x >= self.field.shape[1]) :
+            next_position.x = self.field.shape[1] - .5
+        if (next_position.x < 0) :
+            next_position.x = .5
+        if (next_position.y >= self.field.shape[0]) :    
+            next_position.y = self.field.shape[0] - .5      
+        if (next_position.y < 0) :
+            next_position.y = .5
+        if debug:
+            print('next_position = ', next_position)
+
+        next_cell = TileCell(int(next_position.y), int(next_position.x))
+        next_tile_distance = int(self.field[next_cell.row, next_cell.col]['distance'])
+        next_state = car.CarState(
+            timestamp = car_state.timestamp + self.track_info.time_interval,
+            wheel_angle = car_state.wheel_angle + angular_velocity * time_sec,
+            position = next_position,
+            tile_distance = next_tile_distance,
+            round_count = car_state.round_count,
+            max_round_distance = car_state.max_round_distance)
+
+        # next velocity
+        velocity_forward: float = (car_state.velocity_x * math.cos(0 - car_state.wheel_angle) 
+            + car_state.velocity_y * math.cos(math.pi / 2 - car_state.wheel_angle))
+        if debug: 
+            print('velocity_forward = ', velocity_forward)
+
+        velocity_slide_right: float = (car_state.velocity_y * math.sin(math.pi / 2 - car_state.wheel_angle) 
+            + car_state.velocity_x * math.sin(0 - car_state.wheel_angle))
+        if abs(velocity_slide_right) <= car_config.slide_friction.min_velocity_start :
+            velocity_slide_right = 0
+        if debug: 
+            print('velocity_slide_right = ', velocity_slide_right)
     
+        cell = TileCell(int(car_state.position.y), int(car_state.position.x))
+        cell_type = self.field[cell.row, cell.col]['type']
+        next_cell_type = int(self.field[next_cell.row, next_cell.col]['type'])
+        next_state.tile_type = next_cell_type
+        tile_distance = int(self.field[cell.row, cell.col]['distance'])
+        next_state.tile_distance = int(self.field[next_cell.row, next_cell.col]['distance'])
+        if next_cell_type == TileType.Road.value and next_tile_distance > car_state.max_round_distance:
+            next_state.max_round_distance = next_tile_distance
+            if next_tile_distance == TrackMark.Finish.value:
+                next_state.max_round_distance = self.track_info.round_distance - 1
+
+
+        if (cell_type == TileType.Road.value 
+            and next_cell_type == TileType.Road.value):
+                if (tile_distance == TrackMark.Start.value
+                    and next_tile_distance == TrackMark.Finish.value) :
+                    next_state.round_count = car_state.round_count - 1        # start to finish backward
+                    next_state.tile_distance = self.track_info.round_distance
+                    next_state.max_round_distance = next_state.tile_distance
+                if (tile_distance == TrackMark.Finish.value 
+                    and next_tile_distance == TrackMark.Start.value) :
+                    next_state.round_count = car_state.round_count + 1        # finish to start, complete a round
+                    next_state.tile_distance = 0
+                    next_state.max_round_distance = next_state.tile_distance
+        
+        next_state.max_total_distance = next_state.round_count * self.track_info.round_distance + next_state.max_round_distance
+        if debug: 
+            print('next cell_type = ', next_cell_type
+                ,', tile_distance=', next_state.tile_distance
+                , ', max_round_distance=', next_state.max_round_distance
+                , ', max_total_distance=', next_state.max_total_distance)
+            
+            if next_state.round_count != car_state.round_count: 
+                print('from cell', cell , 'Tile', self.field[cell.row, cell.col], 
+                    'round_count', car_state.round_count,
+                    'to cell', next_cell, 'Tile', self.field[next_cell.row, next_cell.col], 
+                    'round_count', next_state.round_count)
+
+        friction_ratio = cell_type
+        if debug: 
+            print('cell', cell, 'cell_type', cell_type, 'friction_ratio = ', friction_ratio)
+
+        acceleration_forward: float = 0
+        if velocity_forward != 0:
+            acceleration_forward = (action_forward_acceleration 
+                - car_config.rotation_friction.friction * friction_ratio)
+        elif action_forward_acceleration >= car_config.rotation_friction.min_accel_start :
+            acceleration_forward = (action_forward_acceleration 
+                - car_config.rotation_friction.friction * friction_ratio)
+        if debug: 
+            print('acceleration_forward = ', acceleration_forward)
+
+        acceleration_slide_right:float = 0
+        if abs(velocity_slide_right) > car_config.slide_friction.min_velocity_start :
+            if velocity_slide_right > 0 :
+                acceleration_slide_right = -1 * car_config.slide_friction.friction * friction_ratio
+            else :
+                acceleration_slide_right = car_config.slide_friction.friction * friction_ratio
+        if debug: 
+            print('acceleration_slide_right = ', acceleration_slide_right)
+    
+        next_velocity_forward = velocity_forward + acceleration_forward * time_sec
+        # never rotate backward
+        if next_velocity_forward < 0 :
+            next_velocity_forward = 0
+
+        if debug:
+            print('before limit, next_velocity_forward = ', next_velocity_forward)
+        if next_velocity_forward > car_config.motion_profile.max_velocity:
+            next_velocity_forward = car_config.motion_profile.max_velocity 
+        if debug: 
+            print('after limit, next_velocity_forward = ', next_velocity_forward)
+
+        next_velocity_slide_right = velocity_slide_right + acceleration_slide_right * time_sec
+        if (next_velocity_slide_right * velocity_slide_right < 0) :
+            next_velocity_slide_right = 0
+        if debug: 
+            print('next_velocity_slide_right = ', next_velocity_slide_right)
+
+        next_state.velocity_x = (next_velocity_forward * math.cos(car_state.wheel_angle)
+            + next_velocity_slide_right * math.cos(car_state.wheel_angle + math.pi / 2))
+        next_state.velocity_y = (next_velocity_forward * math.sin(car_state.wheel_angle)
+            + next_velocity_slide_right * math.sin(car_state.wheel_angle + math.pi / 2))
+
+        if debug: 
+            print('get_next_state() <<<\n')
+        return next_state
+

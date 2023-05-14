@@ -20,33 +20,10 @@ class ArenaTest(unittest.TestCase):
 
         self.start_state = car.CarState(position = car.Point2D(y = 5.5, x = 14.5))
         print('start_state = ', self.start_state)
-        self.assertTrue(self.start_state.track_distance == 0)
+        self.assertTrue(self.start_state.tile_distance == 0)
         self.assertTrue(self.start_state.velocity_x == 0)
         self.assertTrue(self.start_state.velocity_y == 0)
         self.assertTrue(self.start_state.wheel_angle == 0)
-
-
-    def test_100_startview(self):
-        print('\n===\ntest_100_startview()')
-
-        print('car_config = ', self.arena.car_config)
-
-        start_view = self.arena.get_track_view(self.start_state)
-        print('start_view = ', start_view)
-
-
-    def test_200_too_low_power(self):
-        print('\n===\ntest_200_too_low_power()')
-    
-        low_power_action = car.Action(1,0)
-        print('low_power_action = ', low_power_action)
-        state_1 = self.arena.get_next_state(self.start_state, low_power_action)
-        print('state_1 = ', state_1)
-        self.assertTrue(state_1.velocity_x == 0)
-        self.assertTrue(state_1.velocity_y == 0)
-        self.assertTrue(state_1.wheel_angle == 0)
-        self.assertTrue(state_1.track_distance == 0)
-        self.assertTrue(state_1.timestamp == self.arena.time_interval)
 
 
     def test_201_startable_power(self):
