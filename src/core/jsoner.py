@@ -18,6 +18,8 @@ class Jsoner:
     type_registry['CarConfig'] = CarConfig
     type_registry['CarInfo'] = CarInfo
     type_registry['CarState'] = CarState
+    type_registry['TrackState'] = TrackState
+
     type_registry['Action'] = Action
 
     type_registry['MarkLine'] = MarkLine

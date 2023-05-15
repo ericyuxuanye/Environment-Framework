@@ -52,7 +52,7 @@ class MarkLine :
         self.y_range = y_range
         self.x_range = x_range
 
-
+"""
 @dataclass
 class TrackView:
 
@@ -65,7 +65,7 @@ class TrackView:
         self.up = up
         self.left = left
         self.field = field
-
+"""
 
 @dataclass
 class TrackInfo:
@@ -166,6 +166,7 @@ class TrackField:
 
         self.track_info.round_distance += 2 # add 2 for start and finish line
     
+    """
     def get_track_view(self, position:car.Point2D) -> TrackView:
         
         left = int(position.x - self.track_info.view_radius)
@@ -190,7 +191,47 @@ class TrackField:
         field = self.field[up:down, :][:, left:right]
 
         return TrackView(up, left, field)
+    """
 
+    def calc_track_state(self, car_state:car.CarState) -> None:
+
+        if car_state.wheel_angle > math.pi :
+            car_state.wheel_angle -= math.pi*2
+        elif car_state.wheel_angle < -math.pi :
+            car_state.wheel_angle += math.pi*2
+
+        track_state = car_state.track_state
+        track_state.velocity_distance = math.sqrt(car_state.velocity_x**2 + car_state.velocity_y**2)
+
+        track_state.velocity_angle_to_wheel = math.atan2(car_state.velocity_y, car_state.velocity_x) - car_state.wheel_angle
+        if track_state.velocity_angle_to_wheel > math.pi :
+            track_state.velocity_angle_to_wheel -= math.pi*2
+        elif track_state.velocity_angle_to_wheel < -math.pi :
+            track_state.velocity_angle_to_wheel += math.pi*2
+    
+        cell = TileCell(int(car_state.position.y), int(car_state.position.x))
+        track_state.tile_type = int(self.field[cell.row, cell.col]['type'])
+        track_state.tile_distance = int(self.field[cell.row, cell.col]['distance'])
+        if track_state.tile_type == TileType.Road.value and track_state.tile_distance == TrackMark.Finish.value:
+            track_state.tile_distance = self.track_info.round_distance - 1
+        if track_state.tile_type == TileType.Road.value :
+            track_state.tile_total_distance = self.track_info.round_distance * car_state.round_count + track_state.tile_distance  
+        else:
+            track_state.tile_total_distance = 0
+        
+        last_road_cell = TileCell(int(car_state.last_road_position.y), int(car_state.last_road_position.x))
+        track_state.last_road_tile_distance = int(self.field[last_road_cell.row, last_road_cell.col]['distance'])
+        if (int(self.field[last_road_cell.row, last_road_cell.col]['type']) == TileType.Road.value 
+            and track_state.last_road_tile_distance == TrackMark.Finish.value):
+            track_state.last_road_tile_distance = self.track_info.round_distance - 1
+        track_state.last_road_tile_total_distance = self.track_info.round_distance * car_state.round_count + track_state.last_road_tile_distance  
+
+        angles = [0, -math.pi/2, math.pi/2, -math.pi/4, math.pi/4, -math.pi*1/8, math.pi*1/8, -math.pi*3/8, math.pi*3/8]
+        track_state.rays = []
+        for angle in angles:
+            track_state.rays.append(self.get_ray(car_state.position.x, car_state.position.y, car_state.wheel_angle, angle))  
+
+       
     def get_next_state(self, 
             car_config: car.CarConfig, 
             car_state: car.CarState, 
@@ -233,14 +274,19 @@ class TrackField:
             print('next_position = ', next_position)
 
         next_cell = TileCell(int(next_position.y), int(next_position.x))
+        next_cell_type = int(self.field[next_cell.row, next_cell.col]['type'])
         next_tile_distance = int(self.field[next_cell.row, next_cell.col]['distance'])
+        if next_cell_type == TileType.Road.value :
+            last_road_position = next_position
+        else:
+            last_road_position = car_state.last_road_position
+
         next_state = car.CarState(
             timestamp = car_state.timestamp + self.track_info.time_interval,
             wheel_angle = car_state.wheel_angle + angular_velocity * time_sec,
             position = next_position,
-            tile_distance = next_tile_distance,
-            round_count = car_state.round_count,
-            max_round_distance = car_state.max_round_distance)
+            last_road_position = last_road_position,
+            round_count = car_state.round_count)
 
         # next velocity
         velocity_forward: float = (car_state.velocity_x * math.cos(0 - car_state.wheel_angle) 
@@ -257,35 +303,19 @@ class TrackField:
     
         cell = TileCell(int(car_state.position.y), int(car_state.position.x))
         cell_type = self.field[cell.row, cell.col]['type']
-        next_cell_type = int(self.field[next_cell.row, next_cell.col]['type'])
-        next_state.tile_type = next_cell_type
-        tile_distance = int(self.field[cell.row, cell.col]['distance'])
-        next_state.tile_distance = int(self.field[next_cell.row, next_cell.col]['distance'])
-        if next_cell_type == TileType.Road.value and next_tile_distance > car_state.max_round_distance:
-            next_state.max_round_distance = next_tile_distance
-            if next_tile_distance == TrackMark.Finish.value:
-                next_state.max_round_distance = self.track_info.round_distance - 1
 
+        tile_distance = int(self.field[cell.row, cell.col]['distance'])
 
         if (cell_type == TileType.Road.value 
             and next_cell_type == TileType.Road.value):
                 if (tile_distance == TrackMark.Start.value
                     and next_tile_distance == TrackMark.Finish.value) :
-                    next_state.round_count = car_state.round_count - 1        # start to finish backward
-                    next_state.tile_distance = self.track_info.round_distance
-                    next_state.max_round_distance = next_state.tile_distance
+                    next_state.round_count = car_state.round_count - 1        # start to finish backward, decrease a round
                 if (tile_distance == TrackMark.Finish.value 
                     and next_tile_distance == TrackMark.Start.value) :
                     next_state.round_count = car_state.round_count + 1        # finish to start, complete a round
-                    next_state.tile_distance = 0
-                    next_state.max_round_distance = next_state.tile_distance
-        
-        next_state.max_total_distance = next_state.round_count * self.track_info.round_distance + next_state.max_round_distance
         if debug: 
-            print('next cell_type = ', next_cell_type
-                ,', tile_distance=', next_state.tile_distance
-                , ', max_round_distance=', next_state.max_round_distance
-                , ', max_total_distance=', next_state.max_total_distance)
+            print('next cell_type = ', next_cell_type, 'next_tile_distance = ', next_tile_distance)
             
             if next_state.round_count != car_state.round_count: 
                 print('from cell', cell , 'Tile', self.field[cell.row, cell.col], 
@@ -341,30 +371,19 @@ class TrackField:
 
         if debug: 
             print('get_next_state() <<<\n')
-        
-        next_state.calc_velocity_polar()
-        next_state.rays = self.get_rays(next_state)
 
+        self.calc_track_state(next_state)
         return next_state
 
-
-    def get_rays(self, car_state: car.CarState) -> list[float]:
-        angles = [0, -math.pi/2, math.pi/2, -math.pi/4, math.pi/4, -math.pi*1/8, math.pi*1/8, -math.pi*3/8, math.pi*3/8]
-        rays = []
-        for angle in angles:
-            rays.append(self.get_ray(car_state, angle))
-        return rays
     
-    def get_ray(self, car_state: car.CarState, angle:float, debug=False) -> float:
+    def get_ray(self, position_x:float, position_y:float, wheel_angle:float, ray_angle:float, debug=False) -> float:
 
-        start_x = car_state.position.x
-        start_y = car_state.position.y
-        target_angle = car_state.wheel_angle + angle
+        target_angle = wheel_angle + ray_angle
 
-        use_x = abs(math.cos(target_angle)) > abs(math.sin(target_angle))
+        use_x = abs(math.cos(target_angle)) >= abs(math.sin(target_angle))
         if debug:
-            print('start_x = ', start_x
-                , ', start_y = ', start_y
+            print('position_x = ', position_x
+                , ', position_y = ', position_y
                 , ', target_angle = ', target_angle
                 , ', use_x = ', use_x)
             
@@ -375,8 +394,8 @@ class TrackField:
                 print('step_x = ', step_x, 'step_y = ', step_y)
                 
             for step in range(self.track_info.column):
-                x = start_x + step * step_x
-                y = start_y + step * step_x * step_y
+                x = position_x + step * step_x
+                y = position_y + step * step_x * step_y
 
                 cell = TileCell(int(y), int(x))
                 if debug:
@@ -389,25 +408,25 @@ class TrackField:
                 if debug:
                     print('tile_type = ', tile_type)
                 if tile_type == TileType.Wall.value:
-                    if start_x < x :
+                    if position_x < x :
                         x_edge = int(x)
                     else:
                         x_edge = int(x) + 1
 
-                    y_edge = ( x_edge - start_x) /step_x * step_y + start_y
+                    y_edge = ( x_edge - position_x) /step_x * step_y + position_y
                     if int(y) <= y_edge and y_edge <= int(y) + 1:
                         if debug:
                             print('vertial: x_edge = ', x_edge, ', y_edge = ', y_edge)
-                        return math.sqrt((x_edge - start_x)**2 + (y_edge - start_y)**2)
+                        return math.sqrt((x_edge - position_x)**2 + (y_edge - position_y)**2)
                     
-                    if start_y < y :
+                    if position_y < y :
                         y_edge = int(y)
                     else:
                         y_edge = int(y) + 1
-                    x_edge = (y_edge - start_y) / step_y * step_x + start_x
+                    x_edge = (y_edge - position_y) / step_y * step_x + position_x
                     if debug:
                         print('horizontal: x_edge = ', x_edge, ', y_edge = ', y_edge)
-                    return math.sqrt((x_edge - start_x)**2 + (y_edge - start_y)**2)
+                    return math.sqrt((x_edge - position_x)**2 + (y_edge - position_y)**2)
         else:
             step_y = abs(math.sin(target_angle))/math.sin(target_angle)
             step_x = math.cos(target_angle) / math.sin(target_angle)
@@ -416,8 +435,8 @@ class TrackField:
                 print('step_x = ', step_x, 'step_y = ', step_y)
                 
             for step in range(self.track_info.row):
-                y = start_y + step * step_y
-                x = start_x + step * step_y * step_x
+                y = position_y + step * step_y
+                x = position_x + step * step_y * step_x
             
                 cell = TileCell(int(y), int(x))
                 if debug:
@@ -430,27 +449,27 @@ class TrackField:
                 if debug:
                     print('tile_type = ', tile_type)
                 if tile_type == TileType.Wall.value:
-                    if start_y < y :
+                    if position_y < y :
                         y_edge = int(y)
                     else:
                         y_edge = int(y) + 1
 
-                    x_edge = (y_edge - start_y) * step_x + start_x
+                    x_edge = (y_edge - position_y) * step_x + position_x
                     if debug:
                         print('x_edge = ', x_edge, ', y_edge = ', y_edge)
                     if int(x) <= x_edge and x_edge <= int(x) + 1:
                         if debug:
                             print('horizontal, use x_edge = ', x_edge, ', y_edge = ', y_edge)
-                        return math.sqrt((x_edge - start_x)**2 + (y_edge - start_y)**2)
+                        return math.sqrt((x_edge - position_x)**2 + (y_edge - position_y)**2)
                     
-                    if start_x < x :
+                    if position_x < x :
                         x_edge = int(x)
                     else:
                         x_edge = int(x) + 1
-                    y_edge = (x_edge - start_x) / step_x * step_y + start_y
+                    y_edge = (x_edge - position_x) / step_x * step_y + position_y
                     if debug:
                         print('vertial: x_edge = ', x_edge, ', y_edge = ', y_edge)
-                    return math.sqrt((x_edge - start_x)**2 + (y_edge - start_y)**2)
+                    return math.sqrt((x_edge - position_x)**2 + (y_edge - position_y)**2)
 
                         
 

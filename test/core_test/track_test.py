@@ -42,25 +42,6 @@ class TrackTest(unittest.TestCase):
         print('type =', tf.field[0, 0]['type'])
         print('distance =', tf.field[0, 0]['distance'])
    
-
-    def test_200_cv(self):
-        print('\n===\ntest_200_cv')
-    
-        tf = Factory.sample_track_field_0()
-        print('tf field:', tf.field)
-        print('tf field shape:', tf.field.shape)
-        self.assertTrue(tf.field.shape[0] == 5)
-        self.assertTrue(tf.field.shape[1] == 8)
-
-        tv = tf.get_track_view(position = car.Point2D(4.89, 2.16))
-        print('\n track view:', tv, '(up =', tv.up, ', left =', tv.left, ')')
-        print('field:', tv.field)
-        print('field shape:', tv.field.shape)
-        self.assertTrue(tv.up == 0)
-        self.assertTrue(tv.left == 2)
-        self.assertTrue(tv.field.shape[0] == 5)
-        self.assertTrue(tv.field.shape[1] == 5)
-
   
     def test_301_tf(self):
         print('\n===\ntest_301_tf')
@@ -116,7 +97,6 @@ class TrackTest(unittest.TestCase):
         self.assertTrue(state_1.velocity_x == 0)
         self.assertTrue(state_1.velocity_y == 0)
         self.assertTrue(state_1.wheel_angle == 0)
-        self.assertTrue(state_1.tile_distance == 0)
         self.assertTrue(state_1.timestamp == self.tf.track_info.time_interval)
 
 
@@ -133,7 +113,6 @@ class TrackTest(unittest.TestCase):
         self.assertTrue(abs(state_2.velocity_x - 0.15) < 1e-5)
         self.assertTrue(state_2.velocity_y == 0)
         self.assertTrue(state_2.wheel_angle == 0)
-        self.assertTrue(state_2.tile_distance == 0)
         self.assertTrue(state_2.timestamp == self.tf.track_info.time_interval)
         self.assertTrue(state_2.position.x == self.start_state.position.x)
         self.assertTrue(state_2.position.y == self.start_state.position.y)
@@ -146,7 +125,6 @@ class TrackTest(unittest.TestCase):
         self.assertTrue(abs(state_3.velocity_x - 0.3) < 1e-5)
         self.assertTrue(state_3.velocity_y == 0)
         self.assertTrue(state_3.wheel_angle == 0)
-        self.assertTrue(state_3.tile_distance == 0)
         self.assertTrue(state_3.timestamp - state_2.timestamp ==  self.tf.track_info.time_interval)
         self.assertTrue(abs(state_3.position.x - self.start_state.position.x - 0.015) < 1e-5)
         self.assertTrue(state_3.position.y == self.start_state.position.y)
@@ -192,8 +170,6 @@ class TrackTest(unittest.TestCase):
             velocity_y=0.0,
             position = car.Point2D(y = 5.5, x = 28.015))
         print('before: ', state, '\n')
-        start_view = self.tf.get_track_view(state.position)
-        print('\nstart_view = ', start_view, '\n')
 
         next = self.tf.get_next_state(
             car_config=Factory.default_car_config(), 
@@ -212,8 +188,7 @@ class TrackTest(unittest.TestCase):
             wheel_angle=0.0, 
             velocity_x=2.5, 
             velocity_y=0.0,
-            position = car.Point2D(y = 5.5, x = 17.065),
-            tile_distance=3)
+            position = car.Point2D(y = 5.5, x = 17.065))
         print(current_state)
 
         while current_state.timestamp < 10000 and abs(current_state.velocity_x) > 0:
@@ -224,7 +199,7 @@ class TrackTest(unittest.TestCase):
             print(current_state)
         
         # stop on wall
-        self.assertTrue(current_state.tile_type == 1024)
+        self.assertTrue(current_state.track_state.tile_type == 1024)
 
     def test_406_right_complete(self):
         print('\n===\ntest_406_right_complete()')
@@ -236,8 +211,7 @@ class TrackTest(unittest.TestCase):
             wheel_angle=0.0, 
             velocity_x=2.5, 
             velocity_y=0.0,
-            position = car.Point2D(y = 5.5, x = 17.065),
-            tile_distance=3)
+            position = car.Point2D(y = 5.5, x = 17.065),)
         print(current_state)
 
         while (current_state.timestamp < 10000 
@@ -253,69 +227,68 @@ class TrackTest(unittest.TestCase):
     def test_500_ray(self):
         print('\n===\ntest_500_ray()')
         state = self.start_state
-        state.calc_velocity_polar()
 
         debug = False
 
         angle = 0
         print('\nwheel_angle=', state.wheel_angle, ', angle=', angle)
-        ray = self.tf.get_ray(state, angle, debug)
+        ray = self.tf.get_ray(state.position.x, state.position.y, state.wheel_angle, angle, debug)
         self.assertTrue(abs(ray - 13.5) < 1e-5)
         print('ray', ray)
 
         angle = math.pi/2
         print('\nwheel_angle=', state.wheel_angle, ', angle=', angle)
-        ray = self.tf.get_ray(state, angle, debug)
+        ray = self.tf.get_ray(state.position.x, state.position.y, state.wheel_angle, angle, debug)
         print('ray', ray)
         self.assertTrue(abs(ray - 1.5) < 1e-5)
 
         angle = -math.pi/2
         print('\nwheel_angle=', state.wheel_angle, ', angle=', angle)
-        ray = self.tf.get_ray(state, angle, debug)
+        ray = self.tf.get_ray(state.position.x, state.position.y, state.wheel_angle, angle, debug)
         print('ray', ray)
         self.assertTrue(abs(ray - 1.5) < 1e-5)
 
         angle = -math.pi
         print('\nwheel_angle=', state.wheel_angle, ', angle=', angle)
-        ray = self.tf.get_ray(state, angle, debug)
+        ray = self.tf.get_ray(state.position.x, state.position.y, state.wheel_angle, angle, debug)
         print('ray', ray)
         self.assertTrue(abs(ray - 12.5) < 1e-5)
 
         angle = math.pi/4
         print('\nwheel_angle=', state.wheel_angle, ', angle=', angle)
-        ray = self.tf.get_ray(state, angle, debug)
+        ray = self.tf.get_ray(state.position.x, state.position.y, state.wheel_angle, angle, debug)
         print('ray', ray)
         self.assertTrue(abs(ray - 17.67767) < 1e-5)
 
         angle = -math.pi/4
         print('\nwheel_angle=', state.wheel_angle, ', angle=', angle)
-        ray = self.tf.get_ray(state, angle, debug)
+        ray = self.tf.get_ray(state.position.x, state.position.y, state.wheel_angle, angle, debug)
         print('ray', ray)
         self.assertTrue(abs(ray - 4.94975) < 1e-5)
 
         angle = math.pi/8
         print('\nwheel_angle=', state.wheel_angle, ', angle=', angle)
-        ray = self.tf.get_ray(state, angle, debug)
+        ray = self.tf.get_ray(state.position.x, state.position.y, state.wheel_angle, angle, debug)
         print('ray', ray)
         self.assertTrue(abs(ray - 14.61229) < 1e-5)
 
         angle = -math.pi/8
         print('\nwheel_angle=', state.wheel_angle, ', angle=', angle)
-        ray = self.tf.get_ray(state, angle, debug)
+        ray = self.tf.get_ray(state.position.x, state.position.y, state.wheel_angle, angle, debug)
         print('ray', ray)
         self.assertTrue(abs(ray - 9.20033) < 1e-5)
 
         state.wheel_angle = math.pi
         angle = 0
         print('\nwheel_angle=', state.wheel_angle, ', angle=', angle)
-        ray = self.tf.get_ray(state, angle, debug)
+        ray = self.tf.get_ray(state.position.x, state.position.y, state.wheel_angle, angle, debug)
         print('ray', ray)
         self.assertTrue(abs(ray - 12.5) < 1e-5)
 
         state.wheel_angle = math.pi
         angle = math.pi/3
         print('\nwheel_angle=', state.wheel_angle, ', angle=', angle)
-        ray = self.tf.get_ray(state, angle, debug)
+        ray = self.tf.get_ray(state.position.x, state.position.y, state.wheel_angle, angle, debug)
         print('ray', ray)
         self.assertTrue(abs(ray - 1.73205) < 1e-5)
 

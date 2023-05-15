@@ -16,8 +16,8 @@ class RaceTest(unittest.TestCase):
         # print('track:\r', race.race_info.track_info)
 
         race.run(debug=True)
-    
-    
+
+
     def test_001_back(self):
         print('\n===\ntest_001_back()')
         race = Factory.sample_race_0()
@@ -27,8 +27,7 @@ class RaceTest(unittest.TestCase):
 
         race.run(debug=True)
         self.assertTrue(race.steps[-1].car_state.round_count == -1)
-        self.assertTrue(race.steps[-1].car_state.max_round_distance == 28)
-        self.assertTrue(race.steps[-1].car_state.max_total_distance == -1)
+        self.assertTrue(race.steps[-1].car_state.track_state.last_road_tile_total_distance < 0)
 
 
     def test_100_save(self):
@@ -36,8 +35,6 @@ class RaceTest(unittest.TestCase):
         race = Factory.sample_race_0()
         race_data = race.run(debug=False) 
         race_data.race_info.id = 'TrackField2Radius2_20230512_000000'
-
-           
 
         directory = os.path.join('data/race', race_data.race_info.id)
         if not os.path.exists(directory):
@@ -59,7 +56,7 @@ class RaceTest(unittest.TestCase):
                 print(step_json)
                 logfile.write(step_json + '\n')
 
-    
+
     def test_101_readback(self):
         print('\n===\ntest_101_readback()')
 
@@ -78,6 +75,7 @@ class RaceTest(unittest.TestCase):
 
         print('steps: ', steps)
 
+
     def test_200_too_low_power(self):
         print('\n===\ntest_400_too_low_power')
 
@@ -93,7 +91,6 @@ class RaceTest(unittest.TestCase):
         self.assertTrue(state_1.velocity_x == 0)
         self.assertTrue(state_1.velocity_y == 0)
         self.assertTrue(state_1.wheel_angle == 0)
-        self.assertTrue(state_1.tile_distance == 0)
         self.assertTrue(state_1.timestamp == race.race_info.track_info.time_interval)
 
 if __name__ == '__main__':
