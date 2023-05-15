@@ -1,14 +1,13 @@
 import sys
 import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 import unittest
 import math
-from src.core import car
 
 from samples import Factory
-import json
-from src.core.jsoner import *
+from src import car
+from src.jsoner import *
 
 class JsonTest(unittest.TestCase):
 

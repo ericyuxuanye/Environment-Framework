@@ -1,13 +1,13 @@
 import sys
 import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
-from src.core.track import *
-from src.core.car import *
-from src.core.race import *
+import unittest
+import math
+from src.track import *
+from src.car import *
+from src.race import *    
 
-
-@dataclass 
 class ModelSpecialNumber(model.IModelInference):
 
     def load(self, folder:str) -> bool:

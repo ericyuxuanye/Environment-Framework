@@ -1,12 +1,13 @@
 import sys
 import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 import unittest
+import math
 
 from samples import Factory
-from src.core.race import ActionCarState, Race
-from src.core.jsoner import *
+from src.race import ActionCarState, Race
+from src.jsoner import *
 
 class RaceTest(unittest.TestCase):
 
