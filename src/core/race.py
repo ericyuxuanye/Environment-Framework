@@ -95,6 +95,7 @@ class Race:
         self.race_info.id = self.race_info.name + "_" + start_time
 
         current_state = self.race_info.start_state
+        self.track_field.calc_track_state(current_state)
 
         self.steps = []
         self.steps.append(ActionCarState(None, current_state))
@@ -107,8 +108,7 @@ class Race:
                or (current_state.velocity_x != 0 or current_state.velocity_y != 0))
                and current_state.round_count < self.race_info.round_to_finish) :
             
-            current_view = self.track_field.get_track_view(current_state.position)
-            action = self.model.get_action(current_state, current_view)
+            action = self.model.get_action(current_state)
             next_state = self.track_field.get_next_state(self.race_info.car_config, current_state, action, debug)
             self.steps.append(ActionCarState(action, next_state))
             

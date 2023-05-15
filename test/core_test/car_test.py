@@ -164,7 +164,7 @@ class CarTest(unittest.TestCase):
     def test_602_cs(self):
         print('\n===\ntest_602_cs()')
         car_state = CarState(position = Point2D(1.5, 2), timestamp=14696, 
-            velocity_x=25, velocity_y=20.53, wheel_angle=.23, tile_distance=124)
+            velocity_x=25, velocity_y=20.53, wheel_angle=.23)
         print('\n')
         print(car_state)
         self.assertTrue(car_state.position.x == 1.5)

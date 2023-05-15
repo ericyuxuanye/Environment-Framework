@@ -23,7 +23,7 @@ class IModelSave(ABC):
 
 class IModelInference(IModelLoad):
     @abstractmethod
-    def get_action(self, car_state: car.CarState, car_view: track.TrackView) -> car.Action:
+    def get_action(self, car_state: car.CarState) -> car.Action:
         """
         Returns the appropriate action given car state and visible track view
         """
