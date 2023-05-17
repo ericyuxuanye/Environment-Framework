@@ -2,7 +2,6 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
-import unittest
 import math
 from src.track import *
 from src.car import *

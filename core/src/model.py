@@ -22,29 +22,27 @@ class IModelSave(ABC):
 
 
 class IModelInference(IModelLoad):
-    @abstractmethod
-    def get_action(self, car_state: car.CarState) -> car.Action:
-        """
-        Returns the appropriate action given car state and visible track view
-        """
-        raise NotImplementedError
+    pass
 
 
+class IModelTrain(IModelLoad, IModelSave):
+    pass
+
+    
+"""
+    # update model after each step
 class IModelTrainOnline(IModelLoad, IModelSave):
     def update_online(self, start: car.CarState, action: car.Action, end: car.CarState) -> bool:
-        """
-        for each interaction (state, action) -> next_state
-        """
         raise NotImplementedError
 
-
+    # update model after complete race
 class IModelTrainOffline(IModelLoad, IModelSave):
     pass
 
-    """
+
     def update_offline(self, dataset: RaceDataset) -> bool:
 
         For offline training, tun with dataset from a complete race
 
         raise NotImplementedError
-    """
+"""
