@@ -6,7 +6,7 @@ import random
 import math
 import numpy as np
 from itertools import count
-
+import copy
 from core.src import model, car
 from core.test.samples import Factory
 from model import *
@@ -25,10 +25,10 @@ except RuntimeError:
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-POPULATION_SIZE = 200
-TOP_SIZE = 10
+POPULATION_SIZE = 10
+TOP_SIZE = 2
 
-CROSS_RATE = 0.45
+CROSS_RATE = 0.65
 CROSS_CHANCE = 0.6
 MUTATION_FACTOR = 0.1
 MUTATION_RATE = 0.15
@@ -86,6 +86,7 @@ class ModelTrain(model.IModelInference):
 
         model_saved:bool = False
         try:
+            self.model.set_params(self.population[-1])
             model_path = os.path.join(folder, DATA_FILE_NAME)
             torch.save(self.model.net.state_dict(), model_path)
             model_saved = True
@@ -108,30 +109,21 @@ class ModelTrain(model.IModelInference):
 
         fitnesses = self.evaluate_population(self.population)
         print(f"fitnesses = {fitnesses}")
-        n_fittest = [self.population[x] for x in np.argpartition(fitnesses, -10)[-10:]]
-        
-        fitnesses10 = self.evaluate_population(n_fittest)
-        print(f"fitnesses10 = {fitnesses10}")
 
-        """
-        wheel = makeWheel(population, np.clip(fitnesses, 1, None))
-        population = select(wheel, len(population) - 10)
-        population.extend(n_fittest)
-        last_10 = population[-10:]
+        n_fittest = [self.population[x] for x in np.argpartition(fitnesses, -TOP_SIZE)[-TOP_SIZE:]]
 
+        clipped_fitnesses = np.clip(fitnesses, 1, None) 
+        wheel = self.make_wheel(self.population, clipped_fitnesses)
+        self.population = self.select(wheel, len(self.population) - TOP_SIZE)
+        self.population.extend(n_fittest)
 
-        pop2 = list(population)
-        for index in range(len(population) - 10):
-            child = crossover(population[index], pop2)
-            child = mutate(child)
-            population[index] = child
+        pop2 = list(self.population)
+        for index in range(len(self.population) - TOP_SIZE):
+            child = self.crossover(self.population[index], pop2)
+            child = self.mutate(child)
+            self.population[index] = child
 
-        last_10_after = population[-10:]
-        fitnesses10_2 = evaluate_population(last_10_after)
-        print(f"fitnesses10 = {fitnesses10_2}")
-        """
-    
-    def eval_model(self, params: list[Parameter]) -> float:
+    def eval_model(self, params: Parameters) -> float:
         model = Model()
         model.set_params(params)
 
@@ -148,6 +140,7 @@ class ModelTrain(model.IModelInference):
             - final_state.timestamp / 1000)
         return reward
     
+
     def evaluate_population(self, population: list[Parameters]) -> list[float]:
         fitnesses = np.array(list(map(self.eval_model, population)))
         avg_fitness = fitnesses.sum() / len(fitnesses)
@@ -155,9 +148,7 @@ class ModelTrain(model.IModelInference):
         return fitnesses
 
 
-
-
-    def makeWheel(population, fitness: np.ndarray):
+    def make_wheel(self, population:list[Parameters], fitness: np.ndarray):
         wheel = []
         total = fitness.sum()
         top = 0
@@ -168,25 +159,25 @@ class ModelTrain(model.IModelInference):
         return wheel
 
 
-    def binSearch(wheel, num):
+    def binary_search(self, wheel, num):
         mid = len(wheel)//2
         low, high, answer = wheel[mid]
         if low<=num<=high:
             return answer
         elif high < num:
-            return binSearch(wheel[mid+1:], num)
+            return self.binary_search(wheel[mid+1:], num)
         else:
-            return binSearch(wheel[:mid], num)
+            return self.binary_search(wheel[:mid], num)
 
 
-    def select(wheel, N):
+    def select(self, wheel, target:int):
         answer = []
-        while len(answer) < N:
+        while len(answer) < target:
             r = random.random()
-            answer.append(binSearch(wheel, r))
+            answer.append(self.binary_search(wheel, r))
         return answer
 
-    def crossover(parent1: list[Parameter], pop: list[list[Parameter]]) -> list[Parameter]:
+    def crossover(self, parent1: Parameters, pop: list[Parameters]) -> Parameters:
         """
         Crossover two individuals and produce a child.
 
@@ -200,8 +191,8 @@ class ModelTrain(model.IModelInference):
             Parameters: A child with attributes of both parents or the original parent1
         """
         if np.random.rand() < CROSS_RATE:
-            index = np.random.randint(0, len(pop), size=1)[0]
-            parent2 = pop[index]
+            pop_index = np.random.randint(0, len(pop), size=1)[0]
+            parent2 = pop[pop_index]
             child = []
             mask = None
 
@@ -219,13 +210,13 @@ class ModelTrain(model.IModelInference):
                 reverse_mask = torch.ones(p1l.shape).int() - tmp
                 new_param = nn.parameter.Parameter(p1l * reverse_mask + p2l * tmp)
                 child.append(new_param)
-
+ 
             return child
         else:
-            return parent1
+            return copy.deepcopy(parent1)
 
 
-    def gen_mutate(shape: torch.Size) -> torch.Tensor:
+    def gen_mutate(self, shape: torch.Size) -> torch.Tensor:
         """
         Generate a tensor to use for random mutation of a parameter
 
@@ -242,7 +233,7 @@ class ModelTrain(model.IModelInference):
         return result
 
 
-    def mutate(child: list[Parameter]) -> list[Parameter]:
+    def mutate(self, child: Parameters) -> Parameters:
         """
         Mutate a child
 
@@ -254,7 +245,7 @@ class ModelTrain(model.IModelInference):
         for i in range(len(child)):
             for j in range(len(child[i])):
                 gene = child[i][j]
-                mutate = gen_mutate(child[i][j].shape)
+                mutate = self.gen_mutate(child[i][j].shape)
                 gene += mutate
 
         return child
@@ -269,5 +260,10 @@ if __name__ == '__main__':
     if not loaded:
         model_train.init_population()
         model_train.model.init_data()
+        model_train.save(os.path.dirname(__file__))
 
-    model_train.train()
+    for i in range(100):
+        print(f"Generation {i}")
+        model_train.train()
+
+    model_train.save(os.path.dirname(__file__))
