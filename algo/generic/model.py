@@ -134,3 +134,6 @@ if __name__ == '__main__':
     action2 = model.get_action(start_state)
     print(action2)
 
+    race.run()
+    final_state = race.steps[-1].car_state
+    print(final_state)
