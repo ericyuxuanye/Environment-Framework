@@ -9,6 +9,7 @@ from torch import nn
 from torch.nn.parameter import Parameter
 
 from core.src import model, car
+from core.src.race import *
 from core.test.samples import Factory
 
 
@@ -25,11 +26,15 @@ DATA_FILE_NAME = "net_params.pt"
 class Model(model.IModelInference):
 
     net:torch.nn.Sequential
-    max_acceleration:float = 5
-    max_angular_velocity:float = math.pi/2
+    max_acceleration:float = 1
+    max_angular_velocity:float = 1
 
     def __init__(self):
         self.net = self.create_net()
+
+    def setup(self, max_acceleration:float, max_angular_velocity:float) -> None:
+        self.max_acceleration = max_acceleration
+        self.max_angular_velocity = max_angular_velocity
 
     def load(self, folder:str) -> bool:
         loaded = False
@@ -117,23 +122,29 @@ class Model(model.IModelInference):
                 i += 1
 
 
+
 if __name__ == '__main__':
     
     model = Model()
     loaded = model.load(os.path.dirname(__file__))
-    print('loaded=', loaded)
+    print('Model load from data=', loaded)
 
-    race = Factory.sample_race_0()
+    race = Factory.sample_race_1()
     race.model = model
+    race.race_info.model_info = ModelInfo(name='generic-hc', version='2023.5.18')
+
+    model.setup(race.race_info.car_config.motion_profile.max_acceleration, 
+        race.race_info.car_config.motion_profile.max_angular_velocity)
+    
+
     start_state = race.race_info.start_state
     race.track_field.calc_track_state(start_state)
+    print('start_state:\n', start_state)
 
     action1 = model.get_action(start_state)
-    print(action1)
+    print('action1:\n', action1)
 
-    action2 = model.get_action(start_state)
-    print(action2)
-
-    race.run()
+    race.run(True)
     final_state = race.steps[-1].car_state
-    print(final_state)
+    print('race_info:\n', race.race_info)
+    print('finish:\n', final_state)

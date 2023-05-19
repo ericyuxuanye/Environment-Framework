@@ -1,44 +1,31 @@
-from dataclasses import dataclass
+
 from datetime import datetime
 
 from . import model, car, track
 
-@dataclass 
+
 class ModelInfo:
-
-    name: str
-    version: str
-
     def __init__(self, name:str , version:str):
         self.type = 'ModelInfo'
         self.name = name
         self.version = version
 
+    def __str__(self) -> str:
+        return f'ModelInfo(name={self.name}, version={self.version})'
 
-@dataclass 
+
 class ActionCarState:
-
-    action:     car.Action
-    car_state:  car.CarState
 
     def __init__(self, action:car.Action, car_state:car.CarState):
         self.type = 'ActionCarState'
         self.action = action
         self.car_state = car_state
 
+    def __str__(self) -> str:
+        return f'ActionCarState(action={self.action}, car_state={self.car_state})'
+    
 
-@dataclass 
 class RaceInfo:
-
-    id: str 
-    name: str
-    track_info: track.TrackInfo
-    round_to_finish: int
-    model_info: ModelInfo
-    car_info: car.CarInfo
-    car_config : car.CarConfig
-    start_state : car.CarState
-
     def __init__(self, 
                  name: str,
                  id: str,
@@ -59,18 +46,17 @@ class RaceInfo:
         self.car_config = car_config
         self.start_state = start_state
 
+    def __str__(self) -> str:
+        return f'RaceInfo(name={self.name}, id={self.id}, track_info={self.track_info}, round_to_finish={self.round_to_finish}, model_info={self.model_info}, car_info={self.car_info}, car_config={self.car_config}, start_state={self.start_state})'
+    
 
-@dataclass
 class RaceData:
     
-    race_info:RaceInfo
-    steps: list[ActionCarState]
-
     def __init__(self, race_info:RaceInfo, steps: list[ActionCarState]):
         self.race_info = race_info
         self.steps = steps
 
-@dataclass 
+
 class Race:
 
     race_info : RaceInfo
@@ -113,7 +99,9 @@ class Race:
             self.steps.append(ActionCarState(action, next_state))
             
             if debug:
-                print(action, next_state)
+                print('\naction:\n', action)
+                print('\nnext:\n', next_state)
+                print('\nstart:\n', self.race_info.start_state)
 
             current_state = next_state
 
@@ -123,3 +111,4 @@ class Race:
 
         return RaceData(self.race_info, self.steps)
         
+    

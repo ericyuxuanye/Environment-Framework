@@ -3,7 +3,6 @@
     "name": "sample_track_field_0",
     "row": 5,
     "column": 8,
-    "view_radius": 2,
     "time_interval": 1000,
     "round_distance": 0
 }

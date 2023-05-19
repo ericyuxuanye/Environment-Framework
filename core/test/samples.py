@@ -33,8 +33,7 @@ class Factory:
         track_info = TrackInfo(
             name='sample_track_field_0', 
             row=5, 
-            column=8, 
-            view_radius=2, 
+            column=8,
             time_interval = 1000)
     
         tf = TrackField(track_info)
@@ -54,7 +53,6 @@ class Factory:
             name='sample_track_field_1', 
             row=20, 
             column=30, 
-            view_radius=2, 
             time_interval = 1000)
         tf = TrackField(track_info)
 
@@ -92,8 +90,7 @@ class Factory:
         track_info = TrackInfo(
             name='sample_track_field_2', 
             row=20, 
-            column=30, 
-            view_radius=2, 
+            column=30,
             time_interval = 100)
 
         tf = TrackField(track_info)
@@ -144,6 +141,34 @@ class Factory:
             model_info = model_info,
             car_info = car_info,
             car_config= cls.default_car_config(),
-            start_state = CarState(position = Point2D(y = 5.5, x = 14.5)))
+            start_state = CarState(
+                position = Point2D(y = 5.5, x = 14.5), 
+                last_road_position = Point2D(y = 5.5, x = 14.5))
+            )
+
+        return Race(race_info = race_info, track_field = track_field, model = model)
+
+
+    @classmethod
+    def sample_race_1(cls) -> Race:
+        
+        track_field = cls.sample_track_field_2(True)
+
+        model = ModelSpecialNumber()
+        model_info = ModelInfo(name='simplefixedrightturn', version='0.0.21')
+        car_info = CarInfo(id = 1024, team = 'kirin')
+
+        race_info = RaceInfo(
+            name = 'TrackField2Round3',
+            id = 'NotStarted',
+            track_info = track_field.track_info, 
+            round_to_finish = 3,
+            model_info = model_info, 
+            car_info = car_info,
+            car_config= cls.default_car_config(),
+            start_state = CarState(
+                position = Point2D(y = 5.5, x = 14.5), 
+                last_road_position = Point2D(y = 5.5, x = 14.5))
+            )
 
         return Race(race_info = race_info, track_field = track_field, model = model)

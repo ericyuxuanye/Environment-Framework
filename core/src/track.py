@@ -1,5 +1,4 @@
 import numpy as np
-from dataclasses import dataclass
 from enum import Enum
 import math
 
@@ -22,15 +21,15 @@ class TileType(Enum):
     Block = 65535
 
 
-@dataclass 
+ 
 class TileCell :  
-
-    row: int
-    col: int
     def __init__(self, row:int = 0, col:int = 0):
         self.type = 'TileCell'
         self.row = row
         self.col = col
+
+    def __str__(self) -> str:
+        return f'TileCell(row={self.row}, col={self.col})'
 
 
 # Special value for distance
@@ -40,65 +39,39 @@ class TrackMark(Enum):
     Init = 65000       
 
 
-@dataclass 
-class MarkLine :  
-    mark: TrackMark
-    y_range: range
-    x_range: range
 
+class MarkLine :  
     def __init__(self, mark: TrackMark, y_range:range, x_range:range):
         self.type = 'MarkLine'
         self.mark = mark
         self.y_range = y_range
         self.x_range = x_range
 
-"""
-@dataclass
-class TrackView:
-
-    up: int
-    left: int
-    field: np.ndarray
-
-    def __init__(self, up:int = 0, left:int = 0, field:np.ndarray = None):
-        self.type = 'TrackView'
-        self.up = up
-        self.left = left
-        self.field = field
-"""
-
-@dataclass
-class TrackInfo:
-
-        name: str
-        row: int
-        column: int
-        round_distance: int
-        view_radius : int
-        time_interval : int # msec
-    
-        def __init__(self, 
-                name:str = 'trackinfo', 
-                round_distance:int = 0, 
-                row:int= 1, 
-                column:int = 1,
-                view_radius:int = 1,
-                time_interval:int = 100):
-            
-            self.type = 'TrackInfo'
-            self.name = name
-            self.row = row
-            self.column = column
-            self.view_radius = view_radius
-            self.time_interval = time_interval
-            self.round_distance = round_distance
+    def __str__(self) -> str:
+        return f'MarkLine(mark={self.mark}, y_range={self.y_range}, x_range={self.x_range})'
     
 
-@dataclass
+class TrackInfo:    
+    def __init__(self, 
+            name:str = 'trackinfo', 
+            round_distance:int = 0, 
+            row:int= 1, 
+            column:int = 1,
+            time_interval:int = 100):
+        
+        self.type = 'TrackInfo'
+        self.name = name
+        self.row = row
+        self.column = column
+        self.time_interval = time_interval      # milliseconds
+        self.round_distance = round_distance
+
+    def __str__(self) -> str:
+        return f'TrackInfo(name={self.name}, round_distance={self.round_distance}, row={self.row}, column={self.column}, time_interval={self.time_interval})'
+    
+
+
 class TrackField:
-
-    track_info: TrackInfo 
-    field: np.ndarray
 
     def __init__(self, track_info: TrackInfo):
         self.track_info = track_info
@@ -200,7 +173,7 @@ class TrackField:
         elif car_state.wheel_angle < -math.pi :
             car_state.wheel_angle += math.pi*2
 
-        track_state = car_state.track_state
+        track_state = car.TrackState()
         track_state.velocity_distance = math.sqrt(car_state.velocity_x**2 + car_state.velocity_y**2)
 
         track_state.velocity_angle_to_wheel = math.atan2(car_state.velocity_y, car_state.velocity_x) - car_state.wheel_angle
@@ -219,18 +192,20 @@ class TrackField:
         else:
             track_state.tile_total_distance = 0
         
-        last_road_cell = TileCell(int(car_state.last_road_position.y), int(car_state.last_road_position.x))
-        track_state.last_road_tile_distance = int(self.field[last_road_cell.row, last_road_cell.col]['distance'])
-        if (int(self.field[last_road_cell.row, last_road_cell.col]['type']) == TileType.Road.value 
-            and track_state.last_road_tile_distance == TrackMark.Finish.value):
-            track_state.last_road_tile_distance = self.track_info.round_distance - 1
-        track_state.last_road_tile_total_distance = self.track_info.round_distance * car_state.round_count + track_state.last_road_tile_distance  
+        if None != car_state.last_road_position:
+            last_road_cell = TileCell(int(car_state.last_road_position.y), int(car_state.last_road_position.x))
+            track_state.last_road_tile_distance = int(self.field[last_road_cell.row, last_road_cell.col]['distance'])
+            if (int(self.field[last_road_cell.row, last_road_cell.col]['type']) == TileType.Road.value 
+                and track_state.last_road_tile_distance == TrackMark.Finish.value):
+                track_state.last_road_tile_distance = self.track_info.round_distance - 1
+            track_state.last_road_tile_total_distance = self.track_info.round_distance * car_state.round_count + track_state.last_road_tile_distance  
 
         angles = [0, -math.pi/2, math.pi/2, -math.pi/4, math.pi/4, -math.pi*1/8, math.pi*1/8, -math.pi*3/8, math.pi*3/8]
         track_state.rays = []
         for angle in angles:
             track_state.rays.append(self.get_ray(car_state.position.x, car_state.position.y, car_state.wheel_angle, angle))  
 
+        car_state.track_state = track_state
        
     def get_next_state(self, 
             car_config: car.CarConfig, 

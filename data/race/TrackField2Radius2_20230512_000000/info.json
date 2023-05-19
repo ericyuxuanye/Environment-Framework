@@ -7,7 +7,6 @@
         "name": "sample_track_field_2",
         "row": 20,
         "column": 30,
-        "view_radius": 2,
         "time_interval": 100,
         "round_distance": 29
     },
@@ -57,30 +56,30 @@
         },
         "last_road_position": {
             "type": "Point2D",
-            "x": 0,
-            "y": 0
+            "x": 14.5,
+            "y": 5.5
         },
         "round_count": 0,
         "track_state": {
             "type": "TrackState",
-            "velocity_distance": 8.451368429860109,
-            "velocity_angle_to_wheel": 1.1102230246251565e-16,
+            "velocity_distance": 0.0,
+            "velocity_angle_to_wheel": 0.0,
             "rays": [
-                17.321964528698704,
-                5.91044167236736,
-                1.0486429005576514,
-                13.540037660817138,
-                0.23327316112962848,
-                13.772519144069792,
-                2.657598861105967,
-                9.180635916926908,
-                0.23727844470866835
+                13.5,
+                1.5,
+                1.5,
+                4.949747468305833,
+                17.67766952966369,
+                9.200333702485349,
+                14.612294703947319,
+                3.919688894629129,
+                3.919688894629129
             ],
             "tile_type": 1,
             "tile_distance": 0,
-            "tile_total_distance": 29,
+            "tile_total_distance": 0,
             "last_road_tile_distance": 0,
-            "last_road_tile_total_distance": 29
+            "last_road_tile_total_distance": 0
         }
     }
 }
