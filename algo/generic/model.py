@@ -142,10 +142,10 @@ if __name__ == '__main__':
     race.track_field.calc_track_state(start_state)
     print('start_state:\n', start_state)
 
-    action1 = model.get_action(start_state)
-    print('action1:\n', action1)
+    action = model.get_action(start_state)
+    print('action st start:\n', action)
 
-    race.run(False)
+    race.run(debug=False)
 
     final_state = race.steps[-1].car_state
     print('race_info:\n', race.race_info)
