@@ -45,6 +45,8 @@ class Model(model.IModelInference):
     
         return loaded
 
+    def load_genome(self, genome, config):
+        self.net = neat.nn.FeedForwardNetwork.create(genome, config)
 
     """
         inference
@@ -57,14 +59,14 @@ class Model(model.IModelInference):
         input[2:11] = car_state.track_state.rays[0:9]
 
         output = self.net.activate(input)
-        action = torch.flatten(output).cpu().detach().numpy()
-        return car.Action(self.max_acceleration*action[0], self.max_angular_velocity*action[1])
+        return car.Action(self.max_acceleration*output[0], self.max_angular_velocity*output[1])
 
 
 if __name__ == '__main__':
 
     race = Factory.sample_race_1()
-    model = Model(race.race_info.car_config.motion_profile.max_acceleration, 
+    model = Model(
+        race.race_info.car_config.motion_profile.max_acceleration, 
         race.race_info.car_config.motion_profile.max_angular_velocity)
     loaded = model.load(os.path.dirname(__file__))
     print('Model load from data=', loaded)
@@ -74,8 +76,8 @@ if __name__ == '__main__':
 
     race.model = model
     race.race_info.model_info = ModelInfo(name='neat-hc', version='2023.5.20')
-    race.race_info.round_to_finish = 1
-
+    race.race_info.round_to_finish = 5000
+    race.race_info.max_time_to_finish = 25000000
 
     start_state = race.race_info.start_state
     race.track_field.calc_track_state(start_state)

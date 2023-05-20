@@ -34,7 +34,8 @@ class RaceInfo:
                  model_info: ModelInfo, 
                  car_info: car.CarInfo,
                  car_config : car.CarConfig,
-                 start_state : car.CarState):
+                 start_state : car.CarState,
+                 max_time_to_finish: int = 300000):
 
         self.type = 'RaceInfo'
         self.name = name
@@ -45,6 +46,7 @@ class RaceInfo:
         self.car_info = car_info
         self.car_config = car_config
         self.start_state = start_state
+        self.max_time_to_finish = max_time_to_finish
 
     def __str__(self) -> str:
         return f'RaceInfo(name={self.name}, id={self.id}, track_info={self.track_info}, round_to_finish={self.round_to_finish}, model_info={self.model_info}, car_info={self.car_info}, car_config={self.car_config}, start_state={self.start_state})'
@@ -92,7 +94,9 @@ class Race:
 
         while ((current_state.timestamp < 1000 # let it start
                or (current_state.velocity_x != 0 or current_state.velocity_y != 0))
-               and current_state.round_count < self.race_info.round_to_finish) :
+               and current_state.round_count < self.race_info.round_to_finish
+               and current_state.track_state.tile_type != track.TileType.Wall
+               and current_state.timestamp < self.race_info.max_time_to_finish) :
             
             action = self.model.get_action(current_state)
             next_state = self.track_field.get_next_state(self.race_info.car_config, current_state, action, debug)
