@@ -132,6 +132,7 @@ if __name__ == '__main__':
     race = Factory.sample_race_1()
     race.model = model
     race.race_info.model_info = ModelInfo(name='generic-hc', version='2023.5.18')
+    race.race_info.round_to_finish = 1000
 
     model.setup(race.race_info.car_config.motion_profile.max_acceleration, 
         race.race_info.car_config.motion_profile.max_angular_velocity)
@@ -144,7 +145,8 @@ if __name__ == '__main__':
     action1 = model.get_action(start_state)
     print('action1:\n', action1)
 
-    race.run(True)
+    race.run(False)
+
     final_state = race.steps[-1].car_state
     print('race_info:\n', race.race_info)
     print('finish:\n', final_state)

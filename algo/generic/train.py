@@ -124,11 +124,18 @@ class ModelTrain(model.IModelInference):
             self.population[index] = child
 
     def eval_model(self, params: Parameters) -> float:
+
         model = Model()
         model.set_params(params)
 
-        race = Factory.sample_race_0()
+        race = Factory.sample_race_1()
         race.model = model
+        race.race_info.model_info = ModelInfo(name='generic-hc', version='2023.5.18')
+        race.race_info.round_to_finish = 30
+
+        model.setup(race.race_info.car_config.motion_profile.max_acceleration, 
+            race.race_info.car_config.motion_profile.max_angular_velocity)
+        
         race.run()
 
         final_state = race.steps[-1].car_state
