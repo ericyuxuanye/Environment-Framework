@@ -38,18 +38,15 @@ Parameters = list[Parameter]
 
 class ModelTrain(model.IModelInference):
 
-    model:Model
-    model_loaded:bool = False
+
     population: list[Parameters]
 
 
     def __init__(self):
-        self.model = Model()
         self.population = []
 
 
     def load(self, folder:str) -> bool:
-        model_loaded = self.model.load(folder)
 
         loaded = False
         try:
@@ -58,12 +55,9 @@ class ModelTrain(model.IModelInference):
             loaded = True
         except:
             print(f"Failed to load population from {population_path}")
-            loaded = False
 
-        if loaded:
-            return loaded and model_loaded
+        return loaded 
                 
-        return False
 
     def init_population(self):
         params = self.model.get_params()
@@ -86,9 +80,10 @@ class ModelTrain(model.IModelInference):
 
         model_saved:bool = False
         try:
-            self.model.set_params(self.population[-1])
+            model = Model()
+            model.set_params(self.population[-1])
             model_path = os.path.join(folder, DATA_FILE_NAME)
-            torch.save(self.model.net.state_dict(), model_path)
+            torch.save(model.net.state_dict(), model_path)
             model_saved = True
         except:
             print(f"Failed to save model into {model_path}")
@@ -125,18 +120,16 @@ class ModelTrain(model.IModelInference):
 
     def eval_model(self, params: Parameters) -> float:
 
-        model = Model()
-        model.set_params(params)
-
         race = Factory.sample_race_1()
+
+        model = Model(race.race_info.car_config.motion_profile.max_acceleration, 
+            race.race_info.car_config.motion_profile.max_angular_velocity)
+        model.set_params(params)
         race.model = model
         race.race_info.model_info = ModelInfo(name='generic-hc', version='2023.5.18')
         race.race_info.round_to_finish = 30
-
-        model.setup(race.race_info.car_config.motion_profile.max_acceleration, 
-            race.race_info.car_config.motion_profile.max_angular_velocity)
         
-        race.run()
+        race.run(debug=False)
 
         final_state = race.steps[-1].car_state
         # print(final_state)
@@ -266,7 +259,6 @@ if __name__ == '__main__':
 
     if not loaded:
         model_train.init_population()
-        model_train.model.init_data()
         model_train.save(os.path.dirname(__file__))
 
     for i in range(100):

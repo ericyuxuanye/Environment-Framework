@@ -26,13 +26,11 @@ DATA_FILE_NAME = "net_params.pt"
 class Model(model.IModelInference):
 
     net:torch.nn.Sequential
-    max_acceleration:float = 1
-    max_angular_velocity:float = 1
+    max_acceleration:float
+    max_angular_velocity:float
 
-    def __init__(self):
+    def __init__(self, max_acceleration:float = 1, max_angular_velocity:float = 1):
         self.net = self.create_net()
-
-    def setup(self, max_acceleration:float, max_angular_velocity:float) -> None:
         self.max_acceleration = max_acceleration
         self.max_angular_velocity = max_angular_velocity
 
@@ -125,18 +123,16 @@ class Model(model.IModelInference):
 
 if __name__ == '__main__':
     
-    model = Model()
+    race = Factory.sample_race_1()
+
+    model = Model(race.race_info.car_config.motion_profile.max_acceleration, 
+        race.race_info.car_config.motion_profile.max_angular_velocity)
     loaded = model.load(os.path.dirname(__file__))
     print('Model load from data=', loaded)
-
-    race = Factory.sample_race_1()
     race.model = model
-    race.race_info.model_info = ModelInfo(name='generic-hc', version='2023.5.18')
-    race.race_info.round_to_finish = 1000
 
-    model.setup(race.race_info.car_config.motion_profile.max_acceleration, 
-        race.race_info.car_config.motion_profile.max_angular_velocity)
-    
+    race.race_info.model_info = ModelInfo(name='generic-hc', version='2023.5.18')
+    race.race_info.round_to_finish = 100
 
     start_state = race.race_info.start_state
     race.track_field.calc_track_state(start_state)

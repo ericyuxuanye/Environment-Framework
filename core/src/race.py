@@ -90,7 +90,8 @@ class Race:
             print('Race start at time', start_time)
             print(current_state)
 
-        while (track.TileType.Wall.value != current_state.track_state.tile_type # crashed into wall
+        while ((current_state.timestamp < 1000 # let it start
+               or (current_state.velocity_x != 0 or current_state.velocity_y != 0))
                and current_state.round_count < self.race_info.round_to_finish) :
             
             action = self.model.get_action(current_state)
@@ -100,7 +101,6 @@ class Race:
             if debug:
                 print('\naction:\n', action)
                 print('\nnext:\n', next_state)
-                print('\nstart:\n', self.race_info.start_state)
 
             current_state = next_state
 
