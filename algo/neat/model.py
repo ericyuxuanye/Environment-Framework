@@ -5,7 +5,6 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 import pickle
 import neat
 import numpy as np
-import torch
 
 from core.src import model, car
 from core.src.race import *

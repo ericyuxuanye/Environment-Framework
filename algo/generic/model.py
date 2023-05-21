@@ -2,7 +2,6 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
-import math
 import numpy as np
 import torch
 from torch import nn
@@ -133,6 +132,7 @@ if __name__ == '__main__':
 
     race.race_info.model_info = ModelInfo(name='generic-hc', version='2023.5.18')
     race.race_info.round_to_finish = 100
+    race.race_info.max_time_to_finish = 500000
 
     start_state = race.race_info.start_state
     race.track_field.calc_track_state(start_state)

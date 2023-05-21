@@ -60,13 +60,6 @@ class RaceData:
 
 
 class Race:
-
-    race_info : RaceInfo
-    track_field : track.TrackField
-    model : model.IModelInference
-
-    steps: list[ActionCarState]
-
     def __init__(self, 
             race_info: RaceInfo, 
             track_field: track.TrackField, 
@@ -95,7 +88,7 @@ class Race:
         while ((current_state.timestamp < 1000 # let it start
                or (current_state.velocity_x != 0 or current_state.velocity_y != 0))
                and current_state.round_count < self.race_info.round_to_finish
-               and current_state.track_state.tile_type != track.TileType.Wall
+               and current_state.track_state.tile_type != track.TileType.Wall.value
                and current_state.timestamp < self.race_info.max_time_to_finish) :
             
             action = self.model.get_action(current_state)
