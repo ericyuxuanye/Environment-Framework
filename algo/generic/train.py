@@ -3,11 +3,10 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
 import random
-import math
+
 import numpy as np
-from itertools import count
 import copy
-from core.src import model, car
+from core.src import model
 from core.test.samples import Factory
 from model import *
 

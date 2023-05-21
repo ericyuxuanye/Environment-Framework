@@ -5,36 +5,11 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 import random
 import math
 import numpy as np
-from itertools import count
-import copy
-from core.src import model, car
+
+from core.src import model
 from core.test.samples import Factory
 from model import *
 
-import torch
-from torch import nn
-from torch.nn.parameter import Parameter
-# because we do not need gradients for GA
-torch.set_grad_enabled(False)
-
-from torch.multiprocessing import Pool, set_start_method
-try:
-    set_start_method("spawn")
-except RuntimeError:
-    pass
-
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-POPULATION_SIZE = 10
-TOP_SIZE = 2
-
-CROSS_RATE = 0.65
-CROSS_CHANCE = 0.6
-MUTATION_FACTOR = 0.1
-MUTATION_RATE = 0.15
-
-POPULATION_FILE_NAME = "population.pt"
-Parameters = list[Parameter]
 
 class ModelTrain(model.IModelInference):
 
@@ -95,7 +70,7 @@ class ModelTrain(model.IModelInference):
         race.race_info.model_info = ModelInfo(name='neat-hc', version='2023.5.20')
         race.race_info.round_to_finish = 50
         race.race_info.max_time_to_finish = 300000
-        
+
         race.run()
 
         final_state = race.steps[-1].car_state
