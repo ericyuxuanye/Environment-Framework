@@ -82,7 +82,8 @@ class TrackState:
             tile_distance:int = 0,
             tile_total_distance:int = 0,
             last_road_tile_distance:int = 0,
-            last_road_tile_total_distance:int = 0):
+            last_road_tile_total_distance:int = 0,
+            score:float = 0):
 
         self.type = 'TrackState'
         self.velocity_distance = velocity_distance  # polar coordinate velocity distance
@@ -93,9 +94,11 @@ class TrackState:
         self.tile_total_distance = tile_total_distance   # round_count * TrackInfo.total + tile_distance, 0 if tile is not road
         self.last_road_tile_distance = last_road_tile_distance  # tile_distance of the last road tile
         self.last_road_tile_total_distance = last_road_tile_total_distance  # tile_total_distance of the last road tile
+        self.score = score              # score of the track state
+
 
     def __str__(self) -> str:
-        return f'TrackState(velocity_distance={self.velocity_distance}, velocity_angle_to_wheel={self.velocity_angle_to_wheel}, rays={self.rays}, tile_type={self.tile_type}, tile_distance={self.tile_distance}, tile_total_distance={self.tile_total_distance}, last_road_tile_distance={self.last_road_tile_distance}, last_road_tile_total_distance={self.last_road_tile_total_distance})'
+        return f'TrackState(velocity_distance={self.velocity_distance}, velocity_angle_to_wheel={self.velocity_angle_to_wheel}, rays={self.rays}, tile_type={self.tile_type}, tile_distance={self.tile_distance}, tile_total_distance={self.tile_total_distance}, last_road_tile_distance={self.last_road_tile_distance}, last_road_tile_total_distance={self.last_road_tile_total_distance}, score={self.score})'
     
 
 class CarState:

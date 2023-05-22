@@ -61,22 +61,26 @@ class Model(model.IModelInference):
         return car.Action(self.max_acceleration*output[0], self.max_angular_velocity*output[1])
 
 
-if __name__ == '__main__':
-
+def create_model_race() -> Race:
     race = Factory.sample_race_1()
-    model = Model(
-        race.race_info.car_config.motion_profile.max_acceleration, 
+
+    model = Model(race.race_info.car_config.motion_profile.max_acceleration, 
         race.race_info.car_config.motion_profile.max_angular_velocity)
     loaded = model.load(os.path.dirname(__file__))
-    print('Model load from data=', loaded)
     if not loaded:
         print('Fail to load model, exit')
         exit()
-
+    # print('Model load from data=', loaded)
     race.model = model
     race.race_info.model_info = ModelInfo(name='neat-hc', version='2023.5.20')
-    race.race_info.round_to_finish = 5000
-    race.race_info.max_time_to_finish = 25000000
+    race.race_info.round_to_finish = 50
+    race.race_info.max_time_to_finish = 250000
+
+    return model, race
+
+if __name__ == '__main__':
+
+    model, race = create_model_race()
 
     start_state = race.race_info.start_state
     race.track_field.calc_track_state(start_state)

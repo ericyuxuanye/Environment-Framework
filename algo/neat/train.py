@@ -60,27 +60,14 @@ class ModelTrain(model.IModelInference):
 
     def eval_model(self, genome, config) -> float:
 
-        race = Factory.sample_race_1()
-        model = Model(
-            race.race_info.car_config.motion_profile.max_acceleration, 
-            race.race_info.car_config.motion_profile.max_angular_velocity)
+        model, race = create_model_race()
         model.load_genome(genome, config)
-
-        race.model = model
-        race.race_info.model_info = ModelInfo(name='neat-hc', version='2023.5.20')
-        race.race_info.round_to_finish = 50
-        race.race_info.max_time_to_finish = 300000
-
-        race.run()
+        
+        race.run(debug=False)
 
         final_state = race.steps[-1].car_state
         # print(final_state)
-
-        reward = (final_state.round_count*100
-            + final_state.track_state.tile_total_distance 
-            + final_state.track_state.last_road_tile_total_distance 
-            - final_state.timestamp / 1000)
-        return reward
+        return final_state.track_state.score
     
 
 if __name__ == '__main__':
