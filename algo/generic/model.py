@@ -119,20 +119,24 @@ class Model(model.IModelInference):
                 i += 1
 
 
-
-if __name__ == '__main__':
-    
+def create_model_race() -> Race:
     race = Factory.sample_race_1()
 
     model = Model(race.race_info.car_config.motion_profile.max_acceleration, 
         race.race_info.car_config.motion_profile.max_angular_velocity)
     loaded = model.load(os.path.dirname(__file__))
-    print('Model load from data=', loaded)
+    # print('Model load from data=', loaded)
     race.model = model
 
     race.race_info.model_info = ModelInfo(name='generic-hc', version='2023.5.18')
-    race.race_info.round_to_finish = 100
-    race.race_info.max_time_to_finish = 500000
+    race.race_info.round_to_finish = 200
+    race.race_info.max_time_to_finish = 5000000
+
+    return model, race
+
+if __name__ == '__main__':
+    
+    model, race = create_model_race()
 
     start_state = race.race_info.start_state
     race.track_field.calc_track_state(start_state)

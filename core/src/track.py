@@ -200,6 +200,11 @@ class TrackField:
                 track_state.last_road_tile_distance = self.track_info.round_distance - 1
             track_state.last_road_tile_total_distance = self.track_info.round_distance * car_state.round_count + track_state.last_road_tile_distance  
 
+        track_state.score = (car_state.round_count*100
+            + track_state.tile_total_distance 
+            + track_state.last_road_tile_total_distance 
+            - car_state.timestamp / 1000)
+
         angles = [0, -math.pi/2, math.pi/2, -math.pi/4, math.pi/4, -math.pi*1/8, math.pi*1/8, -math.pi*3/8, math.pi*3/8]
         track_state.rays = []
         for angle in angles:

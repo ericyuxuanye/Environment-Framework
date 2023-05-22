@@ -25,7 +25,7 @@ except RuntimeError:
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 POPULATION_SIZE = 10
-TOP_SIZE = 2
+TOP_SIZE = 3
 
 CROSS_RATE = 0.65
 CROSS_CHANCE = 0.6
@@ -59,7 +59,8 @@ class ModelTrain(model.IModelInference):
                 
 
     def init_population(self):
-        params = self.model.get_params()
+        model = Model()
+        params = model.get_params()
         shapes = [param.shape for param in params]
         self.population = []
         for _ in range(POPULATION_SIZE):
@@ -119,25 +120,12 @@ class ModelTrain(model.IModelInference):
 
     def eval_model(self, params: Parameters) -> float:
 
-        race = Factory.sample_race_1()
-
-        model = Model(race.race_info.car_config.motion_profile.max_acceleration, 
-            race.race_info.car_config.motion_profile.max_angular_velocity)
+        model, race = create_model_race()
         model.set_params(params)
-        race.model = model
-        race.race_info.model_info = ModelInfo(name='generic-hc', version='2023.5.18')
-        race.race_info.round_to_finish = 30
-        
         race.run(debug=False)
-
         final_state = race.steps[-1].car_state
         # print(final_state)
-
-        reward = (final_state.round_count*100
-            + final_state.track_state.tile_total_distance 
-            + final_state.track_state.last_road_tile_total_distance 
-            - final_state.timestamp / 1000)
-        return reward
+        return final_state.track_state.score
     
 
     def evaluate_population(self, population: list[Parameters]) -> list[float]:
@@ -260,7 +248,7 @@ if __name__ == '__main__':
         model_train.init_population()
         model_train.save(os.path.dirname(__file__))
 
-    for i in range(100):
+    for i in range(1000):
         print(f"Generation {i}")
         model_train.train()
 
