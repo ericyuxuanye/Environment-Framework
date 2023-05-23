@@ -1,16 +1,12 @@
-import sys
 import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
 import numpy as np
 import torch
-from torch import nn
-from torch.nn.parameter import Parameter
-
-from core.src import model, car
+from core.src import car, model
 from core.src.race import *
 from core.test.samples import Factory
-
+from torch import nn
+from torch.nn.parameter import Parameter
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # because we do not need gradients for GA
@@ -22,18 +18,18 @@ OUTPUT_VECTOR_SIZE = 2
 
 DATA_FILE_NAME = "net_params.pt"
 
+
 class Model(model.IModelInference):
+    net: torch.nn.Sequential
+    max_acceleration: float
+    max_angular_velocity: float
 
-    net:torch.nn.Sequential
-    max_acceleration:float
-    max_angular_velocity:float
-
-    def __init__(self, max_acceleration:float = 1, max_angular_velocity:float = 1):
+    def __init__(self, max_acceleration: float = 1, max_angular_velocity: float = 1):
         self.net = self.create_net()
         self.max_acceleration = max_acceleration
         self.max_angular_velocity = max_angular_velocity
 
-    def load(self, folder:str) -> bool:
+    def load(self, folder: str) -> bool:
         loaded = False
         try:
             model_path = os.path.join(folder, DATA_FILE_NAME)
@@ -47,7 +43,6 @@ class Model(model.IModelInference):
         return loaded
 
     def init_data(self) -> None:
-
         params = self.get_params()
         shapes = [param.shape for param in params]
 
@@ -64,13 +59,11 @@ class Model(model.IModelInference):
 
         self.set_params(param_value)
 
-    
     """
         inference
     """
 
     def get_action(self, car_state: car.CarState) -> car.Action:
-        
         input = np.empty((INPUT_VECTOR_SIZE), dtype=np.float32)
         input[0] = car_state.track_state.velocity_distance
         input[1] = car_state.track_state.velocity_angle_to_wheel
@@ -79,9 +72,9 @@ class Model(model.IModelInference):
         tensor = torch.tensor(input).float().unsqueeze(0).to(device)
         output = self.net(tensor)
         action = torch.flatten(output).cpu().detach().numpy()
-        return car.Action(self.max_acceleration*action[0], self.max_angular_velocity*action[1])
-
-
+        return car.Action(
+            self.max_acceleration * action[0], self.max_angular_velocity * action[1]
+        )
 
     @classmethod
     def create_net(cls):
@@ -91,15 +84,14 @@ class Model(model.IModelInference):
             nn.Linear(32, 16, bias=True),
             nn.Sigmoid(),
             nn.Linear(16, OUTPUT_VECTOR_SIZE, bias=True),
-            nn.Tanh()
+            nn.Tanh(),
         ).to(device)
-
 
     """
         training
     """
-    def get_params(self) -> list[Parameter]:
 
+    def get_params(self) -> list[Parameter]:
         params = []
         for layer in self.net:
             if hasattr(layer, "weight") and layer.weight != None:
@@ -109,7 +101,7 @@ class Model(model.IModelInference):
         return params
 
     def set_params(self, params: list[Parameter]):
-        i:int = 0
+        i: int = 0
         for layerid, layer in enumerate(self.net):
             if hasattr(layer, "weight") and layer.weight != None:
                 self.net[layerid].weight = params[i]
@@ -122,31 +114,33 @@ class Model(model.IModelInference):
 def create_model_race() -> Race:
     race = Factory.sample_race_1()
 
-    model = Model(race.race_info.car_config.motion_profile.max_acceleration, 
-        race.race_info.car_config.motion_profile.max_angular_velocity)
+    model = Model(
+        race.race_info.car_config.motion_profile.max_acceleration,
+        race.race_info.car_config.motion_profile.max_angular_velocity,
+    )
     loaded = model.load(os.path.dirname(__file__))
     # print('Model load from data=', loaded)
     race.model = model
 
-    race.race_info.model_info = ModelInfo(name='generic-hc', version='2023.5.18')
+    race.race_info.model_info = ModelInfo(name="generic-hc", version="2023.5.18")
     race.race_info.round_to_finish = 200
     race.race_info.max_time_to_finish = 5000000
 
     return model, race
 
-if __name__ == '__main__':
-    
+
+if __name__ == "__main__":
     model, race = create_model_race()
 
     start_state = race.race_info.start_state
     race.track_field.calc_track_state(start_state)
-    print('start_state:\n', start_state)
+    print("start_state:\n", start_state)
 
     action = model.get_action(start_state)
-    print('action st start:\n', action)
+    print("action st start:\n", action)
 
     race.run(debug=False)
 
     final_state = race.steps[-1].car_state
-    print('race_info:\n', race.race_info)
-    print('finish:\n', final_state)
+    print("race_info:\n", race.race_info)
+    print("finish:\n", final_state)
