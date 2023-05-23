@@ -41,7 +41,7 @@ class UI:
         self.width_multiplier = self.width / self.field_width
         self.height_mulplier = self.height / self.field_height
         self.screen = pygame.display.set_mode(
-            (width, height), flags=pygame.SCALED, vsync=1
+            (width, height), flags=pygame.HWSURFACE | pygame.DOUBLEBUF, vsync=1
         )
         self.background = pygame.transform.scale(
             UI.track_field_to_surface(track_field),
@@ -100,7 +100,7 @@ class UI:
                 ),
             )
             pygame.display.flip()
-            clock.tick(15)
+            clock.tick(10)
 
 
 if __name__ == "__main__":
@@ -109,5 +109,5 @@ if __name__ == "__main__":
     race_data = jsoner.RaceDataSaver.load(
         "data/race/TrackField2Radius2_20230512_000000"
     )
-    ui = UI(500, 300, race_data, track_field)
+    ui = UI(1000, 600, race_data, track_field)
     ui.start()
