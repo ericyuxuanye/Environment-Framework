@@ -2,13 +2,16 @@ import os
 import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+import math
+
 import numpy as np
 import pygame
+from numpy._typing import NDArray
+
 from core.src import jsoner
 from core.src.race import RaceData
 from core.src.track import TileType, TrackField
 from core.test.samples import Factory
-from numpy._typing import NDArray
 
 pygame.init()
 
@@ -34,7 +37,7 @@ class UI:
         """
         self.width = width
         self.height = height
-        self.field_width, self.field_height = track_field.field.shape
+        self.field_height, self.field_width = track_field.field.shape
         self.width_multiplier = self.width / self.field_width
         self.height_mulplier = self.height / self.field_height
         self.screen = pygame.display.set_mode(
@@ -48,8 +51,8 @@ class UI:
 
     @staticmethod
     def track_field_to_surface(field: TrackField) -> pygame.Surface:
-        tile_type_array: NDArray[np.uint16] = field.field["type"]
-        color_array = np.zeros((*field.field.shape, 3))
+        tile_type_array: NDArray[np.uint16] = field.field["type"].T
+        color_array = np.zeros((*tile_type_array.shape, 3))
 
         road_mask = tile_type_array == TileType.Road.value
         shoulder_mask = tile_type_array == TileType.Shoulder.value
@@ -77,14 +80,24 @@ class UI:
             self.screen.blit(self.background, (0, 0))
             # draw car
             position = entry.car_state.position
+            car_x = round(position.x * self.width_multiplier)
+            car_y = round(position.y * self.height_mulplier)
+
             pygame.draw.circle(
                 self.screen,
                 "blue",
+                (car_x, car_y),
+                5,
+            )
+            # draw velocity vector
+            pygame.draw.line(
+                self.screen,
+                "green",
+                (car_x, car_y),
                 (
-                    round(position.x * self.height_mulplier),
-                    round(position.y * self.width_multiplier),
+                    car_x + round(entry.car_state.velocity_x * self.width_multiplier),
+                    car_y + round(entry.car_state.velocity_y * self.height_mulplier),
                 ),
-                10,
             )
             pygame.display.flip()
             clock.tick(15)
@@ -94,7 +107,7 @@ if __name__ == "__main__":
     track_field = Factory.sample_track_field_2()
     race_data_saver = jsoner.RaceDataSaver()
     race_data = jsoner.RaceDataSaver.load(
-        "data/race/TrackField2Radius2_20230512_010101"
+        "data/race/TrackField2Radius2_20230512_000000"
     )
-    ui = UI(500, 500, race_data, track_field)
+    ui = UI(500, 300, race_data, track_field)
     ui.start()
