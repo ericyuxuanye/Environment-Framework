@@ -79,7 +79,8 @@
             "tile_distance": 0,
             "tile_total_distance": 0,
             "last_road_tile_distance": 0,
-            "last_road_tile_total_distance": 0
+            "last_road_tile_total_distance": 0,
+            "score": 0.0
         }
     },
     "max_time_to_finish": 300000
