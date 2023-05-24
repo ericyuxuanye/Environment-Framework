@@ -89,16 +89,22 @@ class UI:
                 (car_x, car_y),
                 5,
             )
-            # draw velocity vector
-            pygame.draw.line(
-                self.screen,
-                "green",
-                (car_x, car_y),
-                (
-                    car_x + round(entry.car_state.velocity_x * self.width_multiplier),
-                    car_y + round(entry.car_state.velocity_y * self.height_mulplier),
-                ),
-            )
+            # draw acceleration
+            action = entry.action
+            if action is not None:
+                magnitude = action.forward_acceleration
+                direction = entry.car_state.wheel_angle
+                accel_x = round(self.width_multiplier * magnitude * math.cos(direction))
+                accel_y = round(self.height_mulplier * magnitude * math.sin(direction))
+                pygame.draw.line(
+                    self.screen,
+                    "green",
+                    (car_x, car_y),
+                    (
+                        car_x + accel_x,
+                        car_y + accel_y
+                    ),
+                )
             pygame.display.flip()
             clock.tick(10)
 
