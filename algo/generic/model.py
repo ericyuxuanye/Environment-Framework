@@ -126,6 +126,8 @@ def create_model_race() -> Race:
         race.race_info.car_config.motion_profile.max_angular_velocity)
     loaded = model.load(os.path.dirname(__file__))
     # print('Model load from data=', loaded)
+    if not loaded:
+        model.init_data()
     race.model = model
 
     race.race_info.model_info = ModelInfo(name='generic-hc', version='2023.5.18')
