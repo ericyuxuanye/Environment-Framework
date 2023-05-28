@@ -73,7 +73,7 @@ def create_model_race() -> Race:
     # print('Model load from data=', loaded)
     race.model = model
     race.race_info.model_info = ModelInfo(name='neat-hc', version='2023.5.20')
-    race.race_info.round_to_finish = 50
+    race.race_info.round_to_finish = 2
     race.race_info.max_time_to_finish = 250000
 
     return model, race
@@ -94,3 +94,13 @@ if __name__ == '__main__':
     final_state = race.steps[-1].car_state
     print('race_info:\n', race.race_info)
     print('finish:\n', final_state)
+
+    for i in range(len(race.steps)):
+        step = race.steps[i]
+        if step.action != None:
+            #print(step.car_state)
+            print(i, step.action.forward_acceleration, step.action.angular_velocity, 
+                  step.car_state.position.x, step.car_state.position.y,step.car_state.wheel_angle,
+                  step.car_state.track_state.tile_type,
+                  step.car_state.track_state.velocity_distance, step.car_state.track_state.velocity_angle_to_wheel,
+                  step.car_state.track_state.score)

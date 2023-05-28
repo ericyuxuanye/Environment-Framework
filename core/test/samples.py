@@ -105,9 +105,9 @@ class Factory:
         start_line = MarkLine(TrackMark.Start, range(4, 7), range(14, 15))
 
         # finish line
-        tf.fill_block(range(3, 4), range(12, 15), TileType.Wall.value, 0)   # block top by wall
+        tf.fill_block(range(2, 4), range(12, 16), TileType.Wall.value, 0)   # block top by wall
         finish_line = MarkLine(TrackMark.Finish, range(4, 7), range(13, 14))
-        tf.fill_block(range(7, 8), range(12, 15), TileType.Wall.value, 0)   # block bottom by wall
+        tf.fill_block(range(7, 9), range(12, 16), TileType.Wall.value, 0)   # block bottom by wall
         
         if compute_distance:
             tf.compute_tile_distance(start_line, finish_line)
