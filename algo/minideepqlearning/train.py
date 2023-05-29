@@ -5,9 +5,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 import random
 from collections import namedtuple, deque
 
-from core.src import model
-from core.src.race import *
-
+import torch.optim as optim
 from model import *
 
 Transition = namedtuple('Transition',
@@ -36,8 +34,8 @@ class ReplayMemory:
     def __len__(self):
         return len(self.memory)
 
-class ModelTrain(model.IModelInference):
-    def __init__(self, model:Model, race:Race):
+class ModelTrain():
+    def __init__(self, model:Model, race:MiniRace):
         self.model = model
         self.race = race
         self.target_net = DQN().to(device).to(device)
