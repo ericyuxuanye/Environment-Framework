@@ -113,10 +113,8 @@ class ModelTrain():
             final_state = race.steps[-1].state
 
             total_score += final_state.time
-            
             if final_state.time > max_score:
                 max_score = final_state.time
-            
             episode_durations.append(final_state.time)
             plot_durations()
 
@@ -209,7 +207,7 @@ if __name__ == '__main__':
     model_train.load(os.path.dirname(__file__))
     
     for epoch in range(10):
-        average, max = model_train.train(10)
+        average, max = model_train.train(100)
         print(f"epoch {epoch}: {average, max}")
         model_train.save(os.path.dirname(__file__))
 
