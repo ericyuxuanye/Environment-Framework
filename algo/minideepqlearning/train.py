@@ -1,12 +1,52 @@
-import sys
+
 import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+
+import matplotlib
+import matplotlib.pyplot as plt
 
 import random
 from collections import namedtuple, deque
 
 import torch.optim as optim
 from model import *
+
+# set up matplotlib
+is_ipython = 'inline' in matplotlib.get_backend()
+if is_ipython:
+    from IPython import display
+
+plt.ion()
+
+
+episode_durations = []
+
+
+def plot_durations(show_result=False):
+    plt.figure(1)
+    durations_t = torch.tensor(episode_durations, dtype=torch.float)
+    if show_result:
+        plt.title('Result')
+    else:
+        plt.clf()
+        plt.title('Training...')
+    plt.xlabel('Episode')
+    plt.ylabel('Duration')
+    plt.plot(durations_t.numpy())
+    # Take 100 episode averages and plot them too
+    if len(durations_t) >= 100:
+        means = durations_t.unfold(0, 100, 1).mean(1).view(-1)
+        means = torch.cat((torch.zeros(99), means))
+        plt.plot(means.numpy())
+
+    plt.pause(0.001)  # pause a bit so that plots are updated
+    if is_ipython:
+        if not show_result:
+            display.display(plt.gcf())
+            display.clear_output(wait=True)
+        else:
+            display.display(plt.gcf())
+    
+
 
 Transition = namedtuple('Transition',
                         ('state', 'action', 'next_state', 'reward'))
@@ -76,6 +116,9 @@ class ModelTrain():
             
             if final_state.time > max_score:
                 max_score = final_state.time
+            
+            episode_durations.append(final_state.time)
+            plot_durations()
 
             for i in range(len(race.steps)):
                 step = race.steps[i]
@@ -165,9 +208,12 @@ if __name__ == '__main__':
     model_train = ModelTrain(model, race)
     model_train.load(os.path.dirname(__file__))
     
-    for epoch in range(1):
+    for epoch in range(10):
         average, max = model_train.train(10)
         print(f"epoch {epoch}: {average, max}")
         model_train.save(os.path.dirname(__file__))
 
 
+    plot_durations(show_result=True)
+    plt.ioff()
+    plt.show()

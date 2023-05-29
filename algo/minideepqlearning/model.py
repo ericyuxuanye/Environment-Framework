@@ -33,8 +33,8 @@ class DQN(nn.Module):
 # EPS_END is the final value of epsilon
 # EPS_DECAY controls the rate of exponential decay of epsilon, higher means a slower decay
 EPS_START = 0.95
-EPS_END = 0.8
-EPS_DECAY = 10000
+EPS_END = 0.1
+EPS_DECAY = 100
 
 class MiniState:
     def __init__(self, position:float = 0, time:int = 0):
