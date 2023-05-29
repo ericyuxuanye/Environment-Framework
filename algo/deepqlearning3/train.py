@@ -2,6 +2,9 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
+import matplotlib
+import matplotlib.pyplot as plt
+
 import random
 from collections import namedtuple, deque
 
@@ -10,6 +13,42 @@ from core.src.race import *
 
 from model import *
 
+# set up matplotlib
+is_ipython = 'inline' in matplotlib.get_backend()
+if is_ipython:
+    from IPython import display
+
+plt.ion()
+
+episode_durations = []
+
+
+def plot_durations(show_result=False):
+    plt.figure(1)
+    durations_t = torch.tensor(episode_durations, dtype=torch.float)
+    if show_result:
+        plt.title('Result')
+    else:
+        plt.clf()
+        plt.title('Training...')
+    plt.xlabel('Episode')
+    plt.ylabel('Duration')
+    plt.plot(durations_t.numpy())
+    # Take 100 episode averages and plot them too
+    if len(durations_t) >= 100:
+        means = durations_t.unfold(0, 100, 1).mean(1).view(-1)
+        means = torch.cat((torch.zeros(99), means))
+        plt.plot(means.numpy())
+
+    plt.pause(0.001)  # pause a bit so that plots are updated
+    if is_ipython:
+        if not show_result:
+            display.display(plt.gcf())
+            display.clear_output(wait=True)
+        else:
+            display.display(plt.gcf())
+
+
 Transition = namedtuple('Transition',
                         ('state', 'action', 'next_state', 'reward'))
 
@@ -17,10 +56,10 @@ Transition = namedtuple('Transition',
 # GAMMA is the discount factor as mentioned in the previous section
 # TAU is the update rate of the target network
 # LR is the learning rate of the ``AdamW`` optimizer
-BATCH_SIZE = 10
-GAMMA = 0.99
+BATCH_SIZE = 64
+GAMMA = 0.9
 
-TAU = 0.5
+TAU = 1
 LR = 1e-2
 
 class ReplayMemory:
@@ -68,26 +107,18 @@ class ModelTrain(model.IModelInference):
         global steps_done
 
         total_score:float = 0
-        max_score:float =  -100
-        for episode in range(episodes):
+        max_score:float =  0
 
+        for episode in range(episodes):
             self.race.run(debug=False)
             final_state = race.steps[-1].car_state
+            
+            total_score += final_state.track_state.last_road_tile_total_distance
+            if final_state.track_state.last_road_tile_total_distance > max_score:
+                max_score = final_state.track_state.last_road_tile_total_distance
+            episode_durations.append(final_state.track_state.last_road_tile_total_distance)
+            plot_durations()
 
-            for i in range(len(race.steps)):
-                step = race.steps[i]
-                if step.action != None:
-                    #print(step.car_state)
-                    print(i, step.action.forward_acceleration, step.action.angular_velocity, 
-                        step.car_state.position.x, step.car_state.position.y,step.car_state.wheel_angle,
-                        step.car_state.track_state.tile_type,
-                        step.car_state.track_state.velocity_distance, step.car_state.track_state.velocity_angle_to_wheel,
-                        step.car_state.track_state.score)
-            # print(f"run {episode}: reach {final_state.track_state.score}")
-
-            total_score += final_state.track_state.score
-            if final_state.track_state.score > max_score:
-                max_score = final_state.track_state.score
             step_count = len(race.steps)
             state = race.steps[0].car_state
             state_tensor = Model.state_tensor(state)
@@ -98,12 +129,14 @@ class ModelTrain(model.IModelInference):
                 next_state = step.car_state
                 next_state_tensor = Model.state_tensor(next_state)
             
-                reward = next_state.track_state.score - state.track_state.score
+                reward = next_state.track_state.tile_total_distance - state.track_state.tile_total_distance
                 reward_tensor = torch.tensor([reward], device=device)
 
                 if next_state.track_state.tile_type == track.TileType.Wall.value:
                     next_state_tensor = None
 
+                if next_state.track_state.tile_total_distance > max_score:
+                    max_score = next_state.track_state.tile_total_distance
                 self.memory.push(state_tensor, action_tensor, next_state_tensor, reward_tensor)
                 state = next_state
                 state_tensor = next_state_tensor
@@ -172,9 +205,11 @@ if __name__ == '__main__':
     model_train = ModelTrain(model, race)
     model_train.load(os.path.dirname(__file__))
     
-    for epoch in range(1):
-        #average, max = model_train.train(1)
-        #print(f"epoch {epoch}: {average, max}")
+    for epoch in range(20):
+        average, max = model_train.train(100)
+        print(f"epoch {epoch}: {average, max}")
         model_train.save(os.path.dirname(__file__))
 
-
+    plot_durations(show_result=True)
+    plt.ioff()
+    plt.show()

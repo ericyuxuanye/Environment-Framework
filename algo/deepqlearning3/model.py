@@ -15,18 +15,12 @@ from core.src.race import *
 from core.test.samples import Factory
 
 INPUT_VECTOR_SIZE = 11
-OUTPUT_VECTOR_SIZE = 81
 
-"""
-acceleration: 5.0 * [-1, -.75, -.5, -.25, 0, .25, .5, .75, 1]
-angular_velocity: Pi/2 * [-1, -.75, -.5, -.25, 0, .25, .5, .75, 1]
+action_step = 1 # number of steps for [0, 1]
+action_step_count = 2*action_step+1 # total number of options [-1, 1]
 
-action_index = acceleration_index * 9 + angular_velocity_index
+OUTPUT_VECTOR_SIZE = action_step_count*action_step_count
 
-acceleration_index = action_index // 9
-angular_velocity_index = action_index % 9
-
-"""
 
 device = "cpu"
 
@@ -36,10 +30,14 @@ class DQN(nn.Module):
 
     def __init__(self):
         super(DQN, self).__init__()
-        self.layer1 = nn.Linear(INPUT_VECTOR_SIZE, 32)
-        self.layer2 = nn.Linear(32, 32)
-        self.layer3 = nn.Linear(32, 32)
-        self.layer4 = nn.Linear(32, OUTPUT_VECTOR_SIZE)
+        HideLayer1Size = 32
+        self.layer1 = nn.Linear(INPUT_VECTOR_SIZE, HideLayer1Size)
+        HideLayer2Size = 32
+        self.layer2 = nn.Linear(HideLayer1Size, HideLayer2Size)
+        HideLayer3Size = 32
+        self.layer3 = nn.Linear(HideLayer2Size, HideLayer3Size)
+
+        self.layer4 = nn.Linear(HideLayer3Size, OUTPUT_VECTOR_SIZE)
 
     # Called with either one element to determine next action, or a batch
     # during optimization. Returns tensor([[left0exp,right0exp]...]).
@@ -61,7 +59,7 @@ class DQN(nn.Module):
 
 
 class Wheel:
-    def __init__(self, keys:list[int], weights:list[float]):
+    def __init__(self, keys:list[float], weights:list[float]):
         self.wheel = []
         total_weights = sum(weights)
         top = 0
@@ -70,7 +68,7 @@ class Wheel:
             self.wheel.append((top, top+f, key))
             top += f
 
-    def binary_search(self, min_index:int, max_index:int, number:float):
+    def binary_search(self, min_index:int, max_index:int, number:float) -> float:
         mid_index = (min_index + max_index)//2
         low, high, key = self.wheel[mid_index]
         if low<=number<=high:
@@ -87,9 +85,10 @@ class Wheel:
 # EPS_START is the starting value of epsilon
 # EPS_END is the final value of epsilon
 # EPS_DECAY controls the rate of exponential decay of epsilon, higher means a slower decay
-EPS_START = 0.95
-EPS_END = 0.8
-EPS_DECAY = 10000
+EPS_START = 0.90
+EPS_END = 0.10
+EPS_DECAY = 1000
+
 
 steps_done = 0
 class Model(model.IModelInference):
@@ -100,8 +99,8 @@ class Model(model.IModelInference):
         self.policy_net = DQN().to(device)
         self.is_train = is_train
 
-        self.acceleration_wheel = Wheel([-1, -.75, -.5, -.25, 0, .25, .5, .75, 1], [1, 1, 5, 1, 10, 5, 10, 1, 100])
-        self.angular_wheel = Wheel([-1, -.75, -.5, -.25, 0, .25, .5, .75, 1], [1, 1, 1, 1, 20, 1, 3, 1, 100])
+        self.acceleration_wheel = Wheel([-1, 0, 1], [1, 2, 5])
+        self.angular_wheel = Wheel([-1, 0, 1], [1, 2, 3])
 
     def load(self, folder:str) -> bool:
         loaded = False
@@ -126,11 +125,10 @@ class Model(model.IModelInference):
 
         return input
 
-    
     def action_tensor(self, action: car.Action) -> torch.tensor:
-        acceleration_index = round(action.forward_acceleration/self.max_acceleration) * 4 + 4
-        angular_velocity_index = round(action.angular_velocity/self.max_angular_velocity) * 4 + 4
-        action_index =  acceleration_index*9 + angular_velocity_index
+        acceleration_index = round(action.forward_acceleration/self.max_acceleration) * action_step + action_step
+        angular_velocity_index = round(action.angular_velocity/self.max_angular_velocity) * action_step + action_step
+        action_index =  acceleration_index*action_step_count + angular_velocity_index
         action_tensor = torch.tensor([[action_index]], device=device)
         return action_tensor
     
@@ -150,9 +148,11 @@ class Model(model.IModelInference):
                 top = max[1]
                 action_index = int(top[0])
         else:
-            acceleration_index = self.acceleration_wheel.spin() * 4 + 4
-            angular_velocity_index = self.angular_wheel.spin() * 4 + 4
-            action_index = acceleration_index * 9 + angular_velocity_index
+            acceleration_value = self.acceleration_wheel.spin()
+            acceleration_index = acceleration_value * action_step + action_step
+            angular_velocity_value = self.angular_wheel.spin()
+            angular_velocity_index = angular_velocity_value * action_step + action_step
+            action_index = acceleration_index * action_step_count + angular_velocity_index
 
         return action_index
         
@@ -162,13 +162,13 @@ class Model(model.IModelInference):
         input = self.state_tensor(car_state)
         action_index = self.select_action(input)
 
-        acceleration_index = action_index // 9
-        angular_velocity_index = action_index % 9
-        acceleration = self.max_acceleration*(acceleration_index-4)/4
-        angular_velocity = self.max_angular_velocity*(angular_velocity_index-4)/4
+        acceleration_index = action_index // action_step_count
+        angular_velocity_index = action_index % action_step_count
+        acceleration = self.max_acceleration*(acceleration_index-action_step)/action_step
+        angular_velocity = self.max_angular_velocity*(angular_velocity_index-action_step)/action_step
 
         car_acion = car.Action(acceleration, angular_velocity)
-        # print('A:', acceleration_index-4, angular_velocity_index-4)
+        # print('A:', acceleration_index-action_step, angular_velocity_index-action_step)
         return car_acion
 
 
@@ -186,8 +186,8 @@ def create_model_race() -> Race:
     race.model = model
     
     race.race_info.model_info = ModelInfo(name='graddesc-hc', version='2023.5.27')
-    race.race_info.round_to_finish = 1
-    race.race_info.max_time_to_finish = 300000
+    race.race_info.round_to_finish = 10
+    race.race_info.max_time_to_finish = 100000
 
     return model, race
 
@@ -208,14 +208,14 @@ if __name__ == '__main__':
     print('race_info:\n', race.race_info)
     print('finish:\n', final_state)
 
-   
+    torch.set_printoptions(precision=2)
     for i in range(len(race.steps)):
         step = race.steps[i]
         if step.action != None:
-            #print(step.car_state)
-            print(i, step.action.forward_acceleration, step.action.angular_velocity, 
-                  step.car_state.position.x, step.car_state.position.y,step.car_state.wheel_angle,
-                  step.car_state.track_state.tile_type,
-                  step.car_state.track_state.velocity_distance, step.car_state.track_state.velocity_angle_to_wheel,
-                  step.car_state.track_state.score)
+            print(i
+                  , f'action({step.action.forward_acceleration:.2f}, {step.action.angular_velocity:.2f})'
+                  , step.car_state.track_state.tile_total_distance, step.car_state.track_state.score
+                  , f'(x={step.car_state.position.x:.2f}, y={step.car_state.position.y:.2f})'
+                  , f'(head={step.car_state.wheel_angle:.2f}, r={step.car_state.track_state.velocity_distance:.2f}, a={step.car_state.track_state.velocity_angle_to_wheel:.2f})'
+                  )
     

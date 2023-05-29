@@ -16,21 +16,11 @@ from core.test.samples import Factory
 
 INPUT_VECTOR_SIZE = 11
 
-action_step = 1
-action_step_count = 2*action_step+1
+action_step = 4 # number of steps for [0, 1]
+action_step_count = 2*action_step+1 # total number of options [-1, 1]
 
 OUTPUT_VECTOR_SIZE = action_step_count*action_step_count
 
-"""
-acceleration: 5.0 * [-1, -.75, -.5, -.25, 0, .25, .5, .75, 1]
-angular_velocity: Pi/2 * [-1, -.75, -.5, -.25, 0, .25, .5, .75, 1]
-
-action_index = acceleration_index * 9 + angular_velocity_index
-
-acceleration_index = action_index // 9
-angular_velocity_index = action_index % 9
-
-"""
 
 device = "cpu"
 
@@ -40,10 +30,14 @@ class DQN(nn.Module):
 
     def __init__(self):
         super(DQN, self).__init__()
-        self.layer1 = nn.Linear(INPUT_VECTOR_SIZE, 32)
-        self.layer2 = nn.Linear(32, 32)
-        self.layer3 = nn.Linear(32, 32)
-        self.layer4 = nn.Linear(32, OUTPUT_VECTOR_SIZE)
+        HideLayer1Size = 32
+        self.layer1 = nn.Linear(INPUT_VECTOR_SIZE, HideLayer1Size)
+        HideLayer2Size = 32
+        self.layer2 = nn.Linear(HideLayer1Size, HideLayer2Size)
+        HideLayer3Size = 32
+        self.layer3 = nn.Linear(HideLayer2Size, HideLayer3Size)
+
+        self.layer4 = nn.Linear(HideLayer3Size, OUTPUT_VECTOR_SIZE)
 
     # Called with either one element to determine next action, or a batch
     # during optimization. Returns tensor([[left0exp,right0exp]...]).
@@ -91,12 +85,9 @@ class Wheel:
 # EPS_START is the starting value of epsilon
 # EPS_END is the final value of epsilon
 # EPS_DECAY controls the rate of exponential decay of epsilon, higher means a slower decay
-EPS_START = 0.95
-EPS_END = 0.8
-EPS_DECAY = 10000
-
-action_step = 1
-action_step_count = 2*action_step+1
+EPS_START = 0.90
+EPS_END = 0.05
+EPS_DECAY = 1000
 
 
 steps_done = 0
@@ -108,8 +99,8 @@ class Model(model.IModelInference):
         self.policy_net = DQN().to(device)
         self.is_train = is_train
 
-        self.acceleration_wheel = Wheel([-1, 0, 1], [1, 2, 100])
-        self.angular_wheel = Wheel([-1, 0, 1], [1, 5, 100])
+        self.acceleration_wheel = Wheel([-1, -.75, -.5, -.25, 0, .25, .5, .75, 1], [10, 1, 5, 1, 10, 5, 10, 20, 100])
+        self.angular_wheel = Wheel([-1, -.75, -.5, -.25, 0, .25, .5, .75, 1], [25, 1, 10, 1, 10, 5, 25, 10, 100])
 
     def load(self, folder:str) -> bool:
         loaded = False
@@ -134,7 +125,6 @@ class Model(model.IModelInference):
 
         return input
 
-    
     def action_tensor(self, action: car.Action) -> torch.tensor:
         acceleration_index = round(action.forward_acceleration/self.max_acceleration) * action_step + action_step
         angular_velocity_index = round(action.angular_velocity/self.max_angular_velocity) * action_step + action_step
@@ -163,7 +153,6 @@ class Model(model.IModelInference):
             angular_velocity_value = self.angular_wheel.spin()
             angular_velocity_index = angular_velocity_value * action_step + action_step
             action_index = acceleration_index * action_step_count + angular_velocity_index
-            action_index = 8 #debug only
 
         return action_index
         
@@ -197,8 +186,8 @@ def create_model_race() -> Race:
     race.model = model
     
     race.race_info.model_info = ModelInfo(name='graddesc-hc', version='2023.5.27')
-    race.race_info.round_to_finish = 1
-    race.race_info.max_time_to_finish = 300000
+    race.race_info.round_to_finish = 10
+    race.race_info.max_time_to_finish = 100000
 
     return model, race
 
@@ -219,14 +208,14 @@ if __name__ == '__main__':
     print('race_info:\n', race.race_info)
     print('finish:\n', final_state)
 
-   
     for i in range(len(race.steps)):
         step = race.steps[i]
         if step.action != None:
-            #print(step.car_state)
+            print(i, step.action, model.action_tensor(step.action))
+            """
             print(i, step.action.forward_acceleration, step.action.angular_velocity, 
                   step.car_state.position.x, step.car_state.position.y,step.car_state.wheel_angle,
                   step.car_state.track_state.tile_type,
                   step.car_state.track_state.velocity_distance, step.car_state.track_state.velocity_angle_to_wheel,
                   step.car_state.track_state.score)
-    
+            """
