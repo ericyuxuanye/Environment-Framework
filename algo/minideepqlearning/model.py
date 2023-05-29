@@ -1,18 +1,10 @@
-import sys
 import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
-
 import math
 import numpy as np
 import random
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import torch.optim as optim
-
-from core.src import model, car
-from core.src.race import *
-from core.test.samples import Factory
 
 INPUT_VECTOR_SIZE = 1
 
@@ -26,13 +18,14 @@ class DQN(nn.Module):
 
     def __init__(self):
         super(DQN, self).__init__()
-        self.layer1 = nn.Linear(INPUT_VECTOR_SIZE, 32)
-        self.layer2 = nn.Linear(32, OUTPUT_VECTOR_SIZE)
+        HiddenLayerSize = 1
+        self.layer1 = nn.Linear(INPUT_VECTOR_SIZE, HiddenLayerSize)
+        self.layer2 = nn.Linear(HiddenLayerSize, OUTPUT_VECTOR_SIZE)
 
 
     def forward(self, x):
         x = self.layer1(x)
-        x = F.relu(x)
+        x = F.tanh(x)
         return self.layer2(x)
 
 
@@ -106,7 +99,7 @@ class MiniRace:
 
 steps_done:int = 0 
 
-class Model(model.IModelInference):
+class Model():
 
     def __init__(self, is_train:bool = False):
         self.policy_net = DQN().to(device)
@@ -177,7 +170,7 @@ class Model(model.IModelInference):
         return action
 
 
-def create_model_race() -> Race:
+def create_model_race():
     race = MiniRace(10)
 
     model = Model()
