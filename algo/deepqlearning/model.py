@@ -2,6 +2,7 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
+import math
 import numpy as np
 import random
 import torch
@@ -14,28 +15,39 @@ from core.src.race import *
 from core.test.samples import Factory
 
 INPUT_VECTOR_SIZE = 11
-OUTPUT_VECTOR_SIZE = 9
+OUTPUT_VECTOR_SIZE = 81
+
+"""
+acceleration: 5.0 * [-1, -.75, -.5, -.25, 0, .25, .5, .75, 1]
+angular_velocity: Pi/2 * [-1, -.75, -.5, -.25, 0, .25, .5, .75, 1]
+
+action_index = acceleration_index * 9 + angular_velocity_index
+
+acceleration_index = action_index // 9
+angular_velocity_index = action_index % 9
+
+"""
+
 device = "cpu"
 
-TRAIN_EXPLOITION_RATE = 0.2
-
-
-DATA_FILE_NAME = "target.pt"
+DATA_FILE_NAME = "policy_net.pt"
 
 class DQN(nn.Module):
 
     def __init__(self):
         super(DQN, self).__init__()
-        self.layer1 = nn.Linear(INPUT_VECTOR_SIZE, 128)
-        self.layer2 = nn.Linear(128, 128)
-        self.layer3 = nn.Linear(128, OUTPUT_VECTOR_SIZE)
+        self.layer1 = nn.Linear(INPUT_VECTOR_SIZE, 32)
+        self.layer2 = nn.Linear(32, 32)
+        self.layer3 = nn.Linear(32, 32)
+        self.layer4 = nn.Linear(32, OUTPUT_VECTOR_SIZE)
 
     # Called with either one element to determine next action, or a batch
     # during optimization. Returns tensor([[left0exp,right0exp]...]).
     def forward(self, x):
         x = F.relu(self.layer1(x))
         x = F.relu(self.layer2(x))
-        return self.layer3(x)
+        x = F.relu(self.layer3(x))
+        return self.layer4(x)
 
     @classmethod
     def init_weight(cls, layer:nn.Linear) -> None:
@@ -46,22 +58,57 @@ class DQN(nn.Module):
     def init_bias(cls, layer:nn.Linear) -> None:
         layer.bias = torch.nn.parameter.Parameter(
             nn.init.uniform_(torch.empty(layer.bias.shape), -.1, +.1).to(device))
+
+
+class Wheel:
+    def __init__(self, keys:list[int], weights:list[float]):
+        self.wheel = []
+        total_weights = sum(weights)
+        top = 0
+        for key, weight in zip(keys, weights):
+            f = weight/total_weights
+            self.wheel.append((top, top+f, key))
+            top += f
+
+    def binary_search(self, min_index:int, max_index:int, number:float):
+        mid_index = (min_index + max_index)//2
+        low, high, key = self.wheel[mid_index]
+        if low<=number<=high:
+            return key
+        elif high < number:
+            return self.binary_search(mid_index+1, max_index, number)
+        else:
+            return self.binary_search(min_index, mid_index-1, number)
         
+    def spin(self) -> int:
+        return self.binary_search(0, len(self.wheel) - 1, random.random())
 
 
+# EPS_START is the starting value of epsilon
+# EPS_END is the final value of epsilon
+# EPS_DECAY controls the rate of exponential decay of epsilon, higher means a slower decay
+EPS_START = 0.95
+EPS_END = 0.8
+EPS_DECAY = 10000
+
+steps_done = 0
 class Model(model.IModelInference):
 
-    def __init__(self, max_acceleration:float = 1, max_angular_velocity:float = 1):
+    def __init__(self, max_acceleration:float = 1, max_angular_velocity:float = 1, is_train:bool = False):
         self.max_acceleration = max_acceleration
         self.max_angular_velocity = max_angular_velocity
-        self.net = CarNet(INPUT_VECTOR_SIZE).to(device)
+        self.policy_net = DQN().to(device)
+        self.is_train = is_train
+
+        self.acceleration_wheel = Wheel([-1, -.75, -.5, -.25, 0, .25, .5, .75, 1], [1, 1, 5, 1, 10, 5, 10, 1, 100])
+        self.angular_wheel = Wheel([-1, -.75, -.5, -.25, 0, .25, .5, .75, 1], [1, 1, 1, 1, 20, 1, 3, 1, 100])
 
     def load(self, folder:str) -> bool:
         loaded = False
         try:
             model_path = os.path.join(folder, DATA_FILE_NAME)
             if os.path.exists(model_path):
-                self.net.load_state_dict(torch.load(model_path))
+                self.policy_net.load_state_dict(torch.load(model_path))
                 loaded = True
         except:
             print(f"Failed to load q_learning model from {model_path}")
@@ -80,17 +127,48 @@ class Model(model.IModelInference):
         return input
 
     
-    """
-        inference
-    """
-    def get_action(self, car_state: car.CarState) -> car.Action:
-  
-        input = self.state_tensor(car_state)
-        self.net(input)
-        action_output = self.net.action_output
-        action_vector = torch.flatten(action_output).cpu().detach().numpy()
+    def action_tensor(self, action: car.Action) -> torch.tensor:
+        acceleration_index = round(action.forward_acceleration/self.max_acceleration) * 4 + 4
+        angular_velocity_index = round(action.angular_velocity/self.max_angular_velocity) * 4 + 4
+        action_index =  acceleration_index*9 + angular_velocity_index
+        action_tensor = torch.tensor([[action_index]], device=device)
+        return action_tensor
+    
+    def select_action(self, state_tensor) ->int:
+        global steps_done
+        sample = random.random()
+        eps_threshold = (EPS_END + (EPS_START - EPS_END) * math.exp(-1. * steps_done / EPS_DECAY))
+        steps_done += 1
 
-        car_acion = car.Action(self.max_acceleration*action_vector[0], self.max_angular_velocity*action_vector[1])
+        if sample > eps_threshold or not self.is_train:
+            with torch.no_grad():
+                # t.max(1) will return the largest column value of each row.
+                # second column on max result is index of where max element was
+                # found, so we pick action with the larger expected reward.
+                net_output = self.policy_net(state_tensor)
+                max = net_output.max(1)
+                top = max[1]
+                action_index = int(top[0])
+        else:
+            acceleration_index = self.acceleration_wheel.spin() * 4 + 4
+            angular_velocity_index = self.angular_wheel.spin() * 4 + 4
+            action_index = acceleration_index * 9 + angular_velocity_index
+
+        return action_index
+        
+    
+    def get_action(self, car_state: car.CarState) -> car.Action:
+
+        input = self.state_tensor(car_state)
+        action_index = self.select_action(input)
+
+        acceleration_index = action_index // 9
+        angular_velocity_index = action_index % 9
+        acceleration = self.max_acceleration*(acceleration_index-4)/4
+        angular_velocity = self.max_angular_velocity*(angular_velocity_index-4)/4
+
+        car_acion = car.Action(acceleration, angular_velocity)
+        # print('A:', acceleration_index-4, angular_velocity_index-4)
         return car_acion
 
 
@@ -102,8 +180,8 @@ def create_model_race() -> Race:
     
     loaded = model.load(os.path.dirname(__file__))
     print('Model load from data=', loaded)
-    if not loaded:
-        model.net.init_data() 
+    #if not loaded:
+    #    model.net.init_data() 
 
     race.model = model
     
@@ -124,8 +202,20 @@ if __name__ == '__main__':
     action = model.get_action(start_state)
     print('action at start:\n', action)
 
-    race.run(debug=True)
+    race.run(debug=False)
 
     final_state = race.steps[-1].car_state
     print('race_info:\n', race.race_info)
     print('finish:\n', final_state)
+
+   
+    for i in range(len(race.steps)):
+        step = race.steps[i]
+        if step.action != None:
+            #print(step.car_state)
+            print(i, step.action.forward_acceleration, step.action.angular_velocity, 
+                  step.car_state.position.x, step.car_state.position.y,step.car_state.wheel_angle,
+                  step.car_state.track_state.tile_type,
+                  step.car_state.track_state.velocity_distance, step.car_state.track_state.velocity_angle_to_wheel,
+                  step.car_state.track_state.score)
+    
