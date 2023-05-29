@@ -76,6 +76,7 @@ class ModelTrain(model.IModelInference):
                 reward = final_state.track_state.score 
 
                 current_state_tensor = self.model.state_tensor(current_state)
+                
                 action_tensor = self.model.action_tensor(action)
                 reward_tensor = torch.tensor([reward], device=device)
                 self.memory.push(current_state_tensor, action_tensor, reward_tensor)

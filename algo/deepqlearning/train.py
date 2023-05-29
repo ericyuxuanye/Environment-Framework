@@ -12,9 +12,18 @@ from core.src.race import *
 
 from model import *
 
-Transition = namedtuple("Transition", ("state", "reward"))
-BATCH_SIZE = 10
-GAMMA = 0.999
+Transition = namedtuple('Transition',
+                        ('state', 'action', 'next_state', 'reward'))
+
+# BATCH_SIZE is the number of transitions sampled from the replay buffer
+# GAMMA is the discount factor as mentioned in the previous section
+# TAU is the update rate of the target network
+# LR is the learning rate of the ``AdamW`` optimizer
+BATCH_SIZE = 128
+GAMMA = 0.99
+
+TAU = 0.5
+LR = 1e-2
 
 class ReplayMemory:
     def __init__(self, capacity):
@@ -33,14 +42,16 @@ class ModelTrain(model.IModelInference):
     def __init__(self, model:Model, race:Race):
         self.model = model
         self.race = race
-        self.target = CarNet(INPUT_VECTOR_SIZE).to(device)
-        self.target.training = True
-        self.optimizer = optim.Adam(self.target.parameters(), lr=1e-4, amsgrad=True)
-        
+        self.target_net = DQN().to(device).to(device)
+
+        self.model.is_train = True
+
+        self.optimizer = optim.AdamW(self.model.policy_net.parameters(), lr=LR, amsgrad=True)
+        self.memory = ReplayMemory(10000)
 
     def load(self, folder:str) -> bool:
         loaded = self.model.load(folder)
-        self.target.load_state_dict(self.model.net.state_dict())
+        self.target_net.load_state_dict(self.model.policy_net.state_dict())
                 
         return loaded
     
@@ -48,57 +59,103 @@ class ModelTrain(model.IModelInference):
     def save(self, folder:str) -> bool:
         try:
             model_path = os.path.join(folder, DATA_FILE_NAME)
-            torch.save(self.target.state_dict(), f=model_path)
+            torch.save(self.target_net.state_dict(), f=model_path)
             return True
         except:
             print(f"Failed to save model into {model_path}")
             return False
         
    
-    def train(self, round_count:int) -> float:
+    def train(self, episodes:int) -> float:
+        global steps_done
 
         total_score:float = 0
-        for round in range(round_count):
+        max_score:float =  -100
+        for episode in range(episodes):
 
             self.race.run(debug=False)
             final_state = race.steps[-1].car_state
 
-            reward = final_state.track_state.score
-            print(f"round {round}: reward {reward}")
-            reward_tensor = torch.tensor([reward+1], device=device)
-            total_score += reward
+            # print(f"run {episode}: reach {final_state.track_state.score}")
 
-            self.memory = ReplayMemory(len(race.steps))
+            total_score += final_state.track_state.score
+            if final_state.track_state.score > max_score:
+                max_score = final_state.track_state.score
+            step_count = len(race.steps)
+            state = race.steps[0].car_state
+            state_tensor = Model.state_tensor(state)
 
-            for step in race.steps:
-                state = step.car_state
-                state_tensor = self.model.state_tensor(state)
-                self.memory.push(state_tensor, reward_tensor)
+            for i in range(1, step_count):
+                step = race.steps[i]
+                action_tensor = self.model.action_tensor(step.action)
+                next_state = step.car_state
+                next_state_tensor = Model.state_tensor(next_state)
+            
+                reward = next_state.track_state.score - state.track_state.score
+                reward_tensor = torch.tensor([reward], device=device)
 
-            for i in range(len(race.steps)):
-                self.update_model()
+                if next_state.track_state.tile_type == track.TileType.Wall.value:
+                    next_state_tensor = None
 
-            self.model.net.load_state_dict(self.target.state_dict())
+                self.memory.push(state_tensor, action_tensor, next_state_tensor, reward_tensor)
+                state = next_state
+                state_tensor = next_state_tensor
 
-        return total_score/round_count
+                #print(i, action)
+                self.optimize_model()
 
-    def update_model(self):
+                # Soft update of the target network's weights
+                # θ′ ← τ θ + (1 −τ )θ′
+                target_net_state_dict = self.target_net.state_dict()
+                policy_net_state_dict = self.model.policy_net.state_dict()
+                for key in policy_net_state_dict:
+                    target_net_state_dict[key] = policy_net_state_dict[key]*TAU + target_net_state_dict[key]*(1-TAU)
+                self.target_net.load_state_dict(target_net_state_dict)
 
-        transitions = self.memory.memory
+        return total_score/episodes, max_score
+
+    def optimize_model(self):
+        if len(self.memory) < BATCH_SIZE:
+            return
+        transitions = self.memory.sample(BATCH_SIZE)
+
         batch = Transition(*zip(*transitions))
-
+        non_final_mask = torch.tensor(tuple(map(lambda s: s is not None,
+                                          batch.next_state)), device=device, dtype=torch.bool)
+        non_final_next_states = torch.cat([s for s in batch.next_state
+                                                if s is not None])
         state_batch = torch.cat(batch.state)
-        target_batch = self.target(state_batch)
+        action_batch = torch.cat(batch.action)
         reward_batch = torch.cat(batch.reward)
 
-        loss = F.smooth_l1_loss(target_batch, reward_batch.unsqueeze(1))
+        # Compute Q(s_t, a) - the model computes Q(s_t), then we select the
+        # columns of actions taken. These are the actions which would've been taken
+        # for each batch state according to policy_net
+        state_action_values = self.model.policy_net(state_batch).gather(1, action_batch)
+        
+        
+        # Compute V(s_{t+1}) for all next states.
+        # Expected values of actions for non_final_next_states are computed based
+        # on the "older" target_net; selecting their best reward with max(1)[0].
+        # This is merged based on the mask, such that we'll have either the expected
+        # state value or 0 in case the state was final.
+        next_state_values = torch.zeros(BATCH_SIZE, device=device)
+        with torch.no_grad():
+            next_state_values[non_final_mask] = self.target_net(non_final_next_states).max(1)[0]
+        # Compute the expected Q values
+        expected_state_action_values = (next_state_values * GAMMA) + reward_batch
 
+        # Compute Huber loss
+        expected = expected_state_action_values.unsqueeze(1)
+        criterion = nn.SmoothL1Loss()
+        loss = criterion(state_action_values, expected)
+
+        # Optimize the model
         self.optimizer.zero_grad()
         loss.backward()
-        torch.nn.utils.clip_grad_value_(self.target.parameters(), 100)
-
+        # In-place gradient clipping
+        torch.nn.utils.clip_grad_value_(self.model.policy_net.parameters(), 100)
         self.optimizer.step()
-
         
 
 if __name__ == '__main__':
@@ -108,9 +165,9 @@ if __name__ == '__main__':
     model_train = ModelTrain(model, race)
     model_train.load(os.path.dirname(__file__))
     
-    for epoch in range(20):
-        average_score = model_train.train(50)
-        print(f"epoch {epoch}: {average_score}")
+    for epoch in range(1):
+        average, max = model_train.train(10)
+        print(f"epoch {epoch}: {average, max}")
         model_train.save(os.path.dirname(__file__))
 
 
