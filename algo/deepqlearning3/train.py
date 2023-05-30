@@ -112,7 +112,7 @@ class ModelTrain(model.IModelInference):
         for episode in range(episodes):
             self.race.run(debug=False)
             final_state = race.steps[-1].car_state
-            
+
             total_score += final_state.track_state.last_road_tile_total_distance
             if final_state.track_state.last_road_tile_total_distance > max_score:
                 max_score = final_state.track_state.last_road_tile_total_distance

@@ -47,16 +47,6 @@ class DQN(nn.Module):
         x = F.relu(self.layer3(x))
         return self.layer4(x)
 
-    @classmethod
-    def init_weight(cls, layer:nn.Linear) -> None:
-        layer.weight = torch.nn.parameter.Parameter(
-            nn.init.kaiming_uniform_(torch.empty(layer.weight.shape)).to(device))
-        
-    @classmethod
-    def init_bias(cls, layer:nn.Linear) -> None:
-        layer.bias = torch.nn.parameter.Parameter(
-            nn.init.uniform_(torch.empty(layer.bias.shape), -.1, +.1).to(device))
-
 
 class Wheel:
     def __init__(self, keys:list[float], weights:list[float]):
@@ -208,7 +198,6 @@ if __name__ == '__main__':
     print('race_info:\n', race.race_info)
     print('finish:\n', final_state)
 
-    torch.set_printoptions(precision=2)
     for i in range(len(race.steps)):
         step = race.steps[i]
         if step.action != None:

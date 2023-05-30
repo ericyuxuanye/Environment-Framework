@@ -47,16 +47,6 @@ class DQN(nn.Module):
         x = F.relu(self.layer3(x))
         return self.layer4(x)
 
-    @classmethod
-    def init_weight(cls, layer:nn.Linear) -> None:
-        layer.weight = torch.nn.parameter.Parameter(
-            nn.init.kaiming_uniform_(torch.empty(layer.weight.shape)).to(device))
-        
-    @classmethod
-    def init_bias(cls, layer:nn.Linear) -> None:
-        layer.bias = torch.nn.parameter.Parameter(
-            nn.init.uniform_(torch.empty(layer.bias.shape), -.1, +.1).to(device))
-
 
 class Wheel:
     def __init__(self, keys:list[float], weights:list[float]):
@@ -85,8 +75,8 @@ class Wheel:
 # EPS_START is the starting value of epsilon
 # EPS_END is the final value of epsilon
 # EPS_DECAY controls the rate of exponential decay of epsilon, higher means a slower decay
-EPS_START = 0.90
-EPS_END = 0.05
+EPS_START = 0.95
+EPS_END = 0.75
 EPS_DECAY = 1000
 
 
@@ -208,14 +198,14 @@ if __name__ == '__main__':
     print('race_info:\n', race.race_info)
     print('finish:\n', final_state)
 
+    torch.set_printoptions(precision=2)
     for i in range(len(race.steps)):
         step = race.steps[i]
         if step.action != None:
-            print(i, step.action, model.action_tensor(step.action))
-            """
-            print(i, step.action.forward_acceleration, step.action.angular_velocity, 
-                  step.car_state.position.x, step.car_state.position.y,step.car_state.wheel_angle,
-                  step.car_state.track_state.tile_type,
-                  step.car_state.track_state.velocity_distance, step.car_state.track_state.velocity_angle_to_wheel,
-                  step.car_state.track_state.score)
-            """
+            print(i
+                  , f'action({step.action.forward_acceleration:.2f}, {step.action.angular_velocity:.2f})'
+                  , step.car_state.track_state.tile_total_distance, step.car_state.track_state.score
+                  , f'(x={step.car_state.position.x:.2f}, y={step.car_state.position.y:.2f})'
+                  , f'(head={step.car_state.wheel_angle:.2f}, r={step.car_state.track_state.velocity_distance:.2f}, a={step.car_state.track_state.velocity_angle_to_wheel:.2f})'
+                  )
+    
