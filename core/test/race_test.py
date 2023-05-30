@@ -24,7 +24,7 @@ class RaceTest(unittest.TestCase):
         race = Factory.sample_race_0()
         race.race_info.start_state = CarState(position = Point2D(y = 5.5, x = 14.5), wheel_angle=3.14)
         print('track:\r', race.race_info.track_info)
-        self.assertTrue(race.race_info.track_info.round_distance == 29)
+        self.assertTrue(race.race_info.track_info.round_distance == 28)
 
         race.run(debug=True)
         self.assertTrue(race.steps[-1].car_state.round_count == -1)

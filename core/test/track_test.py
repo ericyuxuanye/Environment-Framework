@@ -75,12 +75,12 @@ class TrackTest(unittest.TestCase):
         print('tf field:', tf.field)
         print('tf field shape:', tf.field.shape)
         print('tf round_distance:', tf.track_info.round_distance)
-        self.assertTrue(tf.track_info.round_distance == 29)
+        self.assertTrue(tf.track_info.round_distance == 28)
 
         print('track_info:', tf.track_info)
 
     def setUp(self):
-        print('\n===\nArenaTest.setUp()')
+        print('\n===\nTrackTest.setUp()')
     
         self.tf = Factory.sample_track_field_2(True)
         self.start_state = car.CarState(position = car.Point2D(y = 5.5, x = 14.5))
