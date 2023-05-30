@@ -126,9 +126,11 @@ class TrackField:
                         continue # col out of bound
                     if self.field[target.row, target.col]['type'] != TileType.Road.value :
                         continue # only deal with bound
-                    if self.field[target.row, target.col]['distance'] == TrackMark.Finish.value :
+                    if (self.field[target.row, target.col]['distance'] == TrackMark.Finish.value 
+                        and self.field[center.row, center.col]['distance'] == TrackMark.Start.value):
                         continue # finish line
-                    if self.field[target.row, target.col]['distance'] == TrackMark.Init.value :
+                    if (self.field[target.row, target.col]['distance'] == TrackMark.Init.value 
+                        or self.field[target.row, target.col]['distance'] == TrackMark.Finish.value):
                         queue.append(target)
                         # print('append queue', target) 
 
@@ -137,34 +139,8 @@ class TrackField:
                         self.field[target.row, target.col]['distance'] = center_distance + 1
                         # print (target, " update:", target_distance, '=>', self.field[target.row, target.col]['distance'])
 
-        self.track_info.round_distance += 2 # add 2 for start and finish line
+        self.track_info.round_distance += 1 # add 1 from finish line to start line
     
-    """
-    def get_track_view(self, position:car.Point2D) -> TrackView:
-        
-        left = int(position.x - self.track_info.view_radius)
-        if left < 0 :
-            left = 0
-
-        right = int(position.x + self.track_info.view_radius + 1)
-        if right > self.field.shape[1] :
-            right = self.field.shape[1]
-        right = right
-
-        up = int(position.y - self.track_info.view_radius)
-        if up < 0 :
-            up = 0
-
-        down = int(position.y + self.track_info.view_radius + 1)
-        if down > self.field.shape[0] :
-            down = self.field.shape[0]
-        down = down
-
-        # print('[', up, ':', down, '][', left, ':', right, ']')
-        field = self.field[up:down, :][:, left:right]
-
-        return TrackView(up, left, field)
-    """
 
     def calc_track_state(self, car_state:car.CarState) -> None:
 
@@ -289,9 +265,9 @@ class TrackField:
         if (cell_type == TileType.Road.value 
             and next_cell_type == TileType.Road.value):
                 if (tile_distance == TrackMark.Start.value
-                    and next_tile_distance == TrackMark.Finish.value) :
+                    and next_tile_distance > tile_distance + 1) :
                     next_state.round_count = car_state.round_count - 1        # start to finish backward, decrease a round
-                if (tile_distance == TrackMark.Finish.value 
+                if (tile_distance > next_tile_distance + 1
                     and next_tile_distance == TrackMark.Start.value) :
                     next_state.round_count = car_state.round_count + 1        # finish to start, complete a round
         if debug: 

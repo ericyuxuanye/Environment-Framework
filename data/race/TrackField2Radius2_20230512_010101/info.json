@@ -8,7 +8,7 @@
         "row": 20,
         "column": 30,
         "time_interval": 100,
-        "round_distance": 29
+        "round_distance": 28
     },
     "round_to_finish": 1,
     "model_info": {
@@ -72,14 +72,15 @@
                 17.67766952966369,
                 9.200333702485349,
                 14.612294703947319,
-                3.919688894629129,
-                3.919688894629129
+                1.6235883004385907,
+                1.6235883004385907
             ],
             "tile_type": 1,
             "tile_distance": 0,
             "tile_total_distance": 0,
             "last_road_tile_distance": 0,
-            "last_road_tile_total_distance": 0
+            "last_road_tile_total_distance": 0,
+            "score": 0.0
         }
     },
     "max_time_to_finish": 300000

@@ -98,9 +98,9 @@ if __name__ == '__main__':
     for i in range(len(race.steps)):
         step = race.steps[i]
         if step.action != None:
-            #print(step.car_state)
-            print(i, step.action.forward_acceleration, step.action.angular_velocity, 
-                  step.car_state.position.x, step.car_state.position.y,step.car_state.wheel_angle,
-                  step.car_state.track_state.tile_type,
-                  step.car_state.track_state.velocity_distance, step.car_state.track_state.velocity_angle_to_wheel,
-                  step.car_state.track_state.score)
+            print(i
+                  , f'action({step.action.forward_acceleration:.2f}, {step.action.angular_velocity:.2f})'
+                  , step.car_state.track_state.tile_total_distance, step.car_state.track_state.score
+                  , f'(x={step.car_state.position.x:.2f}, y={step.car_state.position.y:.2f})'
+                  , f'(head={step.car_state.wheel_angle:.2f}, r={step.car_state.track_state.velocity_distance:.2f}, a={step.car_state.track_state.velocity_angle_to_wheel:.2f})'
+                  )
