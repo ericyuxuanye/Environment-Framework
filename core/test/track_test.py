@@ -67,7 +67,7 @@ class TrackTest(unittest.TestCase):
     def test_303_tf(self):
         print('\n===\ntest_303_tf')
 
-        tf = Factory.sample_track_field_2(True)
+        tf = Factory.sample_track_field_2(True, True)
         self.assertTrue(tf.field.shape[0] == 20)
         self.assertTrue(tf.field.shape[1] == 30)
 

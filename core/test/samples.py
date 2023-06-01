@@ -57,60 +57,59 @@ class Factory:
         tf = TrackField(track_info)
 
         # inner Wall
-        tf.fill_block(range(8, 12), range(8, 22), TileType.Wall.value, 0)
+        tf.fill_block(range(8, 12), range(8, 22), TileType.Wall.value)
 
         # inner Shoulder         
-        tf.fill_block(range(6, 8), range(6, 24), TileType.Shoulder.value, 0)
-        tf.fill_block(range(12, 14), range(6, 24), TileType.Shoulder.value, 0)
-        tf.fill_block(range(8, 12), range(6, 8), TileType.Shoulder.value, 0)
-        tf.fill_block(range(8, 12), range(22, 24), TileType.Shoulder.value, 0)
+        tf.fill_block(range(6, 8), range(6, 24), TileType.Shoulder.value)
+        tf.fill_block(range(12, 14), range(6, 24), TileType.Shoulder.value)
+        tf.fill_block(range(8, 12), range(6, 8), TileType.Shoulder.value)
+        tf.fill_block(range(8, 12), range(22, 24), TileType.Shoulder.value)
 
         # Road
-        tf.fill_block(range(4, 6), range(4, 26), TileType.Road.value, 32767)
-        tf.fill_block(range(14, 16), range(4, 26), TileType.Road.value, 32767)
-        tf.fill_block(range(6, 14), range(4, 6), TileType.Road.value, 32767)
-        tf.fill_block(range(6, 14), range(24, 26), TileType.Road.value, 32767)
+        tf.fill_block(range(4, 6), range(4, 26), TileType.Road.value)
+        tf.fill_block(range(14, 16), range(4, 26), TileType.Road.value)
+        tf.fill_block(range(6, 14), range(4, 6), TileType.Road.value)
+        tf.fill_block(range(6, 14), range(24, 26), TileType.Road.value)
 
         # outer Shoulder
-        tf.fill_block(range(2, 4), range(2, 28), TileType.Shoulder.value, 0)
-        tf.fill_block(range(16, 18), range(2, 28), TileType.Shoulder.value, 0)
-        tf.fill_block(range(4, 16), range(2, 4), TileType.Shoulder.value, 0)
-        tf.fill_block(range(4, 16), range(26, 28), TileType.Shoulder.value, 0)
+        tf.fill_block(range(2, 4), range(2, 28), TileType.Shoulder.value)
+        tf.fill_block(range(16, 18), range(2, 28), TileType.Shoulder.value)
+        tf.fill_block(range(4, 16), range(2, 4), TileType.Shoulder.value)
+        tf.fill_block(range(4, 16), range(26, 28), TileType.Shoulder.value)
 
         # outer Wall
-        tf.fill_block(range(0, 2), range(0, 30), TileType.Wall.value, 0)
-        tf.fill_block(range(18, 20), range(0, 20), TileType.Wall.value, 0)
-        tf.fill_block(range(2, 18), range(0, 2), TileType.Wall.value, 0)
-        tf.fill_block(range(2, 18), range(28, 30), TileType.Wall.value, 0)
+        tf.fill_block(range(0, 2), range(0, 30), TileType.Wall.value)
+        tf.fill_block(range(18, 20), range(0, 20), TileType.Wall.value)
+        tf.fill_block(range(2, 18), range(0, 2), TileType.Wall.value)
+        tf.fill_block(range(2, 18), range(28, 30), TileType.Wall.value)
 
         return tf
 
     @classmethod
-    def sample_track_field_2(cls, compute_distance:bool = False) -> TrackField:
+    def sample_track_field_2(cls, compute_distance:bool = False, debug:bool = False) -> TrackField:
         track_info = TrackInfo(
             name='sample_track_field_2', 
             row=20, 
             column=30,
+            start_line=MarkLine(4, 7, 14, 15),
+            finish_line=MarkLine(4, 7, 13, 14),
             time_interval = 100)
 
         tf = TrackField(track_info)
 
-        tf.fill_block(range(0, 20), range(0, 30), TileType.Wall.value, 0)
-        tf.fill_block(range(2, 18), range(2, 28), TileType.Shoulder.value, 0)
-        tf.fill_block(range(4, 16), range(4, 26), TileType.Road.value, TrackMark.Init.value)     
-        tf.fill_block(range(7, 13), range(11, 19), TileType.Shoulder.value, 0)
-        tf.fill_block(range(9, 11), range(13, 17), TileType.Wall.value, 0)
+        tf.fill_block(range(0, 20), range(0, 30), TileType.Wall.value)
+        tf.fill_block(range(2, 18), range(2, 28), TileType.Shoulder.value)
+        tf.fill_block(range(4, 16), range(4, 26), TileType.Road.value)     
+        tf.fill_block(range(7, 13), range(11, 19), TileType.Shoulder.value)
+        tf.fill_block(range(9, 11), range(13, 17), TileType.Wall.value)
 
-        # start line
-        start_line = MarkLine(TrackMark.Start, range(4, 7), range(14, 15))
-
-        # finish line
-        tf.fill_block(range(2, 4), range(12, 16), TileType.Wall.value, 0)   # block top by wall
-        finish_line = MarkLine(TrackMark.Finish, range(4, 7), range(13, 14))
-        tf.fill_block(range(7, 9), range(12, 16), TileType.Wall.value, 0)   # block bottom by wall
+   
+        # hlock start and finish line by wall, allow only get to them from the road
+        tf.fill_block(range(2, 4), range(12, 16), TileType.Wall.value)   # block top by wall
+        tf.fill_block(range(7, 9), range(12, 16), TileType.Wall.value)   # block bottom by wall
         
         if compute_distance:
-            tf.compute_tile_distance(start_line, finish_line)
+            tf.compute_tile_distance(debug)
 
         return tf
     
