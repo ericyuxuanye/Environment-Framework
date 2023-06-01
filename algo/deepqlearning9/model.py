@@ -14,7 +14,7 @@ from core.src import model, car
 from core.src.race import *
 from core.test.samples import Factory
 
-INPUT_VECTOR_SIZE = 11
+INPUT_VECTOR_SIZE = 14
 
 action_step = 4 # number of steps for [0, 1]
 action_step_count = 2*action_step+1 # total number of options [-1, 1]
@@ -76,7 +76,7 @@ class Wheel:
 # EPS_END is the final value of epsilon
 # EPS_DECAY controls the rate of exponential decay of epsilon, higher means a slower decay
 EPS_START = 0.95
-EPS_END = 0.75
+EPS_END = 0.05
 EPS_DECAY = 1000
 
 
@@ -108,10 +108,13 @@ class Model(model.IModelInference):
     def state_tensor(cls, car_state: car.CarState) -> torch.tensor:
         
         input = np.empty((INPUT_VECTOR_SIZE), dtype=np.float32)
-        input[0] = car_state.track_state.velocity_distance
-        input[1] = car_state.track_state.velocity_angle_to_wheel
-        input[2:11] = car_state.track_state.rays[0:9]
-        input = torch.FloatTensor(input).reshape((1, 11)).to(device)
+        input[0] = car_state.position.x
+        input[1] = car_state.position.y
+        input[2] = car_state.wheel_angle
+        input[3] = car_state.track_state.velocity_forward
+        input[4] = car_state.track_state.velocity_right
+        input[5:14] = car_state.track_state.rays[0:9]
+        input = torch.FloatTensor(input).reshape((1, 14)).to(device)
 
         return input
 
@@ -198,7 +201,6 @@ if __name__ == '__main__':
     print('race_info:\n', race.race_info)
     print('finish:\n', final_state)
 
-    torch.set_printoptions(precision=2)
     for i in range(len(race.steps)):
         step = race.steps[i]
         if step.action != None:
@@ -206,6 +208,6 @@ if __name__ == '__main__':
                   , f'action({step.action.forward_acceleration:.2f}, {step.action.angular_velocity:.2f})'
                   , step.car_state.track_state.tile_total_distance, step.car_state.track_state.score
                   , f'(x={step.car_state.position.x:.2f}, y={step.car_state.position.y:.2f})'
-                  , f'(head={step.car_state.wheel_angle:.2f}, r={step.car_state.track_state.velocity_distance:.2f}, a={step.car_state.track_state.velocity_angle_to_wheel:.2f})'
+                  , f'(head={step.car_state.wheel_angle:.2f}, v_forward={step.car_state.track_state.velocity_forward:.2f}, v_right={step.car_state.track_state.velocity_forward:.2f})'
                   )
     

@@ -76,8 +76,8 @@
         "round_count": 0,
         "track_state": {
             "type": "TrackState",
-            "velocity_distance": 0.0,
-            "velocity_angle_to_wheel": 0.0,
+            "velocity_forward": 0.0,
+            "velocity_right": 0.0,
             "rays": [
                 13.5,
                 1.5,

@@ -60,7 +60,7 @@ BATCH_SIZE = 64
 GAMMA = 0.9
 
 TAU = 1
-LR = 1e-2
+LR = 1e-4
 
 class ReplayMemory:
     def __init__(self, capacity):
