@@ -225,13 +225,10 @@ class TrackField:
             car_state.wheel_angle += math.pi*2
 
         track_state = car.TrackState()
-        track_state.velocity_distance = math.sqrt(car_state.velocity_x**2 + car_state.velocity_y**2)
-
-        track_state.velocity_angle_to_wheel = math.atan2(car_state.velocity_y, car_state.velocity_x) - car_state.wheel_angle
-        if track_state.velocity_angle_to_wheel > math.pi :
-            track_state.velocity_angle_to_wheel -= math.pi*2
-        elif track_state.velocity_angle_to_wheel < -math.pi :
-            track_state.velocity_angle_to_wheel += math.pi*2
+        track_state.velocity_forward = (car_state.velocity_x * math.cos(0 - car_state.wheel_angle) 
+            + car_state.velocity_y * math.cos(math.pi / 2 - car_state.wheel_angle))
+        track_state.velocity_right = (car_state.velocity_y * math.sin(math.pi / 2 - car_state.wheel_angle) 
+            + car_state.velocity_x * math.sin(0 - car_state.wheel_angle))
     
         cell = TileCell(int(car_state.position.y), int(car_state.position.x))
         track_state.tile_type = int(self.field[cell.row, cell.col]['type'])
@@ -320,12 +317,12 @@ class TrackField:
         if debug: 
             print('velocity_forward = ', velocity_forward)
 
-        velocity_slide_right: float = (car_state.velocity_y * math.sin(math.pi / 2 - car_state.wheel_angle) 
+        velocity_right: float = (car_state.velocity_y * math.sin(math.pi / 2 - car_state.wheel_angle) 
             + car_state.velocity_x * math.sin(0 - car_state.wheel_angle))
-        if abs(velocity_slide_right) <= car_config.slide_friction.min_velocity_start :
-            velocity_slide_right = 0
+        if abs(velocity_right) <= car_config.slide_friction.min_velocity_start :
+            velocity_right = 0
         if debug: 
-            print('velocity_slide_right = ', velocity_slide_right)
+            print('velocity_right = ', velocity_right)
     
         cell = TileCell(int(car_state.position.y), int(car_state.position.x))
         cell_type = self.field[cell.row, cell.col]['type']
@@ -361,14 +358,14 @@ class TrackField:
         if debug: 
             print('acceleration_forward = ', acceleration_forward)
 
-        acceleration_slide_right:float = 0
-        if abs(velocity_slide_right) > car_config.slide_friction.min_velocity_start :
-            if velocity_slide_right > 0 :
-                acceleration_slide_right = -1 * car_config.slide_friction.friction * friction_ratio
+        acceleration_right:float = 0
+        if abs(velocity_right) > car_config.slide_friction.min_velocity_start :
+            if velocity_right > 0 :
+                acceleration_right = -1 * car_config.slide_friction.friction * friction_ratio
             else :
-                acceleration_slide_right = car_config.slide_friction.friction * friction_ratio
+                acceleration_right = car_config.slide_friction.friction * friction_ratio
         if debug: 
-            print('acceleration_slide_right = ', acceleration_slide_right)
+            print('acceleration_right = ', acceleration_right)
     
         next_velocity_forward = velocity_forward + acceleration_forward * time_sec
         # never rotate backward
@@ -382,16 +379,16 @@ class TrackField:
         if debug: 
             print('after limit, next_velocity_forward = ', next_velocity_forward)
 
-        next_velocity_slide_right = velocity_slide_right + acceleration_slide_right * time_sec
-        if (next_velocity_slide_right * velocity_slide_right < 0) :
-            next_velocity_slide_right = 0
+        next_velocity_right = velocity_right + acceleration_right * time_sec
+        if (next_velocity_right * velocity_right < 0) :
+            next_velocity_right = 0
         if debug: 
-            print('next_velocity_slide_right = ', next_velocity_slide_right)
+            print('next_velocity_right = ', next_velocity_right)
 
         next_state.velocity_x = (next_velocity_forward * math.cos(car_state.wheel_angle)
-            + next_velocity_slide_right * math.cos(car_state.wheel_angle + math.pi / 2))
+            + next_velocity_right * math.cos(car_state.wheel_angle + math.pi / 2))
         next_state.velocity_y = (next_velocity_forward * math.sin(car_state.wheel_angle)
-            + next_velocity_slide_right * math.sin(car_state.wheel_angle + math.pi / 2))
+            + next_velocity_right * math.sin(car_state.wheel_angle + math.pi / 2))
 
         if debug: 
             print('get_next_state() <<<\n')

@@ -60,7 +60,7 @@ BATCH_SIZE = 64
 GAMMA = 0.9
 
 TAU = 1
-LR = 1e-2
+LR = 1e-4
 
 class ReplayMemory:
     def __init__(self, capacity):
@@ -205,8 +205,8 @@ if __name__ == '__main__':
     model_train = ModelTrain(model, race)
     model_train.load(os.path.dirname(__file__))
     
-    for epoch in range(20):
-        average, max = model_train.train(100)
+    for epoch in range(100):
+        average, max = model_train.train(25)
         print(f"epoch {epoch}: {average, max}")
         model_train.save(os.path.dirname(__file__))
 
