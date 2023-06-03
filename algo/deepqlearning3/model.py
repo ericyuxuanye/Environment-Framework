@@ -34,18 +34,16 @@ class DQN(nn.Module):
         self.layer1 = nn.Linear(INPUT_VECTOR_SIZE, HideLayer1Size)
         HideLayer2Size = 32
         self.layer2 = nn.Linear(HideLayer1Size, HideLayer2Size)
-        HideLayer3Size = 32
-        self.layer3 = nn.Linear(HideLayer2Size, HideLayer3Size)
 
-        self.layer4 = nn.Linear(HideLayer3Size, OUTPUT_VECTOR_SIZE)
+        self.layer3 = nn.Linear(HideLayer2Size, OUTPUT_VECTOR_SIZE)
 
     # Called with either one element to determine next action, or a batch
     # during optimization. Returns tensor([[left0exp,right0exp]...]).
     def forward(self, x):
         x = F.relu(self.layer1(x))
         x = F.relu(self.layer2(x))
-        x = F.relu(self.layer3(x))
-        return self.layer4(x)
+        #x = F.relu(self.layer3(x))
+        return self.layer3(x)
 
 
 class Wheel:
@@ -208,6 +206,6 @@ if __name__ == '__main__':
                   , f'action({step.action.forward_acceleration:.2f}, {step.action.angular_velocity:.2f})'
                   , step.car_state.track_state.tile_total_distance, step.car_state.track_state.score
                   , f'(x={step.car_state.position.x:.2f}, y={step.car_state.position.y:.2f})'
-                  , f'(head={step.car_state.wheel_angle:.2f}, v_forward={step.car_state.track_state.velocity_forward:.2f}, v_right={step.car_state.track_state.velocity_forward:.2f})'
+                  , f'(head={step.car_state.wheel_angle:.2f}, v_forward={step.car_state.track_state.velocity_forward:.2f}, v_right={step.car_state.track_state.velocity_right:.2f})'
                   )
     

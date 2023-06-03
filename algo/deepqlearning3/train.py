@@ -56,7 +56,7 @@ Transition = namedtuple('Transition',
 # GAMMA is the discount factor as mentioned in the previous section
 # TAU is the update rate of the target network
 # LR is the learning rate of the ``AdamW`` optimizer
-BATCH_SIZE = 64
+BATCH_SIZE = 8
 GAMMA = 0.9
 
 TAU = 1

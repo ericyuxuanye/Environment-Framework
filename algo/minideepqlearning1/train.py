@@ -1,6 +1,5 @@
-import sys
+
 import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -8,9 +7,7 @@ import matplotlib.pyplot as plt
 import random
 from collections import namedtuple, deque
 
-from core.src import model
-from core.src.race import *
-
+import torch.optim as optim
 from model import *
 
 # set up matplotlib
@@ -19,6 +16,7 @@ if is_ipython:
     from IPython import display
 
 plt.ion()
+
 
 episode_durations = []
 
@@ -47,6 +45,7 @@ def plot_durations(show_result=False):
             display.clear_output(wait=True)
         else:
             display.display(plt.gcf())
+    
 
 
 Transition = namedtuple('Transition',
@@ -56,11 +55,11 @@ Transition = namedtuple('Transition',
 # GAMMA is the discount factor as mentioned in the previous section
 # TAU is the update rate of the target network
 # LR is the learning rate of the ``AdamW`` optimizer
-BATCH_SIZE = 16
-GAMMA = 0.9
+BATCH_SIZE = 10
+GAMMA = 0.5
 
 TAU = 1
-LR = 1e-3
+LR = 1e-2
 
 class ReplayMemory:
     def __init__(self, capacity):
@@ -75,8 +74,8 @@ class ReplayMemory:
     def __len__(self):
         return len(self.memory)
 
-class ModelTrain(model.IModelInference):
-    def __init__(self, model:Model, race:Race):
+class ModelTrain():
+    def __init__(self, model:Model, race:MiniRace):
         self.model = model
         self.race = race
         self.target_net = DQN().to(device).to(device)
@@ -107,36 +106,38 @@ class ModelTrain(model.IModelInference):
         global steps_done
 
         total_score:float = 0
-        max_score:float =  0
-
+        max_score:float =  -100
         for episode in range(episodes):
-            self.race.run(debug=False)
-            final_state = race.steps[-1].car_state
 
-            total_score += final_state.track_state.last_road_tile_total_distance
-            if final_state.track_state.last_road_tile_total_distance > max_score:
-                max_score = final_state.track_state.last_road_tile_total_distance
-            episode_durations.append(final_state.track_state.last_road_tile_total_distance)
+            self.race.run(debug=False)
+            final_state = race.steps[-1].state
+
+            total_score += final_state.time
+            if final_state.time > max_score:
+                max_score = final_state.time
+            episode_durations.append(final_state.time)
             plot_durations()
 
+            for i in range(len(race.steps)):
+                step = race.steps[i]
+                print(f'{step}')
+
             step_count = len(race.steps)
-            state = race.steps[0].car_state
+            state = race.steps[0].state
             state_tensor = Model.state_tensor(state)
 
             for i in range(1, step_count):
                 step = race.steps[i]
                 action_tensor = self.model.action_tensor(step.action)
-                next_state = step.car_state
+                next_state = step.state
                 next_state_tensor = Model.state_tensor(next_state)
             
-                reward = next_state.track_state.tile_total_distance - state.track_state.tile_total_distance
+                reward = 1
                 reward_tensor = torch.tensor([reward], device=device)
 
-                if next_state.track_state.tile_type == track.TileType.Wall.value:
+                if MiniRace.is_out(next_state.position):
                     next_state_tensor = None
 
-                if next_state.track_state.tile_total_distance > max_score:
-                    max_score = next_state.track_state.tile_total_distance
                 self.memory.push(state_tensor, action_tensor, next_state_tensor, reward_tensor)
                 state = next_state
                 state_tensor = next_state_tensor
@@ -205,10 +206,11 @@ if __name__ == '__main__':
     model_train = ModelTrain(model, race)
     model_train.load(os.path.dirname(__file__))
     
-    for epoch in range(100):
-        average, max = model_train.train(25)
+    for epoch in range(10):
+        average, max = model_train.train(10)
         print(f"epoch {epoch}: {average, max}")
         model_train.save(os.path.dirname(__file__))
+
 
     plot_durations(show_result=True)
     plt.ioff()
