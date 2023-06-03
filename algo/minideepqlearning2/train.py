@@ -56,7 +56,7 @@ Transition = namedtuple('Transition',
 # TAU is the update rate of the target network
 # LR is the learning rate of the ``AdamW`` optimizer
 BATCH_SIZE = 10
-GAMMA = 0.5
+GAMMA = 0.9
 
 TAU = 1
 LR = 1e-2
@@ -207,7 +207,7 @@ if __name__ == '__main__':
     model_train.load(os.path.dirname(__file__))
     
     for epoch in range(10):
-        average, max = model_train.train(100)
+        average, max = model_train.train(10)
         print(f"epoch {epoch}: {average, max}")
         model_train.save(os.path.dirname(__file__))
 

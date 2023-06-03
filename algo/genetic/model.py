@@ -160,6 +160,6 @@ if __name__ == '__main__':
                   , f'action({step.action.forward_acceleration:.2f}, {step.action.angular_velocity:.2f})'
                   , step.car_state.track_state.tile_total_distance, step.car_state.track_state.score
                   , f'(x={step.car_state.position.x:.2f}, y={step.car_state.position.y:.2f})'
-                  , f'(head={step.car_state.wheel_angle:.2f}, v_forward={step.car_state.track_state.velocity_forward:.2f}, v_right={step.car_state.track_state.velocity_forward:.2f})'
+                  , f'(head={step.car_state.wheel_angle:.2f}, v_forward={step.car_state.track_state.velocity_forward:.2f}, v_right={step.car_state.track_state.velocity_right:.2f})'
                   )
 
