@@ -7,9 +7,10 @@ import math
 import numpy as np
 import pygame
 from numpy._typing import NDArray
+from scipy.interpolate import make_interp_spline
 
 from core.src import jsoner
-from core.src.race import RaceData
+from core.src.race import ActionCarState, RaceData
 from core.src.track import TileType, TrackField
 from core.test.samples import Factory
 
@@ -27,10 +28,13 @@ class UI:
         "field_height",
         "width_multiplier",
         "height_mulplier",
+        "framerate",
+        "interpolation_amount",
+        "interpolated_data",
     )
 
     def __init__(
-        self, width: int, height: int, race_data: RaceData, track_field: TrackField
+        self, width: int, height: int, race_data: RaceData, track_field: TrackField, framerate: int = 60, frames_per_entry: int = 1
     ):
         """
         Creates a new UI instance
@@ -48,6 +52,22 @@ class UI:
             (width, height),
         )
         self.race_data = race_data
+        self.interpolation_amount = frames_per_entry
+        self.framerate = framerate
+        if frames_per_entry == 1:
+            self.interpolated_data = [(e.car_state.position.x, e.car_state.position.y) for e in race_data.steps]
+        else:
+            self.interpolated_data = self.interpolate_data(race_data.steps, frames_per_entry)
+
+    @staticmethod
+    def interpolate_data(steps: list[ActionCarState], interpolation_amount: int):
+        data = np.empty((len(steps), 2), dtype=np.float64)
+        for i, entry in enumerate(steps):
+            position = entry.car_state.position
+            data[i] = position.x, position.y
+        new_x = np.linspace(0, len(steps) - 1, len(steps) * interpolation_amount)
+        return make_interp_spline(np.arange(len(steps)), data)(new_x)
+
 
     @staticmethod
     def track_field_to_surface(field: TrackField) -> pygame.Surface:
@@ -72,16 +92,18 @@ class UI:
 
     def start(self):
         clock = pygame.time.Clock()
-        for entry in self.race_data.steps:
+        total_steps = len(self.interpolated_data)
+        for i in range(total_steps):
+            entry = self.race_data.steps[i // self.interpolation_amount]
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     break
             # draw background
             self.screen.blit(self.background, (0, 0))
             # draw car
-            position = entry.car_state.position
-            car_x = round(position.x * self.width_multiplier)
-            car_y = round(position.y * self.height_mulplier)
+            position = self.interpolated_data[i]
+            car_x = round(position[0] * self.width_multiplier)
+            car_y = round(position[1] * self.height_mulplier)
 
             pygame.draw.circle(
                 self.screen,
@@ -106,7 +128,7 @@ class UI:
                     ),
                 )
             pygame.display.flip()
-            clock.tick(10)
+            clock.tick(self.framerate)
 
 
 if __name__ == "__main__":
@@ -115,5 +137,5 @@ if __name__ == "__main__":
     race_data = jsoner.RaceDataSaver.load(
         "data/race/TrackField2Radius2_20230512_000000"
     )
-    ui = UI(1000, 600, race_data, track_field)
+    ui = UI(1000, 600, race_data, track_field, 60, 5)
     ui.start()
