@@ -54,10 +54,7 @@ class UI:
         self.race_data = race_data
         self.interpolation_amount = frames_per_entry
         self.framerate = framerate
-        if frames_per_entry == 1:
-            self.interpolated_data = [(e.car_state.position.x, e.car_state.position.y) for e in race_data.steps]
-        else:
-            self.interpolated_data = self.interpolate_data(race_data.steps, frames_per_entry)
+        self.interpolated_data = self.interpolate_data(race_data.steps, frames_per_entry)
 
     @staticmethod
     def interpolate_data(steps: list[ActionCarState], interpolation_amount: int):
@@ -72,6 +69,8 @@ class UI:
                 accel_y = accel_magnitude * math.sin(accel_direction)
                 data[i, 2:] = accel_x, accel_y
         data[len(steps) - 1, 2:] = data[len(steps) - 2, 2:]
+        if interpolation_amount == 1:
+            return data
         new_x = np.linspace(0, len(steps) - 1, len(steps) * interpolation_amount)
         return make_interp_spline(np.arange(len(steps)), data)(new_x)
 
