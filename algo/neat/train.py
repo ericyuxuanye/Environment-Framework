@@ -41,7 +41,7 @@ class ModelTrain(model.IModelInference):
             return False
         
    
-    def train(self, generation_count:int = 100) :
+    def train(self, generation_count:int) :
         # Create the population, which is the top-level object for a NEAT run.
         population = neat.Population(self.config)
 

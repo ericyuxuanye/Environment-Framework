@@ -17,7 +17,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 torch.set_grad_enabled(False)
 
 
-INPUT_VECTOR_SIZE = 11
+INPUT_VECTOR_SIZE = 14
 OUTPUT_VECTOR_SIZE = 2
 
 DATA_FILE_NAME = "net_params.pt"
@@ -72,13 +72,16 @@ class Model(model.IModelInference):
     def get_action(self, car_state: car.CarState) -> car.Action:
         
         input = np.empty((INPUT_VECTOR_SIZE), dtype=np.float32)
-        input[0] = car_state.track_state.velocity_distance
-        input[1] = car_state.track_state.velocity_angle_to_wheel
-        input[2:11] = car_state.track_state.rays[0:9]
+        input[0] = car_state.position.x
+        input[1] = car_state.position.y
+        input[2] = car_state.wheel_angle
+        input[3] = car_state.track_state.velocity_forward
+        input[4] = car_state.track_state.velocity_right
+        input[5:14] = car_state.track_state.rays[0:9]
 
-        tensor = torch.tensor(input).float().unsqueeze(0).to(device)
-        output = self.net(tensor)
-        action = torch.flatten(output).cpu().detach().numpy()
+        observation = torch.tensor(input, dtype=torch.float)
+        output = self.net(observation)
+        action = output.detach().numpy()
         return car.Action(self.max_acceleration*action[0], self.max_angular_velocity*action[1])
 
 
@@ -131,7 +134,7 @@ def create_model_race() -> Race:
     race.model = model
 
     race.race_info.model_info = ModelInfo(name='generic-hc', version='2023.5.18')
-    race.race_info.round_to_finish = 2
+    race.race_info.round_to_finish = 10
     race.race_info.max_time_to_finish = 5000000
 
     return model, race
