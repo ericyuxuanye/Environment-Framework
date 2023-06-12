@@ -37,8 +37,6 @@ class DQN(nn.Module):
 
         self.layer3 = nn.Linear(HideLayer2Size, OUTPUT_VECTOR_SIZE)
 
-    # Called with either one element to determine next action, or a batch
-    # during optimization. Returns tensor([[left0exp,right0exp]...]).
     def forward(self, x):
         x = F.relu(self.layer1(x))
         x = F.relu(self.layer2(x))
