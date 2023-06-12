@@ -19,12 +19,12 @@ if is_ipython:
 
 plt.ion()
 
-episode_durations = []
+episode_progress = []
 
 
-def plot_durations(show_result=False):
+def plot_progress(show_result=False):
     plt.figure(1)
-    durations_t = torch.tensor(episode_durations, dtype=torch.float)
+    progress_tensor = torch.tensor(episode_progress, dtype=torch.float)
     if show_result:
         plt.title('Result')
     else:
@@ -32,10 +32,10 @@ def plot_durations(show_result=False):
         plt.title('Training...')
     plt.xlabel('Episode')
     plt.ylabel('Duration')
-    plt.plot(durations_t.numpy())
+    plt.plot(progress_tensor.numpy())
     # Take 100 episode averages and plot them too
-    if len(durations_t) >= 100:
-        means = durations_t.unfold(0, 100, 1).mean(1).view(-1)
+    if len(progress_tensor) >= 100:
+        means = progress_tensor.unfold(0, 100, 1).mean(1).view(-1)
         means = torch.cat((torch.zeros(99), means))
         plt.plot(means.numpy())
 
@@ -180,8 +180,8 @@ class ModelTrain(model.IModelInference):
                 max_score = episode_score
             total_score += episode_score
             
-            episode_durations.append(episode_score)
-            plot_durations()
+            episode_progress.append(episode_score)
+            plot_progress()
 
         # ALG STEP #4
         batch_obs = torch.tensor(batch_obs, dtype=torch.float)
@@ -251,6 +251,6 @@ if __name__ == '__main__':
         print(f"epoch {epoch}: {average, max}")
         model_train.save(os.path.dirname(__file__))
 
-    plot_durations(show_result=True)
+    plot_progress(show_result=True)
     plt.ioff()
     plt.show()
