@@ -61,10 +61,17 @@ class UI:
 
     @staticmethod
     def interpolate_data(steps: list[ActionCarState], interpolation_amount: int):
-        data = np.empty((len(steps), 2), dtype=np.float64)
+        data = np.empty((len(steps), 4), dtype=np.float64)
         for i, entry in enumerate(steps):
             position = entry.car_state.position
-            data[i] = position.x, position.y
+            data[i,:2] = position.x, position.y
+            if i < len(steps) - 1:
+                accel_magnitude = steps[i+1].action.forward_acceleration
+                accel_direction = steps[i+1].car_state.wheel_angle
+                accel_x = accel_magnitude * math.cos(accel_direction)
+                accel_y = accel_magnitude * math.sin(accel_direction)
+                data[i, 2:] = accel_x, accel_y
+        data[len(steps) - 1, 2:] = data[len(steps) - 2, 2:]
         new_x = np.linspace(0, len(steps) - 1, len(steps) * interpolation_amount)
         return make_interp_spline(np.arange(len(steps)), data)(new_x)
 
@@ -92,18 +99,15 @@ class UI:
 
     def start(self):
         clock = pygame.time.Clock()
-        total_steps = len(self.interpolated_data)
-        for i in range(total_steps):
-            entry = self.race_data.steps[i // self.interpolation_amount]
+        for state in self.interpolated_data:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     break
             # draw background
             self.screen.blit(self.background, (0, 0))
             # draw car
-            position = self.interpolated_data[i]
-            car_x = round(position[0] * self.width_multiplier)
-            car_y = round(position[1] * self.height_mulplier)
+            car_x = round(state[0] * self.width_multiplier)
+            car_y = round(state[1] * self.height_mulplier)
 
             pygame.draw.circle(
                 self.screen,
@@ -112,21 +116,17 @@ class UI:
                 5,
             )
             # draw acceleration
-            action = entry.action
-            if action is not None:
-                magnitude = action.forward_acceleration
-                direction = entry.car_state.wheel_angle
-                accel_x = round(self.width_multiplier * magnitude * math.cos(direction))
-                accel_y = round(self.height_mulplier * magnitude * math.sin(direction))
-                pygame.draw.line(
-                    self.screen,
-                    "green",
-                    (car_x, car_y),
-                    (
-                        car_x + accel_x,
-                        car_y + accel_y
-                    ),
-                )
+            accel_x = round(self.width_multiplier * state[2])
+            accel_y = round(self.height_mulplier * state[3])
+            pygame.draw.line(
+                self.screen,
+                "green",
+                (car_x, car_y),
+                (
+                    car_x + accel_x,
+                    car_y + accel_y
+                ),
+            )
             pygame.display.flip()
             clock.tick(self.framerate)
 
