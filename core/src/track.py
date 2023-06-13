@@ -18,8 +18,6 @@ class TileType(Enum):
     Road = 1
     Shoulder = 3
     Wall = 1024
-    Block = 65535
-
 
  
 class TileCell :  
@@ -31,25 +29,22 @@ class TileCell :
     def __str__(self) -> str:
         return f'TileCell(row={self.row}, col={self.col})'
 
-
-# Special value for distance
-class TrackMark(Enum):
-    Start = 0                   
-    Finish = 65535             
-    Init = 65000       
-
-
-
-class MarkLine :  
-    def __init__(self, mark: TrackMark, y_range:range, x_range:range):
+class MarkLine:
+    def __init__(self, 
+            y_start:int = 0, 
+            y_end:int = 0, 
+            x_start:int = 0, 
+            x_end:int = 0):
         self.type = 'MarkLine'
-        self.mark = mark
-        self.y_range = y_range
-        self.x_range = x_range
+        self.y_start = y_start
+        self.y_end = y_end
+        self.x_start = x_start
+        self.x_end = x_end
+
 
     def __str__(self) -> str:
-        return f'MarkLine(mark={self.mark}, y_range={self.y_range}, x_range={self.x_range})'
-    
+        return f'MarkLine(y:({self.y_start}, {self.y_end}), x:({self.x_start}, {self.x_end}))'
+
 
 class TrackInfo:    
     def __init__(self, 
@@ -57,17 +52,22 @@ class TrackInfo:
             round_distance:int = 0, 
             row:int= 1, 
             column:int = 1,
+            start_line:MarkLine = MarkLine(), 
+            finish_line:MarkLine = MarkLine(), 
             time_interval:int = 100):
         
         self.type = 'TrackInfo'
         self.name = name
+        self.round_distance = round_distance
         self.row = row
         self.column = column
+        self.start_line = start_line
+        self.finish_line = finish_line
         self.time_interval = time_interval      # milliseconds
-        self.round_distance = round_distance
+
 
     def __str__(self) -> str:
-        return f'TrackInfo(name={self.name}, round_distance={self.round_distance}, row={self.row}, column={self.column}, time_interval={self.time_interval})'
+        return f'TrackInfo(name={self.name}, round_distance={self.round_distance}, row={self.row}, column={self.column}, start_line:{self.start_line}, finish_line:{self.finish_line}, time_interval={self.time_interval})'
     
 
 
@@ -78,41 +78,51 @@ class TrackField:
         self.field = np.zeros((track_info.row, track_info.column), dtype=np.dtype([('type', 'H'), ('distance', 'H')]))
 
 
-    def fill_block(self, y_range: range, x_range: range , type: int, distance: int) :
+    def fill_block(self, y_range: range, x_range: range , type: int) :
         for y in y_range :
             for x in x_range :
                 self.field[y, x]['type'] = type
-                self.field[y, x]['distance'] = distance
-
-    def mark_line(self, line: MarkLine) :
-        for y in line.y_range :
-            for x in line.x_range :
-                self.field[y, x]['distance'] = line.mark.value
     
+    def is_start(self, cell: TileCell) -> bool:
+        return (self.track_info.start_line.y_start <= cell.row 
+            and cell.row < self.track_info.start_line.y_end 
+            and self.track_info.start_line.x_start <= cell.col 
+            and cell.col < self.track_info.start_line.x_end)
+        
+    def is_finish(self, cell: TileCell) -> bool:
+        return (self.track_info.finish_line.y_start <= cell.row 
+            and cell.row < self.track_info.finish_line.y_end 
+            and self.track_info.finish_line.x_start <= cell.col 
+            and cell.col < self.track_info.finish_line.x_end)
     
-    def compute_tile_distance(self, start_line: MarkLine, finish_line: MarkLine):
 
-        self.mark_line(start_line)
-        self.mark_line(finish_line)
+    def compute_tile_distance(self, debug:bool = False) -> None:
+
+        MAX_Distance = 65535
 
         # Create a queue for BFS
         queue = []
 
+        for y in range(self.track_info.row) :
+            for x in range(self.track_info.column) :
+                if self.field[y, x]['type'] == TileType.Wall.value:
+                    self.field[y, x]['distance'] = 0 
+                if self.field[y, x]['type'] == TileType.Shoulder.value:
+                    self.field[y, x]['distance'] = 0
+                if self.field[y, x]['type'] == TileType.Road.value:
+                    self.field[y, x]['distance'] = MAX_Distance
+                
 		# Add the start line
-        for y in start_line.y_range :
-            for x in start_line.x_range :
-                cell = TileCell(y, x)
-                queue.append(cell)
-                # print ('Init queue', cell)
+        for y in range(self.track_info.start_line.y_start, self.track_info.start_line.y_end) :
+            for x in range(self.track_info.start_line.x_start, self.track_info.start_line.x_end) :
+                self.field[y, x]['distance'] = 0
+                queue.append(TileCell(y, x))
         
-        self.track_info.round_distance = 0 
         while queue:
             center = queue.pop(0)
-            # print ('\ncenter', center)
+            if debug:    
+                print ('\ncenter', center)
             center_distance = int(self.field[center.row, center.col]['distance'])
-            if center_distance > self.track_info.round_distance :
-                self.track_info.round_distance = center_distance
-                # print('round', self.track_info.round_distance)   
             
             for y in [-1,0,1] :
                 for x in [-1,0,1] :
@@ -126,45 +136,86 @@ class TrackField:
                         continue # col out of bound
                     if self.field[target.row, target.col]['type'] != TileType.Road.value :
                         continue # only deal with bound
-                    if self.field[target.row, target.col]['distance'] == TrackMark.Finish.value :
-                        continue # finish line
-                    if self.field[target.row, target.col]['distance'] == TrackMark.Init.value :
+                    if (self.is_start(center) and self.is_finish(target)):
+                        # not process finish line from start line,
+                        continue 
+                    if (self.is_start(target)):
+                        continue 
+                    if (self.field[target.row, target.col]['distance'] == MAX_Distance):
                         queue.append(target)
-                        # print('append queue', target) 
-
-                    target_distance = self.field[target.row, target.col]['distance']
-                    if target_distance > center_distance + 1 :
                         self.field[target.row, target.col]['distance'] = center_distance + 1
-                        # print (target, " update:", target_distance, '=>', self.field[target.row, target.col]['distance'])
+                        if debug:
+                            print('append queue', target, self.field[target.row, target.col]['distance'])
+ 
+        if debug:
+            for y in range(self.track_info.row) :
+                for x in range(self.track_info.column) :
+                    print(self.field[y, x]['distance'], end=' ')
+                print()
 
-        self.track_info.round_distance += 2 # add 2 for start and finish line
-    
-    """
-    def get_track_view(self, position:car.Point2D) -> TrackView:
+
+        # Reverse direction From finish line to start line, update distance based on the distance to finish line
         
-        left = int(position.x - self.track_info.view_radius)
-        if left < 0 :
-            left = 0
+        # find the minimum distance to finish line
+        self.track_info.round_distance = MAX_Distance
+        for y in range(self.track_info.finish_line.y_start, self.track_info.finish_line.y_end) :
+            for x in range(self.track_info.finish_line.x_start, self.track_info.finish_line.x_end) :
+                queue.append(TileCell(y, x))
+                if self.field[y, x]['distance'] < self.track_info.round_distance:   
+                    self.track_info.round_distance = int(self.field[y, x]['distance'])
+        if debug:
+            print("Minimum self.track_info.round_distance:", self.track_info.round_distance)
 
-        right = int(position.x + self.track_info.view_radius + 1)
-        if right > self.field.shape[1] :
-            right = self.field.shape[1]
-        right = right
+        # start all road tile use distance of finish line
+        for y in range(self.track_info.row) :
+            for x in range(self.track_info.column) :
+                if self.field[y, x]['type'] == TileType.Road.value:
+                    self.field[y, x]['distance'] = self.track_info.round_distance
+        if debug:
+            print("Start Reverse")
+            for y in range(self.track_info.row) :
+                for x in range(self.track_info.column) :
+                    print(self.field[y, x]['distance'], end=' ')
+                print()
 
-        up = int(position.y - self.track_info.view_radius)
-        if up < 0 :
-            up = 0
 
-        down = int(position.y + self.track_info.view_radius + 1)
-        if down > self.field.shape[0] :
-            down = self.field.shape[0]
-        down = down
+        while queue:
+            center = queue.pop(0)
+            center_distance = int(self.field[center.row, center.col]['distance'])
+            if debug:
+                print ('\ncenter', center, ':', center_distance)
 
-        # print('[', up, ':', down, '][', left, ':', right, ']')
-        field = self.field[up:down, :][:, left:right]
+            for y in [-1,0,1] :
+                for x in [-1,0,1] :
+                    if y == 0 and x == 0:
+                        continue    # center
+                    
+                    target = TileCell(center.row + y, center.col + x)
+                    if target.row < 0 or target.row >= self.field.shape[0] :
+                        continue # row out of bound
+                    if target.col < 0 or target.col >= self.field.shape[1] :
+                        continue # col out of bound
+                    if self.field[target.row, target.col]['type'] != TileType.Road.value :
+                        continue # only deal with bound
+                    if (self.is_finish(target)):
+                        continue 
+                    if (self.is_finish(center) and self.is_start(target)):
+                        # not process start line from finish line,
+                        continue 
+                    if (self.field[target.row, target.col]['distance'] == self.track_info.round_distance):
+                        queue.append(target)
+                        self.field[target.row, target.col]['distance'] = center_distance - 1
+                        if debug:
+                            print('append queue', target, self.field[target.row, target.col]['distance']) 
 
-        return TrackView(up, left, field)
-    """
+        self.track_info.round_distance += 1 # add 1 from finish line to start line
+        if debug:
+            print("After Reverse")
+            for y in range(self.track_info.row) :
+                for x in range(self.track_info.column) :
+                    print(self.field[y, x]['distance'], end=' ')
+                print()
+            print("self.track_info.round_distance:", self.track_info.round_distance)
 
     def calc_track_state(self, car_state:car.CarState) -> None:
 
@@ -174,19 +225,14 @@ class TrackField:
             car_state.wheel_angle += math.pi*2
 
         track_state = car.TrackState()
-        track_state.velocity_distance = math.sqrt(car_state.velocity_x**2 + car_state.velocity_y**2)
-
-        track_state.velocity_angle_to_wheel = math.atan2(car_state.velocity_y, car_state.velocity_x) - car_state.wheel_angle
-        if track_state.velocity_angle_to_wheel > math.pi :
-            track_state.velocity_angle_to_wheel -= math.pi*2
-        elif track_state.velocity_angle_to_wheel < -math.pi :
-            track_state.velocity_angle_to_wheel += math.pi*2
+        track_state.velocity_forward = (car_state.velocity_x * math.cos(0 - car_state.wheel_angle) 
+            + car_state.velocity_y * math.cos(math.pi / 2 - car_state.wheel_angle))
+        track_state.velocity_right = (car_state.velocity_y * math.sin(math.pi / 2 - car_state.wheel_angle) 
+            + car_state.velocity_x * math.sin(0 - car_state.wheel_angle))
     
         cell = TileCell(int(car_state.position.y), int(car_state.position.x))
         track_state.tile_type = int(self.field[cell.row, cell.col]['type'])
         track_state.tile_distance = int(self.field[cell.row, cell.col]['distance'])
-        if track_state.tile_type == TileType.Road.value and track_state.tile_distance == TrackMark.Finish.value:
-            track_state.tile_distance = self.track_info.round_distance - 1
         if track_state.tile_type == TileType.Road.value :
             track_state.tile_total_distance = self.track_info.round_distance * car_state.round_count + track_state.tile_distance  
         else:
@@ -195,9 +241,6 @@ class TrackField:
         if None != car_state.last_road_position:
             last_road_cell = TileCell(int(car_state.last_road_position.y), int(car_state.last_road_position.x))
             track_state.last_road_tile_distance = int(self.field[last_road_cell.row, last_road_cell.col]['distance'])
-            if (int(self.field[last_road_cell.row, last_road_cell.col]['type']) == TileType.Road.value 
-                and track_state.last_road_tile_distance == TrackMark.Finish.value):
-                track_state.last_road_tile_distance = self.track_info.round_distance - 1
             track_state.last_road_tile_total_distance = self.track_info.round_distance * car_state.round_count + track_state.last_road_tile_distance  
 
         track_state.score = (car_state.round_count*100
@@ -274,12 +317,12 @@ class TrackField:
         if debug: 
             print('velocity_forward = ', velocity_forward)
 
-        velocity_slide_right: float = (car_state.velocity_y * math.sin(math.pi / 2 - car_state.wheel_angle) 
+        velocity_right: float = (car_state.velocity_y * math.sin(math.pi / 2 - car_state.wheel_angle) 
             + car_state.velocity_x * math.sin(0 - car_state.wheel_angle))
-        if abs(velocity_slide_right) <= car_config.slide_friction.min_velocity_start :
-            velocity_slide_right = 0
+        if abs(velocity_right) <= car_config.slide_friction.min_velocity_start :
+            velocity_right = 0
         if debug: 
-            print('velocity_slide_right = ', velocity_slide_right)
+            print('velocity_right = ', velocity_right)
     
         cell = TileCell(int(car_state.position.y), int(car_state.position.x))
         cell_type = self.field[cell.row, cell.col]['type']
@@ -288,11 +331,9 @@ class TrackField:
 
         if (cell_type == TileType.Road.value 
             and next_cell_type == TileType.Road.value):
-                if (tile_distance == TrackMark.Start.value
-                    and next_tile_distance == TrackMark.Finish.value) :
+                if (self.is_start(cell) and self.is_finish(next_cell)) :
                     next_state.round_count = car_state.round_count - 1        # start to finish backward, decrease a round
-                if (tile_distance == TrackMark.Finish.value 
-                    and next_tile_distance == TrackMark.Start.value) :
+                if (self.is_finish(cell) and self.is_start(next_cell)) :
                     next_state.round_count = car_state.round_count + 1        # finish to start, complete a round
         if debug: 
             print('next cell_type = ', next_cell_type, 'next_tile_distance = ', next_tile_distance)
@@ -317,14 +358,14 @@ class TrackField:
         if debug: 
             print('acceleration_forward = ', acceleration_forward)
 
-        acceleration_slide_right:float = 0
-        if abs(velocity_slide_right) > car_config.slide_friction.min_velocity_start :
-            if velocity_slide_right > 0 :
-                acceleration_slide_right = -1 * car_config.slide_friction.friction * friction_ratio
+        acceleration_right:float = 0
+        if abs(velocity_right) > car_config.slide_friction.min_velocity_start :
+            if velocity_right > 0 :
+                acceleration_right = -1 * car_config.slide_friction.friction * friction_ratio
             else :
-                acceleration_slide_right = car_config.slide_friction.friction * friction_ratio
+                acceleration_right = car_config.slide_friction.friction * friction_ratio
         if debug: 
-            print('acceleration_slide_right = ', acceleration_slide_right)
+            print('acceleration_right = ', acceleration_right)
     
         next_velocity_forward = velocity_forward + acceleration_forward * time_sec
         # never rotate backward
@@ -338,16 +379,16 @@ class TrackField:
         if debug: 
             print('after limit, next_velocity_forward = ', next_velocity_forward)
 
-        next_velocity_slide_right = velocity_slide_right + acceleration_slide_right * time_sec
-        if (next_velocity_slide_right * velocity_slide_right < 0) :
-            next_velocity_slide_right = 0
+        next_velocity_right = velocity_right + acceleration_right * time_sec
+        if (next_velocity_right * velocity_right < 0) :
+            next_velocity_right = 0
         if debug: 
-            print('next_velocity_slide_right = ', next_velocity_slide_right)
+            print('next_velocity_right = ', next_velocity_right)
 
         next_state.velocity_x = (next_velocity_forward * math.cos(car_state.wheel_angle)
-            + next_velocity_slide_right * math.cos(car_state.wheel_angle + math.pi / 2))
+            + next_velocity_right * math.cos(car_state.wheel_angle + math.pi / 2))
         next_state.velocity_y = (next_velocity_forward * math.sin(car_state.wheel_angle)
-            + next_velocity_slide_right * math.sin(car_state.wheel_angle + math.pi / 2))
+            + next_velocity_right * math.sin(car_state.wheel_angle + math.pi / 2))
 
         if debug: 
             print('get_next_state() <<<\n')

@@ -75,8 +75,8 @@ class CarInfo:
 
 class TrackState:
     def __init__(self, 
-            velocity_distance: float = 0,    
-            velocity_angle_to_wheel: float = 0,       
+            velocity_forward: float = 0,    
+            velocity_right: float = 0,       
             rays:list[float] = [],           
             tile_type:int = 0,
             tile_distance:int = 0,
@@ -86,8 +86,8 @@ class TrackState:
             score:float = 0):
 
         self.type = 'TrackState'
-        self.velocity_distance = velocity_distance  # polar coordinate velocity distance
-        self.velocity_angle_to_wheel = velocity_angle_to_wheel # polar coordinate velocity angle relative to wheel_angle
+        self.velocity_forward = velocity_forward  # velocity in the forward direction of the car
+        self.velocity_right = velocity_right # velocity in the right direction of the car
         self.rays = rays                # list of ray distance
         self.tile_type = tile_type      # tile type of the Tile it is on
         self.tile_distance = tile_distance     # distance from the start of the track, in unit of tile count
@@ -98,7 +98,7 @@ class TrackState:
 
 
     def __str__(self) -> str:
-        return f'TrackState(velocity_distance={self.velocity_distance}, velocity_angle_to_wheel={self.velocity_angle_to_wheel}, rays={self.rays}, tile_type={self.tile_type}, tile_distance={self.tile_distance}, tile_total_distance={self.tile_total_distance}, last_road_tile_distance={self.last_road_tile_distance}, last_road_tile_total_distance={self.last_road_tile_total_distance}, score={self.score})'
+        return f'TrackState(velocity_forward={self.velocity_forward}, velocity_right={self.velocity_right}, rays={self.rays}, tile_type={self.tile_type}, tile_distance={self.tile_distance}, tile_total_distance={self.tile_total_distance}, last_road_tile_distance={self.last_road_tile_distance}, last_road_tile_total_distance={self.last_road_tile_total_distance}, score={self.score})'
     
 
 class CarState:
