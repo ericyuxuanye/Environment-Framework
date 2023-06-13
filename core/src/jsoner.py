@@ -4,9 +4,9 @@ import json
 import os
 import pickle
 
-from src.car import *
-from src.track import *
-from src.race import *
+from .car import *
+from .track import *
+from .race import *
 
 class Jsoner:
 
