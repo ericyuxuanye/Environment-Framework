@@ -83,16 +83,13 @@ class UI:
         road_mask = tile_type_array == TileType.Road.value
         shoulder_mask = tile_type_array == TileType.Shoulder.value
         wall_mask = tile_type_array == TileType.Wall.value
-        block_mask = tile_type_array == TileType.Block.value
 
         # Roads are gray
-        color_array[road_mask] = (79, 79, 79)
+        color_array[road_mask] = (192, 192, 192)
         # shoulders are light gray
-        color_array[shoulder_mask] = (163, 163, 163)
+        color_array[shoulder_mask] = (127, 127, 127)
         # walls are red
-        color_array[wall_mask] = (255, 0, 0)
-        # blocks are white
-        color_array[block_mask] = (255, 255, 255)
+        color_array[wall_mask] = (144, 0, 0)
 
         return pygame.surfarray.make_surface(color_array)
 
