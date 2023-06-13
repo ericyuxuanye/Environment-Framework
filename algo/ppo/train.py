@@ -67,7 +67,7 @@ class ModelTrain(model.IModelInference):
     def _init_hyperparameters(self):
         # Default values for hyperparameters, will need to change later.
         self.episodes_per_batch = 10            # episode(race) per batch
-        self.gamma = 0.95					   # discount factor
+        self.gamma = 0.9					   # discount factor
         self.n_updates_per_iteration = 5
         self.clip = 0.2 # As recommended by the paper
         self.lr = 0.005
@@ -175,7 +175,7 @@ class ModelTrain(model.IModelInference):
 
 
             batch_rewards.append(ep_rewards) 
-            episode_score = current_state.track_state.last_road_tile_total_distance
+            episode_score = current_state.track_state.score
             if max_score < episode_score:
                 max_score = episode_score
             total_score += episode_score
@@ -218,8 +218,8 @@ class ModelTrain(model.IModelInference):
         # in batch_rtgs
         for ep_rewards in reversed(batch_rewards):
             discounted_reward = 0 # The discounted reward so far
-            for rewward in reversed(ep_rewards):
-                discounted_reward = rewward + discounted_reward * self.gamma
+            for reward in reversed(ep_rewards):
+                discounted_reward = reward + discounted_reward * self.gamma
                 batch_rewards_to_go.insert(0, discounted_reward)
     
         # Convert the rewards-to-go into a tensor
