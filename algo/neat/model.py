@@ -5,6 +5,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 import pickle
 import neat
 import numpy as np
+import math
 
 from core.src import model, car
 from core.src.race import *
@@ -61,7 +62,8 @@ class Model(model.IModelInference):
         input[5:14] = car_state.track_state.rays[0:9]
 
         output = self.net.activate(input)
-        return car.Action(self.max_acceleration*output[0], self.max_angular_velocity*output[1])
+
+        return car.Action(self.max_acceleration*math.tanh(output[0]), self.max_angular_velocity*math.tanh(output[1]))
 
 
 def create_model_race() -> Race:
