@@ -81,16 +81,31 @@ class Viewer:
             self.car_element.show_step(self.steps_data[0])
         
         at:int = 0
-
+        moving:bool = False
         while True:
-            event, values = self.window.read()
+            event, values = self.window.read(timeout=100)
             if event == sg.WIN_CLOSED or event == 'Exit':
                 break
 
             if event == 'Step':
+                moving = False
                 at += 1
                 if at < self.steps_data.shape[0]:
                     self.car_element.move_to(self.steps_data[at])
+                else:
+                    at = 0
+                    moving = False
+            
+            if event == 'Move':
+                moving = True
+            
+            if moving:
+                at += 1
+                if at < self.steps_data.shape[0]:
+                    self.car_element.move_to(self.steps_data[at])
+                else:
+                    at = 0
+                    moving = False
 
         self.window.close()
 
@@ -120,16 +135,21 @@ class Viewer:
         
 
         self.layout = [
-            [sg.Text('Spartabots', justification='center', expand_x=True, text_color='white', font=('Helvetica', 25))],
+            [sg.Text(track_info.name, text_color='white', font=('Helvetica', 25))],
             [self.graph],
-            [sg.Button('Step'), sg.Exit()],
+            [sg.Button('Move'), sg.Button('Step'), sg.Exit()],
             ]
         
-        self.window = sg.Window('Track Field', self.layout, grab_anywhere=True, finalize=True)
-        self.draw_track_field()
+        self.window = sg.Window(
+            'Race Show', 
+            self.layout, 
+            element_justification='center', 
+            grab_anywhere=True, 
+            finalize=True
+        )
 
+        self.draw_track_field()
         self.car_element = CarElement(self.graph, self.scale)
-        #self.car_element.show(self.race_data.race_info.start_state)
 
 
     def draw_track_field(self):
