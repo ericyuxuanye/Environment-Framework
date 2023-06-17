@@ -7,8 +7,8 @@ import numpy as np
 from scipy.interpolate import make_interp_spline    
 import PySimpleGUI as sg
 
-from core.src import jsoner, car
-from core.src.race import ActionCarState, RaceData
+from core.src import jsoner
+from core.src.race import RaceData
 from core.src.track import TileType, TrackField
 from core.test.samples import Factory
 
@@ -22,7 +22,6 @@ class CarElement:
         position_x = step_data[0]
         position_y = step_data[1]
         angle = step_data[2]
-
 
         self.circle_figure = self.graph.DrawCircle(
             [position_x * self.scale, position_y * self.scale], 
@@ -53,9 +52,7 @@ class CarElement:
             line_color='blue'
         )
 
-
         self.graph.delete_figure(self.angle_figure)
-
         angle_x = math.cos(angle) + position_x
         angle_y = math.sin(angle) + position_y
         self.angle_figure = self.graph.DrawLine(
@@ -70,56 +67,20 @@ class Viewer:
     def __init__(self,  track_field: TrackField, race_data: RaceData):
         self.track_field = track_field
         self.race_data = race_data
-
         self.init_config()
-        self.init_components()
+    
         self.steps_data = self.interpolate_data()
-
-
-    def run(self):
-        if (self.steps_data.size > 0):
-            self.car_element.show_step(self.steps_data[0])
-        
-        at:int = 0
-        moving:bool = False
-        while True:
-            event, values = self.window.read(timeout=100)
-            if event == sg.WIN_CLOSED or event == 'Exit':
-                break
-
-            if event == 'Step':
-                moving = False
-                at += 1
-                if at < self.steps_data.shape[0]:
-                    self.car_element.move_to(self.steps_data[at])
-                else:
-                    at = 0
-                    moving = False
-            
-            if event == 'Move':
-                moving = True
-            
-            if moving:
-                at += 1
-                if at < self.steps_data.shape[0]:
-                    self.car_element.move_to(self.steps_data[at])
-                else:
-                    at = 0
-                    moving = False
-
-        self.window.close()
-
+        self.init_components()
 
     def init_config(self):
         self.window_width = 800           
         self.window_height = 600	
         self.scale = 20
-        self.step_rate = 1
+        self.step_rate = 10
         
         self.road_color = 'green'
         self.shoulder_color = 'yellow'
         self.wall_color = 'red'
-
 
     def init_components(self):
         track_info = self.track_field.track_info
@@ -137,6 +98,7 @@ class Viewer:
         self.layout = [
             [sg.Text(track_info.name, text_color='white', font=('Helvetica', 25))],
             [self.graph],
+            [sg.ProgressBar(max_value=self.steps_data.shape[0], orientation='h', size=(20, 20), key='progress_bar')],
             [sg.Button('Move'), sg.Button('Step'), sg.Exit()],
             ]
         
@@ -186,6 +148,41 @@ class Viewer:
         new_data = np.linspace(0, len(steps) - 1, len(steps) * self.step_rate)
         return make_interp_spline(np.arange(len(steps)), data)(new_data)
     
+
+    def run(self):
+        if (self.steps_data.shape[0] > 0):
+            self.car_element.show_step(self.steps_data[0])
+        
+        at:int = 0
+        moving:bool = False
+        while True:
+            event, values = self.window.read(timeout=100/self.step_rate)
+            if event == sg.WIN_CLOSED or event == 'Exit':
+                break
+
+            if event == 'Step':
+                moving = False
+                at += 1
+                if at < self.steps_data.shape[0]:
+                    self.car_element.move_to(self.steps_data[at])
+                else:
+                    at = 0
+                    moving = False
+            
+            if event == 'Move':
+                moving = True
+            
+            if moving:
+                at += 1
+                if at < self.steps_data.shape[0]:
+                    self.car_element.move_to(self.steps_data[at])
+                else:
+                    at = 0
+                    moving = False
+
+            self.window['progress_bar'].update(at)
+
+        self.window.close()
 
 if __name__ == "__main__":
     track_field = Factory.sample_track_field_2()
