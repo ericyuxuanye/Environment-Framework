@@ -2,7 +2,9 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
-import math    
+import math
+import numpy as np
+from scipy.interpolate import make_interp_spline    
 import PySimpleGUI as sg
 
 from core.src import jsoner, car
@@ -16,34 +18,52 @@ class CarElement:
         self.scale = scale
         self.radius = scale/2
 
-    def show(self, car_state: car.CarState):
+    def show_step(self, step_data):
+        position_x = step_data[0]
+        position_y = step_data[1]
+        angle = step_data[2]
+
+
         self.circle_figure = self.graph.DrawCircle(
-            [car_state.position.x * self.scale, car_state.position.y * self.scale], 
+            [position_x * self.scale, position_y * self.scale], 
             self.radius, 
             fill_color='blue', 
             line_color='blue'
         )
 
-        angle_x = math.cos(car_state.wheel_angle) + car_state.position.x
-        angle_y = math.sin(car_state.wheel_angle) + car_state.position.y
+        angle_x = math.cos(angle) + position_x
+        angle_y = math.sin(angle) + position_y
         self.angle_figure = self.graph.DrawLine(
-            [car_state.position.x * self.scale, car_state.position.y * self.scale],
+            [position_x * self.scale, position_y * self.scale],
             [angle_x * self.scale, angle_y * self.scale],
             color = 'white', 
             width = 2
         )
 
-        velocity_x = car_state.velocity_x + car_state.position.x
-        velocity_y = car_state.velocity_y + car_state.position.y
-        self.velocity_figure = self.graph.DrawLine(
-            [car_state.position.x * self.scale, car_state.position.y * self.scale],
-            [velocity_x * self.scale, velocity_y * self.scale],
-            color = 'orange', 
-            width = 2
+    def move_to(self, step_data):
+        position_x = step_data[0]
+        position_y = step_data[1]
+        angle = step_data[2]
+
+        self.graph.delete_figure(self.circle_figure)
+        self.circle_figure = self.graph.DrawCircle(
+            [position_x * self.scale, position_y * self.scale], 
+            self.radius, 
+            fill_color='blue', 
+            line_color='blue'
         )
 
-    def move_to(self, car_state: car.CarState):
-        pass
+
+        self.graph.delete_figure(self.angle_figure)
+
+        angle_x = math.cos(angle) + position_x
+        angle_y = math.sin(angle) + position_y
+        self.angle_figure = self.graph.DrawLine(
+            [position_x * self.scale, position_y * self.scale],
+            [angle_x * self.scale, angle_y * self.scale],
+            color = 'white', 
+            width = 2
+        )
 
 
 class Viewer:
@@ -53,13 +73,25 @@ class Viewer:
 
         self.init_config()
         self.init_components()
+        self.steps_data = self.interpolate_data()
 
 
     def run(self):
+        if (self.steps_data.size > 0):
+            self.car_element.show_step(self.steps_data[0])
+        
+        at:int = 0
+
         while True:
             event, values = self.window.read()
             if event == sg.WIN_CLOSED or event == 'Exit':
                 break
+
+            if event == 'Step':
+                at += 1
+                if at < self.steps_data.shape[0]:
+                    self.car_element.move_to(self.steps_data[at])
+
         self.window.close()
 
 
@@ -67,6 +99,7 @@ class Viewer:
         self.window_width = 800           
         self.window_height = 600	
         self.scale = 20
+        self.step_rate = 1
         
         self.road_color = 'green'
         self.shoulder_color = 'yellow'
@@ -89,14 +122,15 @@ class Viewer:
         self.layout = [
             [sg.Text('Spartabots', justification='center', expand_x=True, text_color='white', font=('Helvetica', 25))],
             [self.graph],
-            [sg.Button('Start'), sg.Exit()],
+            [sg.Button('Step'), sg.Exit()],
             ]
         
         self.window = sg.Window('Track Field', self.layout, grab_anywhere=True, finalize=True)
         self.draw_track_field()
 
         self.car_element = CarElement(self.graph, self.scale)
-        self.car_element.show(self.race_data.race_info.start_state)
+        #self.car_element.show(self.race_data.race_info.start_state)
+
 
     def draw_track_field(self):
         for y in range(self.track_field.track_info.row) :
@@ -114,7 +148,24 @@ class Viewer:
                     fill_color = tile_color, 
                     line_color = tile_color, 
                     line_width = 0)
-                    
+
+
+    def interpolate_data(self):
+        steps = self.race_data.steps
+        data = np.empty((len(steps), 5))
+        for i, entry in enumerate(steps):
+            data[i,:3] = entry.car_state.position.x, entry.car_state.position.y, entry.car_state.wheel_angle
+            if entry.action is None:
+                data[i,3:] = 0, 0
+            else:
+                data[i,3:] = entry.action.forward_acceleration, entry.action.angular_velocity
+
+        if self.step_rate == 1:
+            return data
+        
+        new_data = np.linspace(0, len(steps) - 1, len(steps) * self.step_rate)
+        return make_interp_spline(np.arange(len(steps)), data)(new_data)
+    
 
 if __name__ == "__main__":
     track_field = Factory.sample_track_field_2()
