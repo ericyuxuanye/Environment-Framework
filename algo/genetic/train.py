@@ -37,10 +37,6 @@ Parameters = list[Parameter]
 
 class ModelTrain(model.IModelInference):
 
-
-    population: list[Parameters]
-
-
     def __init__(self):
         self.population = []
 
