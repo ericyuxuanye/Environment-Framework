@@ -79,8 +79,6 @@ class Race:
         self.track_field.calc_track_state(current_state)
 
         self.steps = []
-        self.steps.append(ActionCarState(None, current_state))
-
         if debug:
             print('Race start at time', start_time)
             print(current_state)

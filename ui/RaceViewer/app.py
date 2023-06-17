@@ -69,14 +69,14 @@ class Viewer:
         self.race_data = race_data
         self.init_config()
     
-        self.steps_data = self.interpolate_data()
+        self.interpolate_data()
         self.init_components()
 
     def init_config(self):
         self.window_width = 800           
         self.window_height = 600	
         self.scale = 20
-        self.step_rate = 10
+        self.step_rate = 2
         
         self.road_color = 'green'
         self.shoulder_color = 'yellow'
@@ -94,12 +94,23 @@ class Viewer:
             key='graph', 
             tooltip='track field')
         
+        table = sg.Table(
+            values=self.table_data, 
+            headings=['msec', 'x', 'y', 'angle', 'acceleration', 'angular velocity'], 
+            key='table',
+            num_rows=10,
+            display_row_numbers=True,
+            justification = "right",
+            background_color ='gray',
+            alternating_row_color='teal',
+            )
 
         self.layout = [
             [sg.Text(track_info.name, text_color='white', font=('Helvetica', 25))],
             [self.graph],
-            [sg.ProgressBar(max_value=self.steps_data.shape[0], orientation='h', size=(20, 20), key='progress_bar')],
-            [sg.Button('Move'), sg.Button('Step'), sg.Exit()],
+            [sg.Text('0'), sg.ProgressBar(max_value=self.steps_data.shape[0], orientation='h', size=(20, 20), key='progress_bar'), sg.Text(self.steps_data.shape[0])],
+            [sg.Button('Move'), sg.Button('Step'), sg.Text('0', key='at_step'), sg.Exit()],
+            [table],
             ]
         
         self.window = sg.Window(
@@ -143,11 +154,17 @@ class Viewer:
                 data[i,3:] = entry.action.forward_acceleration, entry.action.angular_velocity
 
         if self.step_rate == 1:
-            return data
-        
-        new_data = np.linspace(0, len(steps) - 1, len(steps) * self.step_rate)
-        return make_interp_spline(np.arange(len(steps)), data)(new_data)
-    
+            self.steps_data = data
+        else:
+            new_data = np.linspace(0, len(steps) - 1, len(steps) * self.step_rate)
+            self.steps_data = make_interp_spline(np.arange(len(steps)), data)(new_data)
+
+        self.table_data = [[j for j in range(self.steps_data.shape[1]+1)] for i in range(self.steps_data.shape[0])]
+        for row in range(self.steps_data.shape[0]):
+            self.table_data[row][0] = row * self.track_field.track_info.time_interval / self.step_rate
+            for col in range(self.steps_data.shape[1]):
+                self.table_data[row][col+1] = "{:.3f}".format(self.steps_data[row, col])
+
 
     def run(self):
         if (self.steps_data.shape[0] > 0):
@@ -181,6 +198,7 @@ class Viewer:
                     moving = False
 
             self.window['progress_bar'].update(at)
+            self.window['at_step'].update(at)
 
         self.window.close()
 
