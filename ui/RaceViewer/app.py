@@ -19,9 +19,9 @@ class CarElement:
         self.radius = scale/2
 
     def show_step(self, step_data):
-        position_x = step_data[0]
-        position_y = step_data[1]
-        angle = step_data[2]
+        position_x = step_data[1]
+        position_y = step_data[2]
+        angle = step_data[3]
 
         self.circle_figure = self.graph.DrawCircle(
             [position_x * self.scale, position_y * self.scale], 
@@ -40,9 +40,9 @@ class CarElement:
         )
 
     def move_to(self, step_data):
-        position_x = step_data[0]
-        position_y = step_data[1]
-        angle = step_data[2]
+        position_x = step_data[1]
+        position_y = step_data[2]
+        angle = step_data[3]
 
         self.graph.delete_figure(self.circle_figure)
         self.circle_figure = self.graph.DrawCircle(
@@ -145,13 +145,10 @@ class Viewer:
 
     def interpolate_data(self):
         steps = self.race_data.steps
-        data = np.empty((len(steps), 5))
+        data = np.empty((len(steps), 6))
         for i, entry in enumerate(steps):
-            data[i,:3] = entry.car_state.position.x, entry.car_state.position.y, entry.car_state.wheel_angle
-            if entry.action is None:
-                data[i,3:] = 0, 0
-            else:
-                data[i,3:] = entry.action.forward_acceleration, entry.action.angular_velocity
+            data[i,:4] = entry.car_state.timestamp, entry.car_state.position.x, entry.car_state.position.y, entry.car_state.wheel_angle
+            data[i,4:] = entry.action.forward_acceleration, entry.action.angular_velocity
 
         if self.step_rate == 1:
             self.steps_data = data
@@ -159,11 +156,10 @@ class Viewer:
             new_data = np.linspace(0, len(steps) - 1, len(steps) * self.step_rate)
             self.steps_data = make_interp_spline(np.arange(len(steps)), data)(new_data)
 
-        self.table_data = [[j for j in range(self.steps_data.shape[1]+1)] for i in range(self.steps_data.shape[0])]
+        self.table_data = [[j for j in range(self.steps_data.shape[1])] for i in range(self.steps_data.shape[0])]
         for row in range(self.steps_data.shape[0]):
-            self.table_data[row][0] = row * self.track_field.track_info.time_interval / self.step_rate
-            for col in range(self.steps_data.shape[1]):
-                self.table_data[row][col+1] = "{:.3f}".format(self.steps_data[row, col])
+            for col in range(0, self.steps_data.shape[1]):
+                self.table_data[row][col] = "{:.3f}".format(self.steps_data[row, col])
 
 
     def run(self):
