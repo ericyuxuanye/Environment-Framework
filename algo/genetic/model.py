@@ -24,9 +24,6 @@ DATA_FILE_NAME = "net_params.pt"
 
 class Model(model.IModelInference):
 
-    net:torch.nn.Sequential
-    max_acceleration:float
-    max_angular_velocity:float
 
     def __init__(self, max_acceleration:float = 1, max_angular_velocity:float = 1):
         self.net = self.create_net()
