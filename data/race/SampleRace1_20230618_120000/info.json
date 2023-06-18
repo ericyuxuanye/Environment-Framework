@@ -1,7 +1,7 @@
 {
     "type": "RaceInfo",
-    "name": "TrackField2Radius2",
-    "id": "TrackField2Radius2_20230512_000000",
+    "name": "SampleRace1",
+    "id": "SampleRace1_20230618_120000",
     "track_info": {
         "type": "TrackInfo",
         "id": "sample_track_field_2",
@@ -24,7 +24,7 @@
         },
         "time_interval": 100
     },
-    "round_to_finish": 1,
+    "round_to_finish": 3,
     "model_info": {
         "type": "ModelInfo",
         "name": "simplefixedrightturn",

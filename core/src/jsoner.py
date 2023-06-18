@@ -71,6 +71,42 @@ class Jsoner:
         else:
             return json_dict
         
+class TrackFieldSaver:
+    @classmethod
+    def save(cls, track_field: TrackField, data_folder: str):
+        directory = os.path.join(os.path.join(data_folder, 'trackfield'), track_field.track_info.id)
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+        
+        info_file = 'info.json'
+        info_path = os.path.join(directory, info_file)
+        with open(info_path, 'w') as infofile:
+            info_json = Jsoner.to_json(track_field.track_info, indent=4)
+            # print('race_json', info_json)
+            infofile.write(info_json)
+        
+        field_path = os.path.join(directory, 'field')
+        with open(field_path, 'wb') as field_file:
+            pickle.dump(track_field.field, field_file)
+        
+    
+    @classmethod
+    def load(cls, data_folder: str, id: str) -> TrackField:
+        directory = os.path.join(os.path.join(data_folder, 'trackfield'), id)
+        if not os.path.exists(directory):
+            return None, None
+        
+        info_file = 'info.json'
+        info_path = os.path.join(directory, info_file)
+        track_info = Jsoner.object_from_json_file(info_path)
+        tf = TrackField(track_info)
+
+        field_path = os.path.join(directory, 'field')
+        with open(field_path, 'rb') as field_file:
+            tf.field = pickle.load(field_file)
+    
+        return tf
+    
 
 class RaceDataSaver:
 
@@ -118,39 +154,23 @@ class RaceDataSaver:
         return RaceData(race_info, steps)
 
 
-class TrackFieldSaver:
+class RaceSaver:
 
     @classmethod
-    def save(cls, track_field: TrackField, data_folder: str):
-        directory = os.path.join(os.path.join(data_folder, 'trackfield'), track_field.track_info.id)
-        if not os.path.exists(directory):
-            os.makedirs(directory)
-        
-        info_file = 'info.json'
-        info_path = os.path.join(directory, info_file)
-        with open(info_path, 'w') as infofile:
-            info_json = Jsoner.to_json(track_field.track_info, indent=4)
-            # print('race_json', info_json)
-            infofile.write(info_json)
-        
-        field_path = os.path.join(directory, 'field')
-        with open(field_path, 'wb') as field_file:
-            pickle.dump(track_field.field, field_file)
-        
+    def save(cls, race: Race, data_root: str):
+        RaceDataSaver.save(race.race_data, data_root)
+        TrackFieldSaver.save(race.track_field, data_root)
     
     @classmethod
-    def load(cls, data_folder: str, id: str) -> TrackField:
-        directory = os.path.join(os.path.join(data_folder, 'trackfield'), id)
-        if not os.path.exists(directory):
-            return None, None
-        
-        info_file = 'info.json'
-        info_path = os.path.join(directory, info_file)
-        track_info = Jsoner.object_from_json_file(info_path)
-        tf = TrackField(track_info)
+    def load(cls, data_root: str, id: str):
 
-        field_path = os.path.join(directory, 'field')
-        with open(field_path, 'rb') as field_file:
-            tf.field = pickle.load(field_file)
-    
-        return tf
+        race_data = RaceDataSaver.load(data_root, id)
+        track_field = TrackFieldSaver.load(data_root, race_data.race_info.track_info.id)
+
+        return race_data, track_field
+
+    @classmethod
+    def load_folder(cls, race_folder: str):
+        id = os.path.basename(race_folder)
+        data_root = os.path.dirname(os.path.dirname(race_folder))
+        return cls.load(data_root, id)

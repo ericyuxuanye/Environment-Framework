@@ -133,7 +133,7 @@ class Factory:
         car_info = CarInfo(id = 1024, team = 'kirin')
 
         race_info = RaceInfo(
-            name = 'TrackField2Radius2',
+            name = 'SampleRace0',
             id = 'NotStarted',
             track_info = track_field.track_info, 
             round_to_finish = 1, 
@@ -158,7 +158,7 @@ class Factory:
         car_info = CarInfo(id = 1024, team = 'kirin')
 
         race_info = RaceInfo(
-            name = 'TrackField2Round3',
+            name = 'SampleRace1',
             id = 'NotStarted',
             track_info = track_field.track_info, 
             round_to_finish = 3,

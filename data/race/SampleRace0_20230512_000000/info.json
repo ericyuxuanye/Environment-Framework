@@ -1,7 +1,7 @@
 {
     "type": "RaceInfo",
-    "name": "TrackField2Radius2",
-    "id": "TrackField2Radius2_20230512_010101",
+    "name": "SampleRace0",
+    "id": "SampleRace0_20230512_000000",
     "track_info": {
         "type": "TrackInfo",
         "id": "sample_track_field_2",

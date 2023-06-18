@@ -84,12 +84,12 @@ class UI:
         shoulder_mask = tile_type_array == TileType.Shoulder.value
         wall_mask = tile_type_array == TileType.Wall.value
 
-        # Roads are gray
-        color_array[road_mask] = (192, 192, 192)
-        # shoulders are light gray
-        color_array[shoulder_mask] = (127, 127, 127)
+        # Roads are green
+        color_array[road_mask] = (0, 192, 0)
+        # shoulders are yellow  
+        color_array[shoulder_mask] = (192, 192, 0)
         # walls are red
-        color_array[wall_mask] = (144, 0, 0)
+        color_array[wall_mask] = (192, 0, 0)
 
         return pygame.surfarray.make_surface(color_array)
 
@@ -130,8 +130,6 @@ class UI:
 if __name__ == "__main__":
     track_field = Factory.sample_track_field_2()
     race_data_saver = jsoner.RaceDataSaver()
-    race_data = jsoner.RaceDataSaver.load(
-        "data/race/TrackField2Radius2_20230512_000000"
-    )
+    race_data = jsoner.RaceDataSaver.load("data", "SampleRace0_20230512_000000")
     ui = UI(1000, 600, race_data, track_field, 60, 5)
     ui.start()

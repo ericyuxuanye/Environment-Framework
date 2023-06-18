@@ -198,8 +198,7 @@ class Viewer:
         self.window.close()
 
 if __name__ == "__main__":
-
-    race_data = jsoner.RaceDataSaver.load('data', 'TrackField2Radius2_20230512_000000')
-    track_field = jsoner.TrackFieldSaver.load('data', race_data.race_info.track_info.id)
+        
+    race_data, track_field = jsoner.RaceSaver.load_folder('data/race/SampleRace1_20230618_120000')
     view = Viewer(track_field, race_data)
     view.run()
