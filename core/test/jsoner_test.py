@@ -11,8 +11,8 @@ from src.jsoner import *
 
 class JsonTest(unittest.TestCase):
 
-    def test_100_cc(self):
-        print('\n===\ntest_100_cc()')
+    def test_100_carconfig_json(self):
+        print('\n===\ntest_100_carconfig_json()')
 
         cc_1= Factory.default_car_config()
         print('cc_1:', cc_1)
@@ -32,8 +32,8 @@ class JsonTest(unittest.TestCase):
         print('cc_1 == cc_3:', cc_1 == cc_3) 
 
 
-    def test_101_cc(self):
-        print('\n===\ntest_101_cc()')
+    def test_101_carconfig_folder(self):
+        print('\n===\ntest_101_carconfig_folder()')
 
         cc_1= Factory.default_car_config()
         print('cc_1:', cc_1)
@@ -56,15 +56,17 @@ class JsonTest(unittest.TestCase):
 
         print('cc_1 == cc_3:', cc_1 == cc_3) 
 
-    def test_102_save(self):
-        print('\n===\ntest_102_save()')
+
+    def test_102_save_racedata(self):
+        print('\n===\ntest_102_save_racedata()')
         race = Factory.sample_race_0()
         race_data = race.run(debug=False) 
         race_data.race_info.id = 'TrackField2Radius2_20230512_010101'
-        RaceDataSaver.save(race_data, 'data/race')
+        RaceDataSaver.save(race_data)
 
-    def test_103_load(self):
-        print('\n===\ntest_103_load()')
+
+    def test_103_load_racedata(self):
+        print('\n===\ntest_103_load_racedata()')
         info_path = 'data/race/TrackField2Radius2_20230512_010101'
         race_data = RaceDataSaver.load(info_path)
         print('race_data : ', race_data)
@@ -84,6 +86,63 @@ class JsonTest(unittest.TestCase):
         tf= TrackFieldSaver.load(tf_path)
         print('tf : ', tf)
 
+
+    def test_500_save_race(self):
+        print('\n===\nttest_100_save()')
+        race = Factory.sample_race_0()
+        race_data = race.run(debug=False) 
+        race_data.race_info.id = 'TrackField2Radius2_20230512_000000'
+
+        RaceSaver.save(race)
+
+        """
+
+        directory = os.path.join('data/race', race_data.race_info.id)
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+        
+        info_file = 'info.json'
+        info_path = os.path.join(directory, info_file)
+        with open(info_path, 'w') as infofile:
+            info_json = Jsoner.to_json(race.race_info, indent=4)
+            print('race_json', info_json)
+            infofile.write(info_json)
+
+
+        print('steps:====================')
+        step_path = os.path.join(directory, 'action_state.log')
+        with open(step_path, 'w') as logfile:
+            for step in race.steps: 
+                step_json = Jsoner.to_json(step)
+                print(step_json)
+                logfile.write(step_json + '\n')
+        
+        """
+
+
+    def test_501_read_race(self):
+        print('\n===\ntest_501_read_race()')
+
+        track_field, race_data = RaceSaver.load('data', 'TrackField2Radius2_20230512_000000')
+        """
+        directory = os.path.join('data/race/', 'TrackField2Radius2_20230512_000000')
+        info_path = os.path.join(directory, 'info.json')
+        race_info_read = Jsoner.object_from_json_file(info_path)
+        print('race_info_read : ', race_info_read)
+
+        steps: list[ActionCarState] = []
+        log_path = os.path.join(directory, 'action_state.log')
+        with open(log_path, 'r') as logfile:
+            Lines = logfile.readlines()
+        
+            for line in Lines:
+                steps.append(Jsoner.from_json_str(line))
+        """
+
+
+        print('track_field: \n', track_field)
+        print('race_data: \n', race_data)
+        
 
 if __name__ == '__main__':
     unittest.main()

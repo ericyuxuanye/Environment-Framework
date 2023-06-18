@@ -29,23 +29,23 @@ class RaceInfo:
     def __init__(self, 
                  name: str,
                  id: str,
-                 track_info: track.TrackInfo, 
                  round_to_finish: int, 
                  model_info: ModelInfo, 
                  car_info: car.CarInfo,
                  car_config : car.CarConfig,
                  start_state : car.CarState,
+                 track_info: track.TrackInfo = track.TrackInfo(), 
                  max_time_to_finish: int = 300000):
 
         self.type = 'RaceInfo'
         self.name = name
         self.id = id  
-        self.track_info = track_info
         self.round_to_finish = round_to_finish
         self.model_info = model_info
         self.car_info = car_info
         self.car_config = car_config
         self.start_state = start_state
+        self.track_info = track_info
         self.max_time_to_finish = max_time_to_finish
 
     def __str__(self) -> str:
@@ -65,8 +65,9 @@ class Race:
             track_field: track.TrackField, 
             model: model.IModelInference):
         
-        self.race_info = race_info
         self.track_field = track_field
+        self.race_info = race_info
+        self.race_info.track_info = track_field.track_info, 
         self.model = model
         self.steps = []
 

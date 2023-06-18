@@ -135,7 +135,6 @@ class Factory:
         race_info = RaceInfo(
             name = 'TrackField2Radius2',
             id = 'NotStarted',
-            track_info = track_field.track_info, 
             round_to_finish = 1, 
             model_info = model_info,
             car_info = car_info,
