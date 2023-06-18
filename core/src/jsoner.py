@@ -135,7 +135,7 @@ class RaceDataSaver:
 
         directory = os.path.join(os.path.join(data_folder, 'race'), id)
         if not os.path.exists(directory):
-            return None, None
+            return None
         
         info_file = 'info.json'
         info_path = os.path.join(directory, info_file)
@@ -165,8 +165,14 @@ class RaceSaver:
     def load(cls, data_root: str, id: str):
 
         race_data = RaceDataSaver.load(data_root, id)
-        track_field = TrackFieldSaver.load(data_root, race_data.race_info.track_info.id)
+        if race_data is None:
+            return None, None
+        elif race_data.race_info is None:
+            return None, None
+        elif race_data.race_info.track_info is None:
+            return None, None
 
+        track_field = TrackFieldSaver.load(data_root, race_data.race_info.track_info.id)
         return race_data, track_field
 
     @classmethod

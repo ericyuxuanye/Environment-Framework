@@ -108,12 +108,12 @@ class Viewer:
             [sg.Text(track_info.id, text_color='white', font=('Helvetica', 25))],
             [self.graph],
             [sg.Text('0'), sg.ProgressBar(max_value=self.steps_data.shape[0], orientation='h', size=(20, 20), key='progress_bar'), sg.Text(self.steps_data.shape[0])],
-            [sg.Button('Move'), sg.Button('Step'), sg.Text('0', key='at_step'), sg.Exit()],
+            [sg.Button('Play'), sg.Button('Step'), sg.Text('0', key='at_step'), sg.Exit()],
             [table],
             ]
         
         self.window = sg.Window(
-            'Race Show', 
+            'Race Viewer', 
             self.layout, 
             element_justification='center', 
             grab_anywhere=True, 
@@ -166,31 +166,31 @@ class Viewer:
             self.car_element.show_step(self.steps_data[0])
         
         at:int = 0
-        moving:bool = False
+        play:bool = False
         while True:
             event, values = self.window.read(timeout=100/self.step_rate)
             if event == sg.WIN_CLOSED or event == 'Exit':
                 break
 
             if event == 'Step':
-                moving = False
+                play = False
                 at += 1
                 if at < self.steps_data.shape[0]:
                     self.car_element.move_to(self.steps_data[at])
                 else:
                     at = 0
-                    moving = False
+                    play = False
             
-            if event == 'Move':
-                moving = True
+            if event == 'Play':
+                play = True
             
-            if moving:
+            if play:
                 at += 1
                 if at < self.steps_data.shape[0]:
                     self.car_element.move_to(self.steps_data[at])
                 else:
                     at = 0
-                    moving = False
+                    play = False
 
             self.window['progress_bar'].update(at)
             self.window['at_step'].update(at)
@@ -198,7 +198,15 @@ class Viewer:
         self.window.close()
 
 if __name__ == "__main__":
-        
-    race_data, track_field = jsoner.RaceSaver.load_folder('data/race/SampleRace1_20230618_120000')
+    data_folder = sg.popup_get_folder(
+        'Select race data folder', 
+        default_path=os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))),'data')
+    )
+
+    race_data, track_field = jsoner.RaceSaver.load_folder(data_folder)
+    if race_data is None or track_field is None:
+        sg.popup_error('Error loading data', 'Please choose a correct race data folder')
+        exit()  
+
     view = Viewer(track_field, race_data)
     view.run()
