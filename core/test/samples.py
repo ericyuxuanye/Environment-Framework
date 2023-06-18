@@ -31,7 +31,7 @@ class Factory:
     def sample_track_field_0(cls) -> TrackField:
 
         track_info = TrackInfo(
-            name='sample_track_field_0', 
+            id='sample_track_field_0', 
             row=5, 
             column=8,
             time_interval = 1000)
@@ -50,7 +50,7 @@ class Factory:
     @classmethod
     def sample_track_field_1(cls) -> TrackField:
         track_info = TrackInfo(
-            name='sample_track_field_1', 
+            id='sample_track_field_1', 
             row=20, 
             column=30, 
             time_interval = 1000)
@@ -88,7 +88,7 @@ class Factory:
     @classmethod
     def sample_track_field_2(cls, compute_distance:bool = False, debug:bool = False) -> TrackField:
         track_info = TrackInfo(
-            name='sample_track_field_2', 
+            id='sample_track_field_2', 
             row=20, 
             column=30,
             start_line=MarkLine(4, 7, 14, 15),

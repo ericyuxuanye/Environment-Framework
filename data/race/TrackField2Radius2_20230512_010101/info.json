@@ -4,7 +4,7 @@
     "id": "TrackField2Radius2_20230512_010101",
     "track_info": {
         "type": "TrackInfo",
-        "name": "sample_track_field_2",
+        "id": "sample_track_field_2",
         "round_distance": 28,
         "row": 20,
         "column": 30,

@@ -10,7 +10,6 @@ import PySimpleGUI as sg
 from core.src import jsoner
 from core.src.race import RaceData
 from core.src.track import TileType, TrackField
-from core.test.samples import Factory
 
 class CarElement:
     def __init__(self, graph, scale):
@@ -96,7 +95,7 @@ class Viewer:
         
         table = sg.Table(
             values=self.table_data, 
-            headings=['msec', 'x', 'y', 'angle', 'acceleration', 'angular velocity'], 
+            headings=['sec', 'x', 'y', 'angle', 'acceleration', 'angular velocity'], 
             key='table',
             num_rows=10,
             display_row_numbers=True,
@@ -106,7 +105,7 @@ class Viewer:
             )
 
         self.layout = [
-            [sg.Text(track_info.name, text_color='white', font=('Helvetica', 25))],
+            [sg.Text(track_info.id, text_color='white', font=('Helvetica', 25))],
             [self.graph],
             [sg.Text('0'), sg.ProgressBar(max_value=self.steps_data.shape[0], orientation='h', size=(20, 20), key='progress_bar'), sg.Text(self.steps_data.shape[0])],
             [sg.Button('Move'), sg.Button('Step'), sg.Text('0', key='at_step'), sg.Exit()],
@@ -147,7 +146,7 @@ class Viewer:
         steps = self.race_data.steps
         data = np.empty((len(steps), 6))
         for i, entry in enumerate(steps):
-            data[i,:4] = entry.car_state.timestamp, entry.car_state.position.x, entry.car_state.position.y, entry.car_state.wheel_angle
+            data[i,:4] = entry.car_state.timestamp/1000.0, entry.car_state.position.x, entry.car_state.position.y, entry.car_state.wheel_angle
             data[i,4:] = entry.action.forward_acceleration, entry.action.angular_velocity
 
         if self.step_rate == 1:
@@ -199,10 +198,8 @@ class Viewer:
         self.window.close()
 
 if __name__ == "__main__":
-    track_field = Factory.sample_track_field_2()
-    race_data_saver = jsoner.RaceDataSaver()
-    race_data = jsoner.RaceDataSaver.load(
-        "data/race/TrackField2Radius2_20230512_000000"
-    )
+
+    race_data = jsoner.RaceDataSaver.load('data', 'TrackField2Radius2_20230512_000000')
+    track_field = jsoner.TrackFieldSaver.load('data', race_data.race_info.track_info.id)
     view = Viewer(track_field, race_data)
     view.run()
