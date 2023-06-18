@@ -73,15 +73,49 @@ class JsonTest(unittest.TestCase):
     def test_300_save_race_data(self):
         print('\n===\ntest_300_save_race_data()')
         race = Factory.sample_race_0()
-        race_data = race.run(debug=False) 
-        race_data.race_info.id = 'TrackField2Radius2_20230512_000000'
-        RaceDataSaver.save(race_data, 'data')
+        race.run(debug=False) 
+        race.race_data.race_info.id = 'SampleRace0_20230512_000000'
+        RaceDataSaver.save(race.race_data, 'data')
         TrackFieldSaver.save(race.track_field, 'data')
 
     def test_301_load_race_data(self):
         print('\n===\ntest_301_load_race_data()')
-        race_data = RaceDataSaver.load('data', 'TrackField2Radius2_20230512_000000')
+        race_data = RaceDataSaver.load('data', 'SampleRace0_20230512_000000')
         track_field = TrackFieldSaver.load('data', race_data.race_info.track_info.id)
+
+        print('track_field : ', track_field)
+
+        print('race_info : ', race_data.race_info)
+
+        print('steps: ')
+        for step in race_data.steps:
+            print(step)
+
+    def test_400_save_race(self):
+        print('\n===\ntest_400_save_race()')
+        race = Factory.sample_race_1()
+        race.run(debug=False) 
+        race.race_data.race_info.id = 'SampleRace1_20230618_120000'
+        RaceSaver.save(race, 'data')
+
+
+    def test_401_load_race_by_id(self):
+        print('\n===\ntest_401_load_race_by_id()')
+    
+        race_data, track_field = RaceSaver.load('data', 'SampleRace1_20230618_120000')
+
+        print('track_field : ', track_field)
+
+        print('race_info : ', race_data.race_info)
+
+        print('steps: ')
+        for step in race_data.steps:
+            print(step)
+
+    def test_402_load_race_fullpath(self):
+        print('\n===\ntest_402_load_race_fullpath()')
+    
+        race_data, track_field = RaceSaver.load_folder('data/race/SampleRace1_20230618_120000')
 
         print('track_field : ', track_field)
 

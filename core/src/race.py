@@ -70,7 +70,7 @@ class Race:
         self.model = model
         self.steps = []
 
-    def run(self, debug:bool = False) -> RaceData:
+    def run(self, debug:bool = False):
     
         start_time = datetime.now().strftime("%Y%m%d_%H%M%S")
         self.race_info.id = self.race_info.name + "_" + start_time
@@ -103,6 +103,7 @@ class Race:
             print('Race finished at time', datetime.now())
             print(current_state)
 
-        return RaceData(self.race_info, self.steps)
+        self.race_data = RaceData(self.race_info, self.steps)
+        #return self.race_data
         
     
