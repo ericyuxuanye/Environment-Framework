@@ -75,8 +75,8 @@ class Jsoner:
 class RaceDataSaver:
 
     @classmethod
-    def save(cls, race_data: RaceData, folder: str):
-        directory = os.path.join(folder, race_data.race_info.id)
+    def save(cls, race_data: RaceData, data_folder: str):
+        directory = os.path.join(os.path.join(data_folder, 'race'), race_data.race_info.id)
         if not os.path.exists(directory):
             os.makedirs(directory)
         
@@ -95,7 +95,9 @@ class RaceDataSaver:
                 logfile.write(step_json + '\n')
     
     @classmethod
-    def load(cls, directory: str) -> RaceData:
+    def load(cls, data_folder: str, id: str) -> RaceData:
+
+        directory = os.path.join(os.path.join(data_folder, 'race'), id)
         if not os.path.exists(directory):
             return None, None
         
@@ -119,8 +121,8 @@ class RaceDataSaver:
 class TrackFieldSaver:
 
     @classmethod
-    def save(cls, track_field: TrackField, folder: str):
-        directory = os.path.join(folder, track_field.track_info.name)
+    def save(cls, track_field: TrackField, data_folder: str):
+        directory = os.path.join(os.path.join(data_folder, 'trackfield'), track_field.track_info.id)
         if not os.path.exists(directory):
             os.makedirs(directory)
         
@@ -137,7 +139,8 @@ class TrackFieldSaver:
         
     
     @classmethod
-    def load(cls, directory: str) -> TrackField:
+    def load(cls, data_folder: str, id: str) -> TrackField:
+        directory = os.path.join(os.path.join(data_folder, 'trackfield'), id)
         if not os.path.exists(directory):
             return None, None
         

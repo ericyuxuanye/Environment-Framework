@@ -48,7 +48,7 @@ class MarkLine:
 
 class TrackInfo:    
     def __init__(self, 
-            name:str = 'trackinfo', 
+            id:str, 
             round_distance:int = 0, 
             row:int= 1, 
             column:int = 1,
@@ -57,7 +57,7 @@ class TrackInfo:
             time_interval:int = 100):
         
         self.type = 'TrackInfo'
-        self.name = name
+        self.id = id
         self.round_distance = round_distance
         self.row = row
         self.column = column
@@ -67,7 +67,15 @@ class TrackInfo:
 
 
     def __str__(self) -> str:
-        return f'TrackInfo(name={self.name}, round_distance={self.round_distance}, row={self.row}, column={self.column}, start_line:{self.start_line}, finish_line:{self.finish_line}, time_interval={self.time_interval})'
+        return (
+            f'TrackInfo(id={self.id}'
+            + f', round_distance={self.round_distance}'
+            + f', row={self.row}'
+            + f', column={self.column}'
+            + f', start_line:{self.start_line}'
+            + f', finish_line:{self.finish_line}'
+            + f', time_interval={self.time_interval})'
+        )
     
 
 

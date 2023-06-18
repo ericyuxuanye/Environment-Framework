@@ -56,34 +56,40 @@ class JsonTest(unittest.TestCase):
 
         print('cc_1 == cc_3:', cc_1 == cc_3) 
 
-    def test_102_save(self):
-        print('\n===\ntest_102_save()')
-        race = Factory.sample_race_0()
-        race_data = race.run(debug=False) 
-        race_data.race_info.id = 'TrackField2Radius2_20230512_010101'
-        RaceDataSaver.save(race_data, 'data/race')
-
-    def test_103_load(self):
-        print('\n===\ntest_103_load()')
-        info_path = 'data/race/TrackField2Radius2_20230512_010101'
-        race_data = RaceDataSaver.load(info_path)
-        print('race_data : ', race_data)
-
-    def test_400_save_tf(self):
-        print('\n===\ntest_400_save_tf()')
+    def test_200_save_tf(self):
+        print('\n===\ntest_200_save_tf()')
 
         tf = Factory.sample_track_field_0()
         print('tf:', tf)
         print('type(tf):', type(tf))
 
-        TrackFieldSaver.save(tf, 'data/trackfield')
+        TrackFieldSaver.save(tf, 'data')
 
-    def test_401_load_tf(self):
-        print('\n===\ntest_401_load_tf()')
-        tf_path = 'data/trackfield/sample_track_field_0'
-        tf= TrackFieldSaver.load(tf_path)
+    def test_201_load_tf(self):
+        print('\n===\ntest_201_load_tf()')
+        tf= TrackFieldSaver.load('data', 'sample_track_field_0')
         print('tf : ', tf)
 
+    def test_300_save_race_data(self):
+        print('\n===\ntest_300_save_race_data()')
+        race = Factory.sample_race_0()
+        race_data = race.run(debug=False) 
+        race_data.race_info.id = 'TrackField2Radius2_20230512_000000'
+        RaceDataSaver.save(race_data, 'data')
+        TrackFieldSaver.save(race.track_field, 'data')
+
+    def test_301_load_race_data(self):
+        print('\n===\ntest_301_load_race_data()')
+        race_data = RaceDataSaver.load('data', 'TrackField2Radius2_20230512_000000')
+        track_field = TrackFieldSaver.load('data', race_data.race_info.track_info.id)
+
+        print('track_field : ', track_field)
+
+        print('race_info : ', race_data.race_info)
+
+        print('steps: ')
+        for step in race_data.steps:
+            print(step)
 
 if __name__ == '__main__':
     unittest.main()

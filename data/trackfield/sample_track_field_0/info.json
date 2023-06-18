@@ -1,6 +1,6 @@
 {
     "type": "TrackInfo",
-    "name": "sample_track_field_0",
+    "id": "sample_track_field_0",
     "round_distance": 0,
     "row": 5,
     "column": 8,
