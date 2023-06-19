@@ -9,7 +9,7 @@ import PySimpleGUI as sg
 
 from core.src import jsoner
 from core.src.race import RaceData
-from core.src.track import TileType, TrackField
+from core.src.track import TileType, TrackField, TileCell
 
 class CarElement:
     def __init__(self, graph, scale):
@@ -80,6 +80,8 @@ class Viewer:
         self.road_color = 'green'
         self.shoulder_color = 'yellow'
         self.wall_color = 'red'
+        self.start_color = 'white'
+        self.finish_color = 'lightblue'
 
     def init_components(self):
         track_info = self.track_field.track_info
@@ -134,6 +136,12 @@ class Viewer:
                 elif self.track_field.field[y, x]['type'] == TileType.Shoulder.value:
                     tile_color = self.shoulder_color
 
+                cell = TileCell(y, x)
+                if self.track_field.is_start(cell):
+                    tile_color = self.start_color
+                elif self.track_field.is_finish(cell):
+                    tile_color = self.finish_color
+                
                 self.graph.DrawRectangle(
                     (x * self.scale, y * self.scale), 
                     (x * self.scale + self.scale, y * self.scale + self.scale), 
