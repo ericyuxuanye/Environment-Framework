@@ -119,7 +119,7 @@ class Model(model.IModelInference):
                 i += 1
 
 
-def create_model_race():
+def create_model_race() -> Race:
     race = Factory.sample_race_1()
 
     model = Model(race.race_info.car_config.motion_profile.max_acceleration, 

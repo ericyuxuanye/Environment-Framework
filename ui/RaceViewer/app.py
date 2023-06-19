@@ -75,7 +75,7 @@ class Viewer:
         self.window_width = 800           
         self.window_height = 600	
         self.scale = 20
-        self.step_rate = 2
+        self.step_rate = 1
         
         self.road_color = 'green'
         self.shoulder_color = 'yellow'
