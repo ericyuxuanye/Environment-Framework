@@ -96,7 +96,7 @@ class Model(model.IModelInference):
         return car_action
 
 
-def create_model_race() -> Race:
+def create_model_race():
     race = Factory.sample_race_1()
 
     model = Model(race.race_info.car_config.motion_profile.max_acceleration, 

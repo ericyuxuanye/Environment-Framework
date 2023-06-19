@@ -66,7 +66,7 @@ class Model(model.IModelInference):
         return car.Action(self.max_acceleration*math.tanh(output[0]), self.max_angular_velocity*math.tanh(output[1]))
 
 
-def create_model_race():
+def create_model_race() -> Race:
     race = Factory.sample_race_1()
 
     model = Model(race.race_info.car_config.motion_profile.max_acceleration, 
