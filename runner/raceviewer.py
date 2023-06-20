@@ -76,6 +76,7 @@ class Viewer:
         self.window_height = 600	
         self.scale = 20
         self.step_rate = 1
+        self.show_cell = False
         
         self.road_color = 'green'
         self.shoulder_color = 'yellow'
@@ -146,8 +147,16 @@ class Viewer:
                     (x * self.scale, y * self.scale), 
                     (x * self.scale + self.scale, y * self.scale + self.scale), 
                     fill_color = tile_color, 
-                    line_color = tile_color, 
-                    line_width = 0)
+                    line_color = 'gray', 
+                    line_width = 1)
+                
+                if self.show_cell:
+                    self.graph.DrawText(
+                        self.track_field.field[y, x]['distance'], 
+                        ((x+.5) * self.scale, (y+.5) * self.scale), 
+                        color='black', 
+                        font=('Helvetica', 10)
+                    )
 
 
     def interpolate_data(self):
