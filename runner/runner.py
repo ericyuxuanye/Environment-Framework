@@ -11,11 +11,9 @@ if __name__ == '__main__':
 
     race = Factory.sample_race_1()
     model, model_info = load_model(race.race_info.car_config)
-
     race.model = model
     race.race_info.model_info = model_info
-    race.race_info.round_to_finish = 10
-    race.race_info.max_time_to_finish = 5000000
+
     
     race.run(debug=False)
 

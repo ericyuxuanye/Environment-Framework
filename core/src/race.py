@@ -30,11 +30,11 @@ class RaceInfo:
                  name: str,
                  id: str,
                  track_info: track.TrackInfo, 
-                 round_to_finish: int, 
                  model_info: ModelInfo, 
                  car_info: car.CarInfo,
                  car_config : car.CarConfig,
                  start_state : car.CarState,
+                 round_to_finish: int, 
                  max_time_to_finish: int = 300000):
 
         self.type = 'RaceInfo'
@@ -73,7 +73,10 @@ class Race:
     def run(self, debug:bool = False):
     
         start_time = datetime.now().strftime("%Y%m%d_%H%M%S")
-        self.race_info.id = self.race_info.name + "_" + start_time
+        self.race_info.id = (self.race_info.name + "_" 
+            + self.race_info.track_info.id + "_" 
+            + self.race_info.model_info.name + "_"
+            + start_time)
 
         current_state = self.race_info.start_state
         self.track_field.calc_track_state(current_state)

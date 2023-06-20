@@ -31,7 +31,7 @@ class Factory:
     def sample_track_field_0(cls) -> TrackField:
 
         track_info = TrackInfo(
-            id='sample_track_field_0', 
+            id='trackfield0', 
             row=5, 
             column=8,
             time_interval = 1000)
@@ -50,7 +50,7 @@ class Factory:
     @classmethod
     def sample_track_field_1(cls) -> TrackField:
         track_info = TrackInfo(
-            id='sample_track_field_1', 
+            id='trackfield1', 
             row=20, 
             column=30, 
             time_interval = 1000)
@@ -88,7 +88,7 @@ class Factory:
     @classmethod
     def sample_track_field_2(cls, compute_distance:bool = False, debug:bool = False) -> TrackField:
         track_info = TrackInfo(
-            id='sample_track_field_2', 
+            id='trackfield2', 
             row=20, 
             column=30,
             start_line=MarkLine(4, 7, 14, 15),
@@ -133,7 +133,7 @@ class Factory:
         car_info = CarInfo(id = 1024, team = 'kirin')
 
         race_info = RaceInfo(
-            name = 'SampleRace0',
+            name = 'Race0',
             id = 'NotStarted',
             track_info = track_field.track_info, 
             round_to_finish = 1, 
@@ -158,16 +158,16 @@ class Factory:
         car_info = CarInfo(id = 1024, team = 'kirin')
 
         race_info = RaceInfo(
-            name = 'SampleRace1',
+            name = 'Race1',
             id = 'NotStarted',
             track_info = track_field.track_info, 
-            round_to_finish = 3,
             model_info = model_info, 
             car_info = car_info,
             car_config= cls.default_car_config(),
             start_state = CarState(
                 position = Point2D(y = 5.5, x = 14.5), 
-                last_road_position = Point2D(y = 5.5, x = 14.5))
-            )
+                last_road_position = Point2D(y = 5.5, x = 14.5)),
+            round_to_finish = 10,
+            max_time_to_finish = 100000)
 
         return Race(race_info = race_info, track_field = track_field, model = model)
