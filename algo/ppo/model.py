@@ -96,28 +96,30 @@ class Model(model.IModelInference):
         return car_action
 
 
-def create_model_race():
-    race = Factory.sample_race_1()
 
-    model = Model(race.race_info.car_config.motion_profile.max_acceleration, 
-        race.race_info.car_config.motion_profile.max_angular_velocity)
-    
+def load_model(car_config: car.CarConfig):
+  
+    model = Model(car_config.motion_profile.max_acceleration, 
+        car_config.motion_profile.max_angular_velocity)
     loaded = model.load(os.path.dirname(__file__))
     print('Model load from data=', loaded)
     #if not loaded:
-    #    model.net.init_data() 
+    #    model.init_data()
 
-    race.model = model
-    
-    race.race_info.model_info = ModelInfo(name='ppo-hc', version='2023.06.11')
-    race.race_info.round_to_finish = 10
-    race.race_info.max_time_to_finish = 100000
+    model_info = ModelInfo(name='ppo-hc', version='2023.06.11')
 
-    return model, race
+    return model, model_info
+
 
 if __name__ == '__main__':
 
-    model, race = create_model_race()
+    race = Factory.sample_race_1()
+    model, model_info = load_model(race.race_info.car_config)
+
+    race.model = model
+    race.race_info.model_info = model_info
+    race.race_info.round_to_finish = 10
+    race.race_info.max_time_to_finish = 100000
 
     start_state = race.race_info.start_state
     race.track_field.calc_track_state(start_state)
