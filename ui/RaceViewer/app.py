@@ -18,9 +18,9 @@ class CarElement:
         self.radius = scale/2
 
     def show_step(self, step_data):
-        position_x = step_data[1]
-        position_y = step_data[2]
-        angle = step_data[3]
+        position_x = step_data[3]
+        position_y = step_data[4]
+        angle = step_data[5]
 
         self.circle_figure = self.graph.DrawCircle(
             [position_x * self.scale, position_y * self.scale], 
@@ -39,9 +39,9 @@ class CarElement:
         )
 
     def move_to(self, step_data):
-        position_x = step_data[1]
-        position_y = step_data[2]
-        angle = step_data[3]
+        position_x = step_data[3]
+        position_y = step_data[4]
+        angle = step_data[5]
 
         self.graph.delete_figure(self.circle_figure)
         self.circle_figure = self.graph.DrawCircle(
@@ -97,7 +97,7 @@ class Viewer:
         
         table = sg.Table(
             values=self.table_data, 
-            headings=['sec', 'x', 'y', 'angle', 'acceleration', 'angular velocity'], 
+            headings=['sec', 'acceleration', 'angular velocity', 'x', 'y', 'angle'], 
             key='table',
             num_rows=10,
             display_row_numbers=True,
@@ -107,7 +107,7 @@ class Viewer:
             )
 
         self.layout = [
-            [sg.Text(track_info.id, text_color='white', font=('Helvetica', 25))],
+            [sg.Text(race_data.race_info.id, text_color='white', font=('Helvetica', 25))],
             [self.graph],
             [sg.Text('0'), sg.ProgressBar(max_value=self.steps_data.shape[0], orientation='h', size=(20, 20), key='progress_bar'), sg.Text(self.steps_data.shape[0])],
             [sg.Button('Play'), sg.Button('Step'), sg.Text('0', key='at_step'), sg.Exit()],
@@ -154,8 +154,9 @@ class Viewer:
         steps = self.race_data.steps
         data = np.empty((len(steps), 6))
         for i, entry in enumerate(steps):
-            data[i,:4] = entry.car_state.timestamp/1000.0, entry.car_state.position.x, entry.car_state.position.y, entry.car_state.wheel_angle
-            data[i,4:] = entry.action.forward_acceleration, entry.action.angular_velocity
+            data[i, 0] = entry.car_state.timestamp/1000.0
+            data[i,1:3] = entry.action.forward_acceleration, entry.action.angular_velocity
+            data[i,3:6] = entry.car_state.position.x, entry.car_state.position.y, entry.car_state.wheel_angle
 
         if self.step_rate == 1:
             self.steps_data = data
