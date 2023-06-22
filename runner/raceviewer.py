@@ -71,7 +71,7 @@ class Viewer:
         self.window_height = 600	
         self.scale = 20
         self.step_rate = 1
-        self.show_cell = False
+        self.show_cell = True
         
         self.road_color = 'green'
         self.shoulder_color = 'yellow'
