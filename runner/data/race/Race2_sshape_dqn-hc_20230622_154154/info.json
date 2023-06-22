@@ -1,39 +1,39 @@
 {
     "type": "RaceInfo",
-    "name": "Race1",
-    "id": "Race1_trackfield2_ppo-hc_20230622_114545",
+    "name": "Race2",
+    "id": "Race2_sshape_dqn-hc_20230622_154154",
     "track_info": {
         "type": "TrackInfo",
-        "id": "trackfield2",
-        "round_distance": 28,
-        "row": 20,
-        "column": 30,
+        "id": "sshape",
+        "round_distance": 78,
+        "row": 18,
+        "column": 31,
         "start_line": {
             "type": "MarkLine",
-            "y_start": 4,
-            "y_end": 7,
-            "x_start": 14,
-            "x_end": 15
+            "y_start": 2,
+            "y_end": 4,
+            "x_start": 21,
+            "x_end": 22
         },
         "finish_line": {
             "type": "MarkLine",
-            "y_start": 4,
-            "y_end": 7,
-            "x_start": 13,
-            "x_end": 14
+            "y_start": 2,
+            "y_end": 4,
+            "x_start": 20,
+            "x_end": 21
         },
         "time_interval": 100
     },
     "round_to_finish": 10,
     "model_info": {
         "type": "ModelInfo",
-        "name": "ppo-hc",
-        "version": "2023.06.11"
+        "name": "dqn-hc",
+        "version": "2023.5.27"
     },
     "car_info": {
         "type": "CarInfo",
-        "id": 1024,
-        "team": "kirin",
+        "id": 123,
+        "team": "halo",
         "city": "",
         "state": "",
         "region": ""
@@ -65,13 +65,13 @@
         "velocity_y": 0,
         "position": {
             "type": "Point2D",
-            "x": 14.5,
-            "y": 5.5
+            "x": 21,
+            "y": 3
         },
         "last_road_position": {
             "type": "Point2D",
-            "x": 14.5,
-            "y": 5.5
+            "x": 21,
+            "y": 3
         },
         "round_count": 0,
         "track_state": {
@@ -79,15 +79,15 @@
             "velocity_forward": 0.0,
             "velocity_right": 0.0,
             "rays": [
-                13.5,
-                1.5,
-                1.5,
-                4.949747468305833,
-                17.67766952966369,
-                9.200333702485349,
-                14.612294703947319,
-                1.6235883004385907,
-                1.6235883004385907
+                9.0,
+                1.0,
+                1.0,
+                4.242640687119285,
+                1.4142135623730951,
+                5.41196100146197,
+                9.741529802631545,
+                1.0823922002923942,
+                1.0823922002923942
             ],
             "tile_type": 1,
             "tile_distance": 0,
