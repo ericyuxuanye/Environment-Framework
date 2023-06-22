@@ -86,6 +86,7 @@ class Race:
             print('Race start at time', start_time)
             print(current_state)
 
+        self.steps.append(ActionCarState(None, current_state))
         while ((current_state.timestamp < 1000 # let it start
                     or (current_state.velocity_x != 0 or current_state.velocity_y != 0))
                and current_state.round_count < self.race_info.round_to_finish

@@ -11,6 +11,7 @@ from core.src import jsoner
 from core.src.race import RaceData
 from core.src.track import TileType, TrackField, TileCell
 
+
 class CarElement:
     def __init__(self, graph, scale):
         self.graph = graph
@@ -18,10 +19,7 @@ class CarElement:
         self.radius = scale/2
 
     def show_step(self, step_data):
-        position_x = step_data[3]
-        position_y = step_data[4]
-        angle = step_data[5]
-
+        position_x, position_y, angle = Viewer.get_step_fields(step_data)
         self.circle_figure = self.graph.DrawCircle(
             [position_x * self.scale, position_y * self.scale], 
             self.radius, 
@@ -39,10 +37,7 @@ class CarElement:
         )
 
     def move_to(self, step_data):
-        position_x = step_data[3]
-        position_y = step_data[4]
-        angle = step_data[5]
-
+        position_x, position_y, angle = Viewer.get_step_fields(step_data)
         self.graph.delete_figure(self.circle_figure)
         self.circle_figure = self.graph.DrawCircle(
             [position_x * self.scale, position_y * self.scale], 
@@ -98,7 +93,7 @@ class Viewer:
         
         table = sg.Table(
             values=self.table_data, 
-            headings=['sec', 'acceleration', 'angular velocity', 'x', 'y', 'angle'], 
+            headings=['sec', 'distance', 'acceleration', 'angular velocity', 'x', 'y', 'angle'], 
             key='table',
             num_rows=10,
             display_row_numbers=True,
@@ -161,11 +156,15 @@ class Viewer:
 
     def interpolate_data(self):
         steps = self.race_data.steps
-        data = np.empty((len(steps), 6))
+        data = np.empty((len(steps), 7))
         for i, entry in enumerate(steps):
             data[i, 0] = entry.car_state.timestamp/1000.0
-            data[i,1:3] = entry.action.forward_acceleration, entry.action.angular_velocity
+            if entry.action is not None:
+                data[i,1:3] = entry.action.forward_acceleration, entry.action.angular_velocity
+            else:
+                data[i,1:3] = 0, 0
             data[i,3:6] = entry.car_state.position.x, entry.car_state.position.y, entry.car_state.wheel_angle
+            data[i,6] = entry.car_state.track_state.tile_total_distance
 
         if self.step_rate == 1:
             self.steps_data = data
@@ -175,10 +174,22 @@ class Viewer:
 
         self.table_data = [[j for j in range(self.steps_data.shape[1])] for i in range(self.steps_data.shape[0])]
         for row in range(self.steps_data.shape[0]):
-            for col in range(0, self.steps_data.shape[1]):
-                self.table_data[row][col] = "{:.3f}".format(self.steps_data[row, col])
+            self.table_data[row][0] = "{:.1f}".format(self.steps_data[row, 0])
+            self.table_data[row][1] = "{:.0f}".format(self.steps_data[row, 6])
+            self.table_data[row][2] = "{:.3f}".format(self.steps_data[row, 1])
+            self.table_data[row][3] = "{:.3f}".format(self.steps_data[row, 2])   
+            self.table_data[row][4] = "{:.3f}".format(self.steps_data[row, 3])
+            self.table_data[row][5] = "{:.3f}".format(self.steps_data[row, 4])
+            self.table_data[row][6] = "{:.3f}".format(self.steps_data[row, 5])
+         
 
-
+    @classmethod
+    def get_step_fields(cls, step_data):
+        position_x = step_data[3]
+        position_y = step_data[4]
+        angle = step_data[5]    
+        return position_x, position_y, angle
+    
     def run(self):
         if (self.steps_data.shape[0] > 0):
             self.car_element.show_step(self.steps_data[0])
