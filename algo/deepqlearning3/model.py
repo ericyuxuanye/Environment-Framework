@@ -171,7 +171,7 @@ def load_model(car_config: car.CarConfig):
     if not loaded:
         model.init_data()
 
-    model_info = ModelInfo(name='graddesc-hc', version='2023.5.27')
+    model_info = ModelInfo(name='dqn-hc', version='2023.5.27')
 
     return model, model_info
 
