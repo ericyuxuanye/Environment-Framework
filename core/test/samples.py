@@ -104,9 +104,56 @@ class Factory:
         tf.fill_block(range(9, 11), range(13, 17), TileType.Wall.value)
 
    
-        # hlock start and finish line by wall, allow only get to them from the road
+        # block start and finish line by wall, allow only get to them from the road
         tf.fill_block(range(2, 4), range(12, 16), TileType.Wall.value)   # block top by wall
         tf.fill_block(range(7, 9), range(12, 16), TileType.Wall.value)   # block bottom by wall
+        
+        if compute_distance:
+            tf.compute_tile_distance(debug)
+
+        return tf
+    
+
+    @classmethod
+    def sample_track_field_sshape(cls, compute_distance:bool = False, debug:bool = False) -> TrackField:
+        track_info = TrackInfo(
+            id='sshape', 
+            row=18, 
+            column=31,
+            start_line=MarkLine(2, 4, 21, 22),
+            finish_line=MarkLine(2, 4, 20, 21),
+            time_interval = 100)
+
+        tf = TrackField(track_info)
+
+        # outer range
+        tf.fill_block(range(0, 18), range(0, 31), TileType.Wall.value)
+        tf.fill_block(range(1, 17), range(1, 30), TileType.Shoulder.value)
+        tf.fill_block(range(2, 16), range(2, 29), TileType.Road.value)
+
+        # inside part
+        tf.fill_block(range(1, 9), range(9, 12), TileType.Shoulder.value)
+        tf.fill_block(range(1, 8), range(10, 11), TileType.Wall.value)
+
+        tf.fill_block(range(9, 17), range(19, 22), TileType.Shoulder.value)
+        tf.fill_block(range(10, 18), range(20, 21), TileType.Wall.value)
+
+        tf.fill_block(range(4, 14), range(4, 7), TileType.Shoulder.value)
+        tf.fill_block(range(11, 14), range(7, 14), TileType.Shoulder.value)
+        tf.fill_block(range(4, 14), range(14, 17), TileType.Shoulder.value)
+        tf.fill_block(range(4, 7), range(17, 24), TileType.Shoulder.value)
+        tf.fill_block(range(4, 14), range(24, 27), TileType.Shoulder.value)
+
+        tf.fill_block(range(5, 13), range(5, 6), TileType.Wall.value)
+        tf.fill_block(range(12, 13), range(6, 16), TileType.Wall.value)        
+        tf.fill_block(range(5, 13), range(15, 16), TileType.Wall.value)
+        tf.fill_block(range(5, 6), range(16, 25), TileType.Wall.value)
+        tf.fill_block(range(5, 13), range(25, 26), TileType.Wall.value)
+
+        
+        # hlock start and finish line by wall, allow only get to them from the road
+        tf.fill_block(range(1, 2), range(19, 23), TileType.Wall.value)   # block top
+        tf.fill_block(range(4, 5), range(19, 23), TileType.Wall.value)   # block bottom
         
         if compute_distance:
             tf.compute_tile_distance(debug)
@@ -171,3 +218,27 @@ class Factory:
             max_time_to_finish = 100000)
 
         return Race(race_info = race_info, track_field = track_field, model = model)
+    
+
+    @classmethod
+    def sample_race_sshape(cls) -> Race:
+        
+        track_field = cls.sample_track_field_sshape(True)
+
+        model_info = ModelInfo(name='unknown', version='0.0.21')
+        car_info = CarInfo(id = 123, team = 'halo')
+
+        race_info = RaceInfo(
+            name = 'Race2',
+            id = 'NotStarted',
+            track_info = track_field.track_info, 
+            model_info = model_info, 
+            car_info = car_info,
+            car_config= cls.default_car_config(),
+            start_state = CarState(
+                position = Point2D(y = 3, x = 21), 
+                last_road_position = Point2D(y = 3, x = 21)),
+            round_to_finish = 10,
+            max_time_to_finish = 100000)
+
+        return Race(race_info = race_info, track_field = track_field, model = None)
