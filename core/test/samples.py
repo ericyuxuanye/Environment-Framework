@@ -214,8 +214,8 @@ class Factory:
             start_state = CarState(
                 position = Point2D(y = 5.5, x = 14.5), 
                 last_road_position = Point2D(y = 5.5, x = 14.5)),
-            round_to_finish = 10,
-            max_time_to_finish = 100000)
+            round_to_finish = 1,
+            max_time_to_finish = 10000)
 
         return Race(race_info = race_info, track_field = track_field, model = model)
     
@@ -238,7 +238,7 @@ class Factory:
             start_state = CarState(
                 position = Point2D(y = 3, x = 21), 
                 last_road_position = Point2D(y = 3, x = 21)),
-            round_to_finish = 10,
+            round_to_finish = 1,
             max_time_to_finish = 100000)
 
         return Race(race_info = race_info, track_field = track_field, model = None)
