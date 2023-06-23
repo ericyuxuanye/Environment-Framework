@@ -93,7 +93,7 @@ class Viewer:
         
         table = sg.Table(
             values=self.table_data, 
-            headings=['sec', 'distance', 'acceleration', 'angular velocity', 'x', 'y', 'angle'], 
+            headings=['sec', 'distance', 'acceleration', 'angular velocity', 'x', 'y', 'angle', 'v_forward', 'v_right'], 
             key='table',
             num_rows=10,
             display_row_numbers=True,
@@ -106,7 +106,7 @@ class Viewer:
             [sg.Text(race_data.race_info.id, text_color='white', font=('Helvetica', 25))],
             [self.graph],
             [sg.Text('0'), sg.ProgressBar(max_value=self.steps_data.shape[0], orientation='h', size=(20, 20), key='progress_bar'), sg.Text(self.steps_data.shape[0])],
-            [sg.Button('Play'), sg.Button('Step'), sg.Text('0', key='at_step'), sg.Exit()],
+            [sg.Button('Play'), sg.Button('-'), sg.Text('0', key='at_step'), sg.Button('+'), sg.Exit()],
             [table],
             ]
         
@@ -156,7 +156,7 @@ class Viewer:
 
     def interpolate_data(self):
         steps = self.race_data.steps
-        data = np.empty((len(steps), 7))
+        data = np.empty((len(steps), 9))
         for i, entry in enumerate(steps):
             data[i, 0] = entry.car_state.timestamp/1000.0
             if entry.action is not None:
@@ -165,6 +165,8 @@ class Viewer:
                 data[i,1:3] = 0, 0
             data[i,3:6] = entry.car_state.position.x, entry.car_state.position.y, entry.car_state.wheel_angle
             data[i,6] = entry.car_state.track_state.tile_total_distance
+            data[i,7] = entry.car_state.track_state.velocity_forward
+            data[i,8] = entry.car_state.track_state.velocity_right
 
         if self.step_rate == 1:
             self.steps_data = data
@@ -181,7 +183,8 @@ class Viewer:
             self.table_data[row][4] = "{:.3f}".format(self.steps_data[row, 3])
             self.table_data[row][5] = "{:.3f}".format(self.steps_data[row, 4])
             self.table_data[row][6] = "{:.3f}".format(self.steps_data[row, 5])
-         
+            self.table_data[row][7] = "{:.3f}".format(self.steps_data[row, 7])
+            self.table_data[row][8] = "{:.3f}".format(self.steps_data[row, 8])         
 
     @classmethod
     def get_step_fields(cls, step_data):
@@ -201,14 +204,21 @@ class Viewer:
             if event == sg.WIN_CLOSED or event == 'Exit':
                 break
 
-            if event == 'Step':
+            if event == '+':
                 play = False
                 at += 1
                 if at < self.steps_data.shape[0]:
                     self.car_element.move_to(self.steps_data[at])
                 else:
                     at = 0
-                    play = False
+            
+            if event == '-':
+                play = False
+                at -= 1
+                if at >= 0:
+                    self.car_element.move_to(self.steps_data[at])
+                else:
+                    at = self.steps_data.shape[0] - 1
             
             if event == 'Play':
                 play = True
