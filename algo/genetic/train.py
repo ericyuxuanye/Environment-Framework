@@ -24,8 +24,8 @@ except RuntimeError:
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-POPULATION_SIZE = 100
-TOP_SIZE = 10
+POPULATION_SIZE = 50
+TOP_SIZE = 5
 
 CROSS_RATE = 0.65
 CROSS_CHANCE = 0.6
@@ -248,8 +248,10 @@ if __name__ == '__main__':
         model_train.init_population()
         model_train.save(os.path.dirname(__file__))
 
-    for i in range(100):
+
+    for i in range(1000):
         print(f"Generation {i}")
         model_train.train()
 
-    model_train.save(os.path.dirname(__file__))
+        if i % 20 == 0:
+            model_train.save(os.path.dirname(__file__))

@@ -82,11 +82,11 @@ class Viewer:
     def init_components(self):
         track_info = self.track_field.track_info
 
-        field_width, field_height = track_info.column * self.scale, track_info.row * self.scale
+        field_width, field_height = (track_info.column + 2) * self.scale, (track_info.row + 2)* self.scale
         self.graph = sg.Graph(
             canvas_size=(field_width, field_height), 
-            graph_bottom_left=(0, field_height), 
-            graph_top_right=(field_width, 0), 
+            graph_bottom_left=(-self.scale, field_height-self.scale), 
+            graph_top_right=(field_width-self.scale, -self.scale), 
             background_color='white', 
             key='graph', 
             tooltip='track field')
@@ -121,6 +121,35 @@ class Viewer:
         self.draw_track_field()
         self.car_element = CarElement(self.graph, self.scale)
 
+    def draw_x_coordinate(self, y):
+        for x in range(self.track_field.track_info.column) :
+            self.graph.DrawRectangle(
+                (x * self.scale, y * self.scale), 
+                (x * self.scale + self.scale, y * self.scale + self.scale), 
+                fill_color = 'lightgray', 
+                line_color = 'gray', 
+                line_width = 1)
+            
+            self.graph.DrawText(
+                x, 
+                (x * self.scale, (y + 0.5) * self.scale), 
+                color='black', 
+                font=('Helvetica', 10))
+
+    def draw_y_coordinate(self, x):
+        for y in range(self.track_field.track_info.row) :
+            self.graph.DrawRectangle(
+                (x * self.scale, y * self.scale), 
+                (x * self.scale + self.scale, y * self.scale + self.scale), 
+                fill_color = 'lightgray', 
+                line_color = 'gray', 
+                line_width = 1)
+            
+            self.graph.DrawText(
+                y, 
+                ((x+0.5) * self.scale, y * self.scale), 
+                color='black', 
+                font=('Helvetica', 10))
 
     def draw_track_field(self):
         for y in range(self.track_field.track_info.row) :
@@ -150,9 +179,12 @@ class Viewer:
                         self.track_field.field[y, x]['distance'], 
                         ((x+.5) * self.scale, (y+.5) * self.scale), 
                         color='black', 
-                        font=('Helvetica', 10)
-                    )
-
+                        font=('Helvetica', 10))
+        
+        self.draw_x_coordinate(-1)
+        self.draw_x_coordinate(self.track_field.track_info.row)
+        self.draw_y_coordinate(-1)
+        self.draw_y_coordinate(self.track_field.track_info.column)
 
     def interpolate_data(self):
         steps = self.race_data.steps

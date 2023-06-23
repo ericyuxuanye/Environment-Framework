@@ -164,9 +164,9 @@ class Factory:
     def default_car_config(cls) -> CarConfig:
 
         return CarConfig(
-            rotation_friction = RotationFriction(min_accel_start = 2, friction = 0.5),
+            rotation_friction = RotationFriction(min_accel_start = 1, friction = 0.5),
             slide_friction = SlideFriction(min_velocity_start = 4, friction = 2),
-            motion_profile = MotionProfile(max_acceleration = 5, max_velocity = 50, max_angular_velocity = math.pi/2))
+            motion_profile = MotionProfile(max_acceleration = 5, max_velocity = 10, max_angular_velocity = math.pi/2))
 
 
     @classmethod

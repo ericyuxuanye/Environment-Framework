@@ -1,7 +1,7 @@
 {
     "type": "RaceInfo",
     "name": "Race2",
-    "id": "Race2_sshape_dqn-hc_20230622_154154",
+    "id": "Race2_sshape_generic-hc_20230623_115048",
     "track_info": {
         "type": "TrackInfo",
         "id": "sshape",
@@ -24,11 +24,11 @@
         },
         "time_interval": 100
     },
-    "round_to_finish": 10,
+    "round_to_finish": 1,
     "model_info": {
         "type": "ModelInfo",
-        "name": "dqn-hc",
-        "version": "2023.5.27"
+        "name": "generic-hc",
+        "version": "2023.5.18"
     },
     "car_info": {
         "type": "CarInfo",
@@ -42,7 +42,7 @@
         "type": "CarConfig",
         "rotation_friction": {
             "type": "RotationFriction",
-            "min_accel_start": 2,
+            "min_accel_start": 1,
             "friction": 0.5
         },
         "slide_friction": {
@@ -53,7 +53,7 @@
         "motion_profile": {
             "type": "MotionProfile",
             "max_acceleration": 5,
-            "max_velocity": 50,
+            "max_velocity": 10,
             "max_angular_velocity": 1.5707963267948966
         }
     },

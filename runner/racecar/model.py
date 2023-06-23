@@ -56,7 +56,7 @@ class Model(model.IModelInference):
             try:
                 rand_tensor = nn.init.kaiming_uniform_(torch.empty(shape)).to(device)
             except ValueError:
-                rand_tensor = nn.init.uniform_(torch.empty(shape), -0.5, 0.5).to(device)
+                rand_tensor = nn.init.uniform_(torch.empty(shape), -0.2, 0.2).to(device)
             param_value.append((torch.nn.parameter.Parameter(rand_tensor)))
 
         self.set_params(param_value)
@@ -86,11 +86,11 @@ class Model(model.IModelInference):
     @classmethod
     def create_net(cls):
         return nn.Sequential(
-            nn.Linear(INPUT_VECTOR_SIZE, 32, bias=True),
+            nn.Linear(INPUT_VECTOR_SIZE, 64, bias=True),
             nn.Sigmoid(),
-            nn.Linear(32, 16, bias=True),
+            nn.Linear(64, 64, bias=True),
             nn.Sigmoid(),
-            nn.Linear(16, OUTPUT_VECTOR_SIZE, bias=True),
+            nn.Linear(64, OUTPUT_VECTOR_SIZE, bias=True),
             nn.Tanh()
         ).to(device)
 
