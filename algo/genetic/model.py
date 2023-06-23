@@ -86,11 +86,11 @@ class Model(model.IModelInference):
     @classmethod
     def create_net(cls):
         return nn.Sequential(
-            nn.Linear(INPUT_VECTOR_SIZE, 32, bias=True),
+            nn.Linear(INPUT_VECTOR_SIZE, 64, bias=True),
             nn.Sigmoid(),
-            nn.Linear(32, 16, bias=True),
+            nn.Linear(64, 64, bias=True),
             nn.Sigmoid(),
-            nn.Linear(16, OUTPUT_VECTOR_SIZE, bias=True),
+            nn.Linear(64, OUTPUT_VECTOR_SIZE, bias=True),
             nn.Tanh()
         ).to(device)
 
