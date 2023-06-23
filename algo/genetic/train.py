@@ -24,8 +24,8 @@ except RuntimeError:
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-POPULATION_SIZE = 10
-TOP_SIZE = 3
+POPULATION_SIZE = 100
+TOP_SIZE = 10
 
 CROSS_RATE = 0.65
 CROSS_CHANCE = 0.6
@@ -116,11 +116,15 @@ class ModelTrain(model.IModelInference):
 
     def eval_model(self, params: Parameters) -> float:
 
-        model, race = create_model_race()
+        race = Factory.sample_race_sshape()
+        model, model_info = load_model(race.race_info.car_config)
+        race.model = model
+        race.race_info.model_info = model_info
+
         model.set_params(params)
+
         race.run(debug=False)
         final_state = race.steps[-1].car_state
-        # print(final_state)
         return final_state.track_state.score
     
 

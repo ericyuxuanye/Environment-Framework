@@ -87,9 +87,7 @@ class Race:
             print(current_state)
 
         self.steps.append(ActionCarState(None, current_state))
-        while ((current_state.timestamp < 1000 # let it start
-                    or (current_state.velocity_x != 0 or current_state.velocity_y != 0))
-               and current_state.round_count < self.race_info.round_to_finish
+        while (current_state.round_count < self.race_info.round_to_finish
                and current_state.track_state.tile_type != track.TileType.Wall.value
                and current_state.timestamp < self.race_info.max_time_to_finish) :
             
