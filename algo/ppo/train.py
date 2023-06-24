@@ -241,12 +241,16 @@ class ModelTrain(model.IModelInference):
 
 if __name__ == '__main__':
 
-    model, race = create_model_race()
+    race = Factory.sample_race_sshape()
+    model, model_info = load_model(race.race_info.car_config)
+
+    race.model = model
+    race.race_info.model_info = model_info
 
     model_train = ModelTrain(model, race)
     model_train.load(os.path.dirname(__file__))
     
-    for epoch in range(100):
+    for epoch in range(1000):
         average, max = model_train.train()
         print(f"epoch {epoch}: {average, max}")
         model_train.save(os.path.dirname(__file__))

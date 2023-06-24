@@ -24,7 +24,7 @@ class ModelTrain(model.IModelInference):
                 config_path)
             loaded = True
         except:
-            print(f"Failed to load config from {config_path}")
+            # print(f"Failed to load config from {config_path}")
             loaded = False
                 
         return loaded
@@ -60,7 +60,12 @@ class ModelTrain(model.IModelInference):
 
     def eval_model(self, genome, config) -> float:
 
-        model, race = create_model_race()
+        race = Factory.sample_race_sshape()
+        model, model_info = load_model(race.race_info.car_config)
+
+        race.model = model
+        race.race_info.model_info = model_info   
+
         model.load_genome(genome, config)
         
         race.run(debug=False)
@@ -80,7 +85,7 @@ if __name__ == '__main__':
         print('Fail to load NEAT config, exit')
         exit()
 
-    model_train.train(30)
+    model_train.train(300)
     model_train.save(os.path.dirname(__file__))
 
 
