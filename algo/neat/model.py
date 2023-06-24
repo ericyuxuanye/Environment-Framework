@@ -40,7 +40,7 @@ class Model(model.IModelInference):
             self.net = neat.nn.FeedForwardNetwork.create(winner, config)
             loaded = True
         except:
-            print(f"Failed to load NEAT model from {folder}")
+            # print(f"Failed to load NEAT model from {folder}")
             loaded = False
     
         return loaded
@@ -72,8 +72,6 @@ def load_model(car_config: car.CarConfig):
         car_config.motion_profile.max_angular_velocity)
     loaded = model.load(os.path.dirname(__file__))
     # print('Model load from data=', loaded)
-    if not loaded:
-        model.init_data()
 
     model_info = ModelInfo(name='neat-hc', version='2023.5.20')
 
@@ -82,21 +80,18 @@ def load_model(car_config: car.CarConfig):
 
 if __name__ == '__main__':
 
-    race = Factory.sample_race_1()
+    race = Factory.sample_race_sshape()
     model, model_info = load_model(race.race_info.car_config)
 
     race.model = model
-    race.race_info.model_info = model_info
-    race.race_info.round_to_finish = 10
-    race.race_info.max_time_to_finish = 5000000
-    
+    race.race_info.model_info = model_info   
 
     start_state = race.race_info.start_state
     race.track_field.calc_track_state(start_state)
     print('start_state:\n', start_state)
 
     action = model.get_action(start_state)
-    print('action st start:\n', action)
+    print('action at start:\n', action)
 
     race.run(debug=False)
 
