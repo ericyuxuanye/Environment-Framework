@@ -56,10 +56,10 @@ Transition = namedtuple('Transition',
 # GAMMA is the discount factor as mentioned in the previous section
 # TAU is the update rate of the target network
 # LR is the learning rate of the ``AdamW`` optimizer
-BATCH_SIZE = 8
+BATCH_SIZE = 32
 GAMMA = 0.9
 
-TAU = 1
+TAU = .8
 LR = 1e-4
 
 class ReplayMemory:
@@ -200,12 +200,16 @@ class ModelTrain(model.IModelInference):
 
 if __name__ == '__main__':
 
-    model, race = create_model_race()
+    race = Factory.sample_race_sshape()
+    model, model_info = load_model(race.race_info.car_config)
+
+    race.model = model
+    race.race_info.model_info = model_info
 
     model_train = ModelTrain(model, race)
     model_train.load(os.path.dirname(__file__))
     
-    for epoch in range(100):
+    for epoch in range(200):
         average, max = model_train.train(25)
         print(f"epoch {epoch}: {average, max}")
         model_train.save(os.path.dirname(__file__))
