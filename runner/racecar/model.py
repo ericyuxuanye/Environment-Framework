@@ -2,68 +2,98 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
-
+import math
 import numpy as np
+import random
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
+import torch.optim as optim
 
 from core.src import model, car
 from core.src.race import *
 from core.test.samples import Factory
 
 INPUT_VECTOR_SIZE = 14
-OUTPUT_VECTOR_SIZE = 2
+
+action_step = 1 # number of steps for [0, 1]
+action_step_count = 2*action_step+1 # total number of options [-1, 1]
+
+OUTPUT_VECTOR_SIZE = action_step_count*action_step_count
+
 
 device = "cpu"
 
-ACTOR_FILE_NAME = "actor.pt"
-CRITIC_FILE_NAME = "critic.pt"
+DATA_FILE_NAME = "policy_net.pt"
+
+class DQN(nn.Module):
+
+    def __init__(self):
+        super(DQN, self).__init__()
+        HideLayer1Size = 32
+        self.layer1 = nn.Linear(INPUT_VECTOR_SIZE, HideLayer1Size)
+        HideLayer2Size = 32
+        self.layer2 = nn.Linear(HideLayer1Size, HideLayer2Size)
+
+        self.layer3 = nn.Linear(HideLayer2Size, OUTPUT_VECTOR_SIZE)
+
+    def forward(self, x):
+        x = F.relu(self.layer1(x))
+        x = F.relu(self.layer2(x))
+        #x = F.relu(self.layer3(x))
+        return self.layer3(x)
 
 
-class Actor(nn.Module):
-	def __init__(self, in_dim, out_dim):
-		super(Actor, self).__init__()
+class Wheel:
+    def __init__(self, keys:list[float], weights:list[float]):
+        self.wheel = []
+        total_weights = sum(weights)
+        top = 0
+        for key, weight in zip(keys, weights):
+            f = weight/total_weights
+            self.wheel.append((top, top+f, key))
+            top += f
 
-		self.layer1 = nn.Linear(in_dim, 64)
-		self.layer2 = nn.Linear(64, 64)
-		self.layer3 = nn.Linear(64, out_dim)
+    def binary_search(self, min_index:int, max_index:int, number:float) -> float:
+        mid_index = (min_index + max_index)//2
+        low, high, key = self.wheel[mid_index]
+        if low<=number<=high:
+            return key
+        elif high < number:
+            return self.binary_search(mid_index+1, max_index, number)
+        else:
+            return self.binary_search(min_index, mid_index-1, number)
+        
+    def spin(self) -> int:
+        return self.binary_search(0, len(self.wheel) - 1, random.random())
 
-	def forward(self, x):
-		activation1 = F.relu(self.layer1(x))
-		activation2 = F.relu(self.layer2(activation1))
-		output = F.tanh(self.layer3(activation2))
 
-		return output
+# EPS_START is the starting value of epsilon
+# EPS_END is the final value of epsilon
+# EPS_DECAY controls the rate of exponential decay of epsilon, higher means a slower decay
+EPS_START = 0.95
+EPS_END = 0.05
+EPS_DECAY = 1000
 
-class Critic(nn.Module):
-	def __init__(self, in_dim, out_dim):
-		super(Critic, self).__init__()
 
-		self.layer1 = nn.Linear(in_dim, 64)
-		self.layer2 = nn.Linear(64, 64)
-		self.layer3 = nn.Linear(64, out_dim)
-
-	def forward(self, x):
-		activation1 = F.relu(self.layer1(x))
-		activation2 = F.relu(self.layer2(activation1))
-
-		return self.layer3(activation2)
-
+steps_done = 0
 class Model(model.IModelInference):
 
     def __init__(self, max_acceleration:float = 1, max_angular_velocity:float = 1, is_train:bool = False):
         self.max_acceleration = max_acceleration
         self.max_angular_velocity = max_angular_velocity
-        self.actor = Actor(INPUT_VECTOR_SIZE, OUTPUT_VECTOR_SIZE).to(device)
+        self.policy_net = DQN().to(device)
+        self.is_train = is_train
+
+        self.acceleration_wheel = Wheel([-1, 0, 1], [1, 2, 5])
+        self.angular_wheel = Wheel([-1, 0, 1], [1, 2, 3])
 
     def load(self, folder:str) -> bool:
         loaded = False
         try:
-            model_path = os.path.join(folder, ACTOR_FILE_NAME)
+            model_path = os.path.join(folder, DATA_FILE_NAME)
             if os.path.exists(model_path):
-                self.actor.load_state_dict(torch.load(model_path))
+                self.policy_net.load_state_dict(torch.load(model_path))
                 loaded = True
         except:
             print(f"Failed to load q_learning model from {model_path}")
@@ -71,7 +101,7 @@ class Model(model.IModelInference):
         return loaded
 
     @classmethod
-    def observation(cls, car_state: car.CarState) -> torch.tensor:
+    def state_tensor(cls, car_state: car.CarState) -> torch.tensor:
         
         input = np.empty((INPUT_VECTOR_SIZE), dtype=np.float32)
         input[0] = car_state.position.x
@@ -80,20 +110,55 @@ class Model(model.IModelInference):
         input[3] = car_state.track_state.velocity_forward
         input[4] = car_state.track_state.velocity_right
         input[5:14] = car_state.track_state.rays[0:9]
-        observation = torch.tensor(input, dtype=torch.float)
+        input = torch.FloatTensor(input).reshape((1, 14)).to(device)
 
-        return observation
+        return input
 
-    def get_action(self, car_state: car.CarState) -> car.Action:
-        observation = self.observation(car_state)
+    def action_tensor(self, action: car.Action) -> torch.tensor:
+        acceleration_index = round(action.forward_acceleration/self.max_acceleration) * action_step + action_step
+        angular_velocity_index = round(action.angular_velocity/self.max_angular_velocity) * action_step + action_step
+        action_index =  acceleration_index*action_step_count + angular_velocity_index
+        action_tensor = torch.tensor([[action_index]], device=device)
+        return action_tensor
+    
+    def select_action(self, state_tensor) ->int:
+        global steps_done
+        sample = random.random()
+        eps_threshold = (EPS_END + (EPS_START - EPS_END) * math.exp(-1. * steps_done / EPS_DECAY))
+        steps_done += 1
 
-        mean = self.actor(observation)
-        action = mean.detach().numpy()
-        car_action = car.Action(
-            action[0] * self.max_acceleration, 
-            action[1] * self.max_angular_velocity)
+        if sample > eps_threshold or not self.is_train:
+            with torch.no_grad():
+                # t.max(1) will return the largest column value of each row.
+                # second column on max result is index of where max element was
+                # found, so we pick action with the larger expected reward.
+                net_output = self.policy_net(state_tensor)
+                max = net_output.max(1)
+                top = max[1]
+                action_index = int(top[0])
+        else:
+            acceleration_value = self.acceleration_wheel.spin()
+            acceleration_index = acceleration_value * action_step + action_step
+            angular_velocity_value = self.angular_wheel.spin()
+            angular_velocity_index = angular_velocity_value * action_step + action_step
+            action_index = acceleration_index * action_step_count + angular_velocity_index
+
+        return action_index
         
-        return car_action
+    
+    def get_action(self, car_state: car.CarState) -> car.Action:
+
+        input = self.state_tensor(car_state)
+        action_index = self.select_action(input)
+
+        acceleration_index = action_index // action_step_count
+        angular_velocity_index = action_index % action_step_count
+        acceleration = self.max_acceleration*(acceleration_index-action_step)/action_step
+        angular_velocity = self.max_angular_velocity*(angular_velocity_index-action_step)/action_step
+
+        car_acion = car.Action(acceleration, angular_velocity)
+        # print('A:', acceleration_index-action_step, angular_velocity_index-action_step)
+        return car_acion
 
 
 
@@ -102,9 +167,11 @@ def load_model(car_config: car.CarConfig):
     model = Model(car_config.motion_profile.max_acceleration, 
         car_config.motion_profile.max_angular_velocity)
     loaded = model.load(os.path.dirname(__file__))
-    print('Model load from data=', loaded)
+    # print('Model load from data=', loaded)
+    if not loaded:
+        model.init_data()
 
-    model_info = ModelInfo(name='ppo-hc', version='2023.06.24')
+    model_info = ModelInfo(name='dqn-hc', version='2023.5.27')
 
     return model, model_info
 
@@ -129,7 +196,7 @@ if __name__ == '__main__':
     final_state = race.steps[-1].car_state
     print('race_info:\n', race.race_info)
     print('finish:\n', final_state)
-    
+
     for i in range(len(race.steps)):
         step = race.steps[i]
         if step.action != None:
