@@ -151,7 +151,7 @@ class Factory:
         tf.fill_block(range(5, 13), range(25, 26), TileType.Wall.value)
 
         
-        # hlock start and finish line by wall, allow only get to them from the road
+        # block start and finish line by wall, allow only get to them from the road
         tf.fill_block(range(1, 2), range(19, 23), TileType.Wall.value)   # block top
         tf.fill_block(range(4, 5), range(19, 23), TileType.Wall.value)   # block bottom
         
@@ -159,7 +159,38 @@ class Factory:
             tf.compute_tile_distance(debug)
 
         return tf
+
+    @classmethod
+    def sample_track_field_round_angle(cls, compute_distance:bool = False, debug:bool = False) -> TrackField:
+        track_info = TrackInfo(
+            id='round_angle', 
+            row=30, 
+            column=40,
+            start_line=MarkLine(1, 10, 20, 21),
+            finish_line=MarkLine(1, 10, 19, 20),
+            time_interval = 100)
+
+        tf = TrackField(track_info)
+
+        # outer range
+        tf.fill_block(range(0, 30), range(0, 40), TileType.Wall.value)
+        tf.fill_block(range(10, 20), range(10, 30), TileType.Wall.value)
+
+        tf.fill_block(range(1, 10), range(10, 30), TileType.Road.value)
+        tf.fill_block(range(21, 29), range(10, 30), TileType.Road.value)
+        tf.fill_block(range(10, 20), range(1, 10), TileType.Road.value)
+        tf.fill_block(range(10, 20), range(30, 39), TileType.Road.value)
     
+        tf.fill_circle(10, 10, 9, range(0, 10), range(0, 10), TileType.Road.value)
+        tf.fill_circle(10, 30, 9, range(0, 10), range(30, 40), TileType.Road.value)
+        tf.fill_circle(20, 10, 9, range(20, 30), range(0, 10), TileType.Road.value)
+        tf.fill_circle(20, 30, 9, range(20, 30), range(30, 40), TileType.Road.value)
+        
+        if compute_distance:
+            tf.compute_tile_distance(debug)
+
+        return tf
+
     @classmethod
     def default_car_config(cls) -> CarConfig:
 
@@ -238,6 +269,30 @@ class Factory:
             start_state = CarState(
                 position = Point2D(y = 3, x = 21), 
                 last_road_position = Point2D(y = 3, x = 21)),
+            round_to_finish = 1,
+            max_time_to_finish = 100000)
+
+        return Race(race_info = race_info, track_field = track_field, model = None)
+    
+
+    @classmethod
+    def sample_race_round_angle(cls) -> Race:
+        
+        track_field = cls.sample_track_field_round_angle(True)
+
+        model_info = ModelInfo(name='unknown', version='0.0.21')
+        car_info = CarInfo(id = 123, team = 'halo')
+
+        race_info = RaceInfo(
+            name = 'Race3',
+            id = 'NotStarted',
+            track_info = track_field.track_info, 
+            model_info = model_info, 
+            car_info = car_info,
+            car_config= cls.default_car_config(),
+            start_state = CarState(
+                position = Point2D(y = 5, x = 20), 
+                last_road_position = Point2D(y = 10, x = 20)),
             round_to_finish = 1,
             max_time_to_finish = 100000)
 
