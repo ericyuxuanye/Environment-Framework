@@ -91,6 +91,21 @@ class TrackField:
             for x in x_range :
                 self.field[y, x]['type'] = type
     
+    def fill_circle(self, 
+        center_y:float, 
+        center_x:float,
+        radius:float,
+        y_range: range, 
+        x_range: range, 
+        type: int) :
+        for y in y_range :
+            for x in x_range :
+                cell_y = y+.5
+                cell_x = x+.5
+                distance = math.sqrt((cell_y - center_y)**2 + (cell_x - center_x)**2)
+                if distance <= radius :
+                    self.field[y, x]['type'] = type
+
     def is_start(self, cell: TileCell) -> bool:
         return (self.track_info.start_line.y_start <= cell.row 
             and cell.row < self.track_info.start_line.y_end 
