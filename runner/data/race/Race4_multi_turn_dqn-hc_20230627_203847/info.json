@@ -1,26 +1,26 @@
 {
     "type": "RaceInfo",
-    "name": "Race5",
-    "id": "Race5_multi_turn_large_dqn-hc_20230627_191713",
+    "name": "Race4",
+    "id": "Race4_multi_turn_dqn-hc_20230627_203847",
     "track_info": {
         "type": "TrackInfo",
-        "id": "multi_turn_large",
-        "round_distance": 390,
-        "row": 70,
-        "column": 120,
+        "id": "multi_turn",
+        "round_distance": 80,
+        "row": 30,
+        "column": 50,
         "start_line": {
             "type": "MarkLine",
             "y_start": 1,
             "y_end": 10,
-            "x_start": 60,
-            "x_end": 61
+            "x_start": 25,
+            "x_end": 26
         },
         "finish_line": {
             "type": "MarkLine",
             "y_start": 1,
             "y_end": 10,
-            "x_start": 59,
-            "x_end": 60
+            "x_start": 24,
+            "x_end": 25
         },
         "time_interval": 100
     },
@@ -65,12 +65,12 @@
         "velocity_y": 0,
         "position": {
             "type": "Point2D",
-            "x": 60,
+            "x": 25,
             "y": 5
         },
         "last_road_position": {
             "type": "Point2D",
-            "x": 60,
+            "x": 25,
             "y": 5
         },
         "round_count": 0,
@@ -79,7 +79,7 @@
             "velocity_forward": 0.0,
             "velocity_right": 0.0,
             "rays": [
-                58.0,
+                23.0,
                 4.0,
                 5.0,
                 7.071067811865475,

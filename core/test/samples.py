@@ -252,7 +252,7 @@ class Factory:
         #vertical
         tf.fill_block(range(10, 20), range(1, 10), TileType.Road.value)
         tf.fill_block(range(50, 60), range(1, 10), TileType.Road.value)
-        tf.fill_block(range(10, 70), range(110, 119), TileType.Road.value)
+        tf.fill_block(range(10, 60), range(110, 119), TileType.Road.value)
         tf.fill_block(range(30, 40), range(40, 50), TileType.Road.value)
         tf.fill_block(range(30, 40), range(60, 70), TileType.Road.value)
         tf.fill_block(range(50, 60), range(70, 80), TileType.Road.value)

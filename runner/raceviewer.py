@@ -67,8 +67,8 @@ class Viewer:
         self.init_components()
 
     def init_config(self):
-        self.window_width = 800           
-        self.window_height = 600	
+        self.window_width = 1600           
+        self.window_height = 900	
         self.scale = 20
         self.step_rate = 1
         self.show_cell = True
@@ -82,11 +82,22 @@ class Viewer:
     def init_components(self):
         track_info = self.track_field.track_info
 
-        field_width, field_height = (track_info.column + 2) * self.scale, (track_info.row + 2)* self.scale
+        scale_x = int(self.window_width / (track_info.column + 2))
+        scale_y = int(self.window_height / (track_info.row + 2))
+        if scale_x < scale_y:
+            self.scale = scale_x
+        else:
+            self.scale = scale_y
+        
+        self.text_step = int(20.0/self.scale+.4999)
+
+        self.window_width = self.scale * (track_info.column + 2)
+        self.window_height = self.scale * (track_info.row + 2)
+
         self.graph = sg.Graph(
-            canvas_size=(field_width, field_height), 
-            graph_bottom_left=(-self.scale, field_height-self.scale), 
-            graph_top_right=(field_width-self.scale, -self.scale), 
+            canvas_size=(self.window_width, self.window_height), 
+            graph_bottom_left=(-self.scale, self.window_height-self.scale), 
+            graph_top_right=(self.window_width-self.scale, -self.scale), 
             background_color='white', 
             key='graph', 
             tooltip='track field')
@@ -122,7 +133,8 @@ class Viewer:
         self.car_element = CarElement(self.graph, self.scale)
 
     def draw_x_coordinate(self, y):
-        for x in range(self.track_field.track_info.column) :
+
+        for x in range(0, self.track_field.track_info.column, self.text_step) :
             self.graph.DrawRectangle(
                 (x * self.scale, y * self.scale), 
                 (x * self.scale + self.scale, y * self.scale + self.scale), 
@@ -137,7 +149,7 @@ class Viewer:
                 font=('Helvetica', 10))
 
     def draw_y_coordinate(self, x):
-        for y in range(self.track_field.track_info.row) :
+        for y in range(0, self.track_field.track_info.row, self.text_step) :
             self.graph.DrawRectangle(
                 (x * self.scale, y * self.scale), 
                 (x * self.scale + self.scale, y * self.scale + self.scale), 
@@ -173,18 +185,22 @@ class Viewer:
                     fill_color = tile_color, 
                     line_color = 'gray', 
                     line_width = 1)
-                
-                if self.show_cell:
-                    self.graph.DrawText(
-                        self.track_field.field[y, x]['distance'], 
-                        ((x+.5) * self.scale, (y+.5) * self.scale), 
-                        color='black', 
-                        font=('Helvetica', 10))
+
         
+        if self.show_cell:
+            for y in range(0, self.track_field.track_info.row, self.text_step) :
+                for x in range(0, self.track_field.track_info.column, self.text_step) :
+                    self.graph.DrawText(
+                            self.track_field.field[y, x]['distance'], 
+                            ((x+.5) * self.scale, (y+.5) * self.scale), 
+                            color='black', 
+                            font=('Helvetica', 10))
+                    
         self.draw_x_coordinate(-1)
         self.draw_x_coordinate(self.track_field.track_info.row)
         self.draw_y_coordinate(-1)
         self.draw_y_coordinate(self.track_field.track_info.column)
+
 
     def interpolate_data(self):
         steps = self.race_data.steps
