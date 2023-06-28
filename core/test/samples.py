@@ -206,11 +206,9 @@ class Factory:
 
         # outer range
         tf.fill_block(range(0, 30), range(0, 50), TileType.Wall.value)
-        tf.fill_block(range(10, 20), range(10, 40), TileType.Wall.value)
 
         tf.fill_block(range(1, 10), range(10, 40), TileType.Road.value)
         tf.fill_block(range(11, 20), range(20, 30), TileType.Road.value)
-        #tf.fill_block(range(21, 30), range(20, 30), TileType.Road.value)
         tf.fill_block(range(10, 20), range(1, 10), TileType.Road.value)
         tf.fill_block(range(10, 20), range(40, 49), TileType.Road.value)
     
@@ -229,6 +227,60 @@ class Factory:
 
         return tf
     
+    @classmethod
+    def sample_track_field_multi_turn_large(cls, compute_distance:bool = False, debug:bool = False) -> TrackField:
+        track_info = TrackInfo(
+            id='multi_turn_large', 
+            row=70, 
+            column=120,
+            start_line=MarkLine(1, 10, 60, 61),
+            finish_line=MarkLine(1, 10, 59, 60),
+            time_interval = 100)
+
+        tf = TrackField(track_info)
+
+        # outer range
+        tf.fill_block(range(0, 70), range(0, 120), TileType.Wall.value)
+
+        #horizontal
+        tf.fill_block(range(1, 10), range(10, 110), TileType.Road.value)
+        tf.fill_block(range(20, 30), range(10, 40), TileType.Road.value)
+        tf.fill_block(range(20, 30), range(70, 90), TileType.Road.value)
+        tf.fill_block(range(40, 50), range(10, 40), TileType.Road.value)
+        tf.fill_block(range(60, 69), range(10, 70), TileType.Road.value)
+        tf.fill_block(range(60, 69), range(100, 110), TileType.Road.value)
+        #vertical
+        tf.fill_block(range(10, 20), range(1, 10), TileType.Road.value)
+        tf.fill_block(range(50, 60), range(1, 10), TileType.Road.value)
+        tf.fill_block(range(10, 70), range(110, 119), TileType.Road.value)
+        tf.fill_block(range(30, 40), range(40, 50), TileType.Road.value)
+        tf.fill_block(range(30, 40), range(60, 70), TileType.Road.value)
+        tf.fill_block(range(50, 60), range(70, 80), TileType.Road.value)
+        tf.fill_block(range(30, 60), range(90, 100), TileType.Road.value)
+
+        #corner
+        tf.fill_circle(10, 10, 9, range(0, 10), range(0, 10), TileType.Road.value)
+        tf.fill_circle(20, 10, 9, range(20, 30), range(0, 10), TileType.Road.value)
+        tf.fill_circle(30, 40, 9, range(20, 30), range(40, 50), TileType.Road.value)
+        tf.fill_circle(40, 40, 9, range(40, 50), range(40, 50), TileType.Road.value)
+        
+        tf.fill_circle(50, 10, 9, range(40, 50), range(0, 10), TileType.Road.value)
+        tf.fill_circle(60, 10, 9, range(60, 70), range(0, 10), TileType.Road.value)
+        tf.fill_circle(60, 70, 9, range(60, 70), range(70, 80), TileType.Road.value)
+        tf.fill_circle(50, 70, 9, range(40, 50), range(70, 80), TileType.Road.value)
+        tf.fill_circle(40, 70, 9, range(40, 50), range(60, 70), TileType.Road.value)
+
+        tf.fill_circle(30, 70, 9, range(20, 30), range(60, 70), TileType.Road.value)
+        tf.fill_circle(30, 70, 9, range(20, 30), range(60, 70), TileType.Road.value)
+        tf.fill_circle(30, 90, 9, range(20, 30), range(90, 100), TileType.Road.value)
+        tf.fill_circle(60, 100, 9, range(60,70), range(90, 100), TileType.Road.value)
+        tf.fill_circle(60, 110, 9, range(60, 70), range(110, 120), TileType.Road.value)
+        tf.fill_circle(10, 110, 9, range(0, 10), range(110, 120), TileType.Road.value)
+        
+        if compute_distance:
+            tf.compute_tile_distance(debug)
+
+        return tf
 
     @classmethod
     def default_car_config(cls) -> CarConfig:
@@ -357,6 +409,30 @@ class Factory:
             start_state = CarState(
                 position = Point2D(y = 5, x = 25), 
                 last_road_position = Point2D(y = 5, x = 25)),
+            round_to_finish = 1,
+            max_time_to_finish = 100000)
+
+        return Race(race_info = race_info, track_field = track_field, model = None)
+    
+
+    @classmethod
+    def sample_race_multi_turn_large(cls) -> Race:
+        
+        track_field = cls.sample_track_field_multi_turn_large(True)
+
+        model_info = ModelInfo(name='unknown', version='0.0.21')
+        car_info = CarInfo(id = 123, team = 'halo')
+
+        race_info = RaceInfo(
+            name = 'Race5',
+            id = 'NotStarted',
+            track_info = track_field.track_info, 
+            model_info = model_info, 
+            car_info = car_info,
+            car_config= cls.default_car_config(),
+            start_state = CarState(
+                position = Point2D(y = 5, x = 60), 
+                last_road_position = Point2D(y = 5, x = 60)),
             round_to_finish = 1,
             max_time_to_finish = 100000)
 
