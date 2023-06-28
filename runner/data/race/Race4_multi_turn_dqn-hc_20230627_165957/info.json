@@ -1,26 +1,26 @@
 {
     "type": "RaceInfo",
-    "name": "Race3",
-    "id": "Race3_round_angle_dqn-hc_20230627_160511",
+    "name": "Race4",
+    "id": "Race4_multi_turn_dqn-hc_20230627_165957",
     "track_info": {
         "type": "TrackInfo",
-        "id": "round_angle",
-        "round_distance": 62,
+        "id": "multi_turn",
+        "round_distance": 80,
         "row": 30,
-        "column": 40,
+        "column": 50,
         "start_line": {
             "type": "MarkLine",
             "y_start": 1,
             "y_end": 10,
-            "x_start": 20,
-            "x_end": 21
+            "x_start": 25,
+            "x_end": 26
         },
         "finish_line": {
             "type": "MarkLine",
             "y_start": 1,
             "y_end": 10,
-            "x_start": 19,
-            "x_end": 20
+            "x_start": 24,
+            "x_end": 25
         },
         "time_interval": 100
     },
@@ -65,13 +65,13 @@
         "velocity_y": 0,
         "position": {
             "type": "Point2D",
-            "x": 20,
-            "y": 10
+            "x": 25,
+            "y": 5
         },
         "last_road_position": {
             "type": "Point2D",
-            "x": 20,
-            "y": 10
+            "x": 25,
+            "y": 5
         },
         "round_count": 0,
         "track_state": {
@@ -79,17 +79,17 @@
             "velocity_forward": 0.0,
             "velocity_right": 0.0,
             "rays": [
-                1.0,
-                1.0,
-                1.0,
-                1.4142135623730951,
-                1.4142135623730951,
-                2.6131259297527536,
-                1.0823922002923942,
-                2.6131259297527523,
-                1.0823922002923942
+                23.0,
+                4.0,
+                5.0,
+                7.071067811865475,
+                7.0710678118654755,
+                10.82392200292394,
+                14.071098603801122,
+                5.2262518595055045,
+                5.41196100146197
             ],
-            "tile_type": 1024,
+            "tile_type": 1,
             "tile_distance": 0,
             "tile_total_distance": 0,
             "last_road_tile_distance": 0,
