@@ -241,7 +241,7 @@ class ModelTrain(model.IModelInference):
 
 if __name__ == '__main__':
 
-    race = Factory.sample_race_sshape()
+    race = Factory.sample_race_multi_turn_large()
     model, model_info = load_model(race.race_info.car_config)
 
     race.model = model
