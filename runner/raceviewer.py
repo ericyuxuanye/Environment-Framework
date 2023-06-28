@@ -90,6 +90,8 @@ class Viewer:
             self.scale = scale_y
         
         self.text_step = int(20.0/self.scale+.4999)
+        if self.text_step < 1:
+            self.text_step = 1
 
         self.window_width = self.scale * (track_info.column + 2)
         self.window_height = self.scale * (track_info.row + 2)
